@@ -1,7 +1,9 @@
 from iglsynth.util.graph import *
 from iglsynth.game.game import *
+import pytest
 
 
+@pytest.mark.skip(reason="Game module is to be updated to v0.2.")
 def test_game_basic():
     graph = Graph()
     graph.add_vertex_property(name="is_final", of_type="bool")

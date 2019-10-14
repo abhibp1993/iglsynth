@@ -29,7 +29,7 @@ class Graph(object):
     """
 
     # ------------------------------------------------------------------------------------------------------------------
-    # INTERNAL PRIVATE CLASSES
+    # PUBLIC CLASSES
     # ------------------------------------------------------------------------------------------------------------------
     class Vertex(object):
         """
@@ -154,8 +154,8 @@ class Graph(object):
 
         :param v: (:class:`Vertex`) Vertex to be added to graph.
         """
-        assert isinstance(v, Graph.Vertex), \
-            f"Vertex {v} must be object of Graph.Vertex or its sub-class. Given, v is {v.__class__.__name__}"
+        assert isinstance(v, self.vtype), \
+            f"Vertex {v} must be object of {self.vtype}. Given, v is {v.__class__.__name__}"
 
         # If vertex is not already added, then add it.
         if v not in self._vertex_edge_map:
@@ -180,8 +180,8 @@ class Graph(object):
 
         :param v: (:class:`Vertex`) Vertex to be removed.
         """
-        assert isinstance(v, Graph.Vertex), \
-            f"Vertex {v} must be object of Graph.Vertex or its sub-class. Given, v is {v.__class__.__name__}"
+        assert isinstance(v, self.vtype), \
+            f"Vertex {v} must be object of {self.vtype}. Given, v is {v.__class__.__name__}"
 
         # Remove incoming and outgoing edges from v, and then remove v
         if v in self._vertex_edge_map:
@@ -208,8 +208,8 @@ class Graph(object):
         :raises AttributeError: When at least one of the vertex is not in the graph.
         :raises AssertionError: When argument `e` is not an :class:`Edge` object.
         """
-        assert isinstance(e, Graph.Edge), \
-            f"e must be an object of Graph.Edge class or its sub-class. Got {e.__class__.__name__}"
+        assert isinstance(e, self.etype), \
+            f"Edge {e} must be an object of {self.etype} class. Got {e.__class__.__name__}"
 
         if e in self._edges:
             warnings.warn(f"Edge {e} is already present in graph. Ignoring request to add.")
@@ -286,14 +286,14 @@ class Graph(object):
         :raises AssertionError: When `v` is neither a :class:`Vertex` object
             nor an iterable of :class:`Vertex` objects.
         """
-        if isinstance(v, Graph.Vertex):
+        if isinstance(v, self.vtype):
             return iter(self._vertex_edge_map[v][0])
 
         elif isinstance(v, Iterable):
             in_edges = (self._vertex_edge_map[u][0] for u in v)
             return iter(reduce(set.union, in_edges))
 
-        raise AssertionError("v must be a single or an iterable of Graph.Vertex (or its sub-class) objects.")
+        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
 
     def out_edges(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
         """
@@ -306,14 +306,14 @@ class Graph(object):
         :raises AssertionError: When `v` is neither a :class:`Vertex` object
             nor an iterable of :class:`Vertex` objects.
         """
-        if isinstance(v, Graph.Vertex):
+        if isinstance(v, self.vtype):
             return iter(self._vertex_edge_map[v][1])
 
         elif isinstance(v, Iterable):
             in_edges = (self._vertex_edge_map[u][1] for u in v)
             return iter(reduce(set.union, in_edges))
 
-        raise AssertionError("v must be a single or an iterable of Graph.Vertex (or its sub-class) objects.")
+        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
 
     def in_neighbors(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
         """
@@ -326,13 +326,13 @@ class Graph(object):
         :raises AssertionError: When `v` is neither a :class:`Vertex` object
             nor an iterable of :class:`Vertex` objects.
         """
-        if isinstance(v, Graph.Vertex):
+        if isinstance(v, self.vtype):
             return iter(e.source for e in self._vertex_edge_map[v][0])
 
         elif isinstance(v, Iterable):
             return iter(e.source for u in v for e in self._vertex_edge_map[u][0])
 
-        raise ValueError("v must be a single or an iterable of Graph.Vertex (or its sub-class) objects.")
+        raise ValueError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
 
     def out_neighbors(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
         """
@@ -345,13 +345,13 @@ class Graph(object):
         :raises AssertionError: When `v` is neither a :class:`Vertex` object
             nor an iterable of :class:`Vertex` objects.
         """
-        if isinstance(v, Graph.Vertex):
+        if isinstance(v, self.vtype):
             return iter(e.target for e in self._vertex_edge_map[v][1])
 
         elif isinstance(v, Iterable):
             return iter(e.target for u in v for e in self._vertex_edge_map[u][1])
 
-        raise ValueError("v must be a single or an iterable of Graph.Vertex (or its sub-class) objects.")
+        raise ValueError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
 
     def prune(self, v: 'Graph.Vertex'):
         raise NotImplementedError
