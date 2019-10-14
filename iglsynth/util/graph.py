@@ -4,543 +4,369 @@ iglsynth: graph.py
 License goes here...
 """
 
-import graph_tool as gt
-from typing import Iterable, Iterator, List, Tuple
+from typing import Iterable, Iterator, List, Union
+from functools import reduce
+import warnings
 
 
 class Graph(object):
     """
-    Represents a discrete graph :math:`G = (V, E, vprops, eprops, gprops)`.
+    Base class to represent graph-based objects in IGLSynth.
 
-    :param vprops: An iterable of 2-tuple of (vertex-property-name, vertex-property-type). The type must be a string
-        from values of dictionary :data:`VALID_PROPERTY_TYPES <iglsynth.util.VALID_PROPERTY_TYPES>`
-    :type vprops: Iterable[Tuple[str, str]]
+    - :class:`Graph` may represent a Digraph or a Multi-Digraph.
+    - :class:`Edge` may represent a self-loop, i.e. `source = target`.
+    - :class:`Graph` stores objects of :class:`Graph.Vertex` and :class:`Graph.Edge` classes or
+    their sub-classes, which users may define.
+    - :class:`Vertex` and :class:`Edge` may have attributes, which represent the vertex
+    and edge properties of the graph.
 
-    :param eprops: An iterable of 2-tuple of (vertex-property-name, vertex-property-type). The type must be a string
-        from values of dictionary :data:`VALID_PROPERTY_TYPES <iglsynth.util.VALID_PROPERTY_TYPES>`
-    :type eprops: Iterable[Tuple[str, str]]
+    :param vtype: (class) Class representing vertex objects.
+    :param etype: (class) Class representing edge objects.
+    :param graph: (:class:`Graph`) Copy constructor. Copies the input graph into new Graph object.
+    :param file: (str) Name of file (with absolute path) from which to load the graph.
 
-    :param gprops: An iterable of 2-tuple of (vertex-property-name, vertex-property-type). The type must be a string
-        from values of dictionary :data:`VALID_PROPERTY_TYPES <iglsynth.util.VALID_PROPERTY_TYPES>`
-    :type gprops: Iterable[Tuple[str, str]]
+    .. todo: The copy-constructor and load-from-file functionality.
     """
-
-    # ------------------------------------------------------------------------------------------------------------------
-    # CLASS VARIABLES
-    # ------------------------------------------------------------------------------------------------------------------
-    VALID_PROPERTY_TYPES = {bool: "bool", int: "int", float: "float", str: "string", object: "object"}
 
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL PRIVATE CLASSES
     # ------------------------------------------------------------------------------------------------------------------
+    class Vertex(object):
+        """
+        Base class for representing a vertex of graph.
+
+        - :class:`Vertex` constructor takes no arguments.
+        - Two vertices are equal, if the two :class:`Vertex` objects are same.
+        """
+        __hash__ = object.__hash__
+
     class Edge(object):
         """
-        [INTERNAL CLASS] Represents an edge in :class:`Graph`. It is a wrapper around the edge data structure of
-        internal graph library.
+        Base class for representing a edge of graph.
 
-        :param graph: A :class:`Graph` object.
-        :param gt_edge: A ``graph_tool.Edge`` object.
+        - :class:`Edge` represents a directed edge.
+        - Two edges are equal, if the two :class:`Edge` objects are same.
 
-        .. warning:: DO NOT INSTANTIATE. This class must not be instantiated by users.
+        :param u: (:class:`Vertex`) Source vertex of edge.
+        :param v: (:class:`Vertex`) Target vertex of edge.
         """
 
         __hash__ = object.__hash__
 
-        def __init__(self, graph, gt_edge):
-            self._graph = graph
-            self._edge = gt_edge
+        def __init__(self, u: 'Graph.Vertex', v: 'Graph.Vertex'):
+            self._source = u
+            self._target = v
 
         def __repr__(self):
             return f"Edge(source={self.source}, target={self.target})"
 
-        def __eq__(self, other: 'Edge'):
-            """ Two edges are equivalent, if their source, target and all properties are equivalent. """
-            return self.edge == other.edge
-
         @property
         def source(self):
-            """ Returns the vertex id of source vertex of edge. """
-            return int(self._edge.source())
+            """ Returns the source vertex of edge. """
+            return self._source
 
         @property
         def target(self):
-            """ Returns the vertex id of source target of edge. """
-            return int(self._edge.target())
-
-        @property
-        def edge(self):
-            return self._edge
+            """ Returns the target vertex of edge. """
+            return self._target
 
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
-    def __init__(self, vprops: Iterable[Tuple[str, str]] = tuple(), eprops: Iterable[Tuple[str, str]] = tuple(),
-                 gprops: Iterable[Tuple[str, str]] = tuple()):
+    def __init__(self, vtype=None, etype=None, graph=None, file=None):
 
-        # Define a graph object
-        self._graph = gt.Graph()
+        # Validate input data-types
+        if vtype is None:
+            vtype = Graph.Vertex
+        else:
+            assert issubclass(vtype, Graph.Vertex), "vtype must be a sub-class of Graph.Vertex."
 
-        # Create an edge dictionary to maintain a map of edge id's and edge objects {eid: gt.edge_obj}
-        self._edge_map = dict()
+        if etype is None:
+            etype = Graph.Edge
+        else:
+            assert issubclass(etype, Graph.Edge), "etype must be a sub-class of Graph.Edge."
 
-        # Add vertex properties
-        for name, of_type in vprops:
-            self.add_vertex_property(name=name, of_type=of_type)
+        # Define internal data structure
+        self.vtype = vtype                                          # Vertex class used in graph
+        self.etype = etype                                          # Edge class used in graph
+        self._vertex_edge_map = dict()                              # Dict: {vertex: (set(<in-edge>), set(<out-edge>))}
+        self._edges = set()                                         # Set of all edges of graph
 
-        # Add edge properties
-        for name, of_type in eprops:
-            self.add_edge_property(name=name, of_type=of_type)
+        # TODO: Initialize graph by provided (optional) inputs
+        if graph is not None and file is None:
+            self._instantiate_by_graph(graph)
 
-        # Add graph properties
-        for name, of_type in gprops:
-            self.add_graph_property(name=name, of_type=of_type)
+        # TODO: If file argument is given, then load graph from the file.
+        elif file is not None and graph is None:
+            self._load(filename=file)
+
+        elif file is not None and graph is not None:
+            raise ValueError("file and graph parameters should not be provided simultaneously.")
 
     def __repr__(self):
-        return f"Graph(|V|={self.num_vertices}, |E|={self.num_edges}, vprops={self.vertex_properties}, " \
-               f"eprops={self.edge_properties}, gprops={self.graph_properties})"
-
-    def __getattr__(self, item):
-        if item in self.vertex_properties:
-            return self.get_vertex_property(name=item)
-
-        elif item in self.edge_properties:
-            return self.get_edge_property(name=item)
-
-        elif item in self.graph_properties:
-            return self.get_graph_property(name=item)
-
-        else:
-            raise AttributeError(f"{item} is not an attribute in class Graph.")
+        return f"Graph(|V|={self.num_vertices} of type={self.vtype}, |E|={self.num_edges} of type={self.etype})"
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
     # ------------------------------------------------------------------------------------------------------------------
     @property
     def vertices(self) -> Iterator:
-        """
-        Returns an iterator over vertices in graph.
-        """
-        return iter(int(v) for v in self._graph.vertices())
+        """ Returns an iterator over vertices in graph. """
+        return iter(self._vertex_edge_map.keys())
 
     @property
     def edges(self) -> Iterator:
-        """
-        Returns an iterator over edges in graph.
-        """
-        return iter(Graph.Edge(graph=self, gt_edge=edge) for edge in self._graph.edges())
+        """ Returns an iterator over edges in graph. """
+        return iter(self._edges)
 
     @property
     def num_vertices(self) -> int:
-        """
-        Returns the number of vertices in graph.
-        """
-        return self._graph.num_vertices()
+        """ Returns the number of vertices in graph. """
+        return len(self._vertex_edge_map)
 
     @property
     def num_edges(self) -> int:
-        """
-        Returns the number of edges in graph.
-        """
-        return self._graph.num_edges()
+        """ Returns the number of edges in graph. """
+        return len(self._edges)
 
     @property
-    def vertex_properties(self) -> List[str]:
-        """
-        Returns the a list of vertex property names in graph.
-        """
-        return self._graph.vertex_properties.keys()
+    def vp_names(self) -> List[str]:
+        """ Returns the a list of vertex property names in graph. """
+        raise NotImplementedError
 
     @property
-    def edge_properties(self):
-        """
-        Returns a list of edge property names in graph.
-        """
-        return self._graph.edge_properties.keys()
+    def ep_names(self):
+        """ Returns a list of edge property names in graph. """
+        raise NotImplementedError
 
     @property
-    def graph_properties(self):
-        """
-        Returns a list of graph property names in graph.
-        """
-        return self._graph.graph_properties.keys()
-
-    @property
-    def properties(self):
-        """
-        Returns a list of all properties of graph, including vertex, edge and graph properties.
-        """
-        return tuple(prop[1] for prop in self._graph.properties.keys())
+    def gp_names(self):
+        """ Returns a list of graph property names in graph. """
+        raise NotImplementedError
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
-    def add_vertex(self) -> int:
-        """ Creates a new vertex in graph. """
-        return int(self._graph.add_vertex())
-
-    def add_vertices(self, num: int) -> Iterable[int]:
+    def add_vertex(self, v: 'Graph.Vertex'):
         """
-        Creates a given number of vertices in graph.
+        Adds a new vertex to graph.
+        An attempt to add existing vertex will be ignored, with a warning.
 
-        :param num: Number of vertices to be added.
-        :type num: int (> 0)
-
-        :raises AssertionError: When num <= 0.
+        :param v: (:class:`Vertex`) Vertex to be added to graph.
         """
-        assert num > 0, f"Required, num > 0. Received, num = {num}."
-        if num == 1:
-            return [self.add_vertex()]
+        assert isinstance(v, Graph.Vertex), \
+            f"Vertex {v} must be object of Graph.Vertex or its sub-class. Given, v is {v.__class__.__name__}"
+
+        # If vertex is not already added, then add it.
+        if v not in self._vertex_edge_map:
+            self._vertex_edge_map[v] = (set(), set())
         else:
-            return [int(v) for v in self._graph.add_vertex(n=num)]
+            warnings.warn(f"Vertex {v} is already present in graph. Ignoring request to add.")
 
-    def add_edge(self, uid: int, vid: int) -> 'Graph.Edge':
+    def add_vertices(self, vbunch: Iterable['Graph.Vertex']):
         """
-        Adds an edge in the graph. Both the vertices must be present in the graph.
+        Adds a bunch of vertices to graph.
+        An attempt to add existing vertex will be ignored, with a warning.
 
-        :param uid: Vertex ID of source vertex.
-        :type uid: int
-
-        :param vid: Vertex ID of target vertex.
-        :type uid: int
-
-        :return: :class:`Graph.Edge` object representing the edge.
-
-        :raises AssertionError: When at least one of the vertex is not in the graph.
+        :param vbunch: (Iterable over :class:`Vertex`) Vertices to be added to graph.
         """
-        try:
-            edge = self._graph.add_edge(uid, vid, add_missing=False)
-            return Graph.Edge(graph=self, gt_edge=edge)
+        for v in vbunch:
+            self.add_vertex(v)
 
-        except ValueError:
-            uid_in_graph = "IN-GRAPH" if uid in self.vertices else "NOT-IN-GRAPH"
-            vid_in_graph = "IN-GRAPH" if vid in self.vertices else "NOT-IN-GRAPH"
-            raise AssertionError(f"At least one vertex is not in graph. "
-                             f"Vertex {uid}: {uid_in_graph}, Vertex {vid}: {vid_in_graph}.")
-
-    def add_edges(self, edges: Iterable[Tuple[int, int]]) -> Iterator['Graph.Edge']:
+    def rm_vertex(self, v: 'Graph.Vertex'):
         """
-        Adds multiple edges to the graph. All the vertices must be present in the graph.
+        Removes a vertex from the graph.
+        An attempt to remove a non-existing vertex will be ignored, with a warning.
 
-        :param edges: An iterable of 2-tuple of (uid, vid) representing the edge, where uid is source and vid is target.
-        :type edges: Iterable[Tuple[int, int]]
-
-        :raises ValueError: When at least one of the vertex is not in the graph.
+        :param v: (:class:`Vertex`) Vertex to be removed.
         """
+        assert isinstance(v, Graph.Vertex), \
+            f"Vertex {v} must be object of Graph.Vertex or its sub-class. Given, v is {v.__class__.__name__}"
 
-        return iter([self.add_edge(u, v) for u, v in edges])
+        # Remove incoming and outgoing edges from v, and then remove v
+        if v in self._vertex_edge_map:
+            in_edges, out_edges = self._vertex_edge_map[v]
+            self.rm_edges(in_edges)
+            self.rm_edges(out_edges)
+            self._vertex_edge_map.pop(v)
 
-    def remove_vertex(self, vid):
+    def rm_vertices(self, vbunch: Iterable['Graph.Vertex']):
         """
-        Removes a single vertex from the graph, if exists.
+        Removes a bunch of vertices from the graph.
+        An attempt to remove a non-existing vertex will be ignored, with a warning.
 
-        :param vid: Vertex id.
-        :type vid: int
+        :param vbunch: (Iterable over :class:`Vertex`) Vertices to be removed.
         """
-        if vid in self.vertices:
-            self._graph.remove_vertex(vid)
+        for v in vbunch:
+            self.rm_vertex(v)
 
-    def remove_vertices(self, vid: Iterable[int]):
+    def add_edge(self, e: 'Graph.Edge'):
         """
-        Removes a multiple vertices from the graph, if existing.
+        Adds an edge to the graph.
+        Both the vertices must be present in the graph.
 
-        :param vid: A list of vertex id's.
-        :type vid: Iterable[int]
+        :raises AttributeError: When at least one of the vertex is not in the graph.
+        :raises AssertionError: When argument `e` is not an :class:`Edge` object.
         """
-        for v in reversed(sorted(vid)):
-            self.remove_vertex(v)
+        assert isinstance(e, Graph.Edge), \
+            f"e must be an object of Graph.Edge class or its sub-class. Got {e.__class__.__name__}"
 
-    def remove_edge(self, edge: 'Graph.Edge'):
+        if e in self._edges:
+            warnings.warn(f"Edge {e} is already present in graph. Ignoring request to add.")
+            return None
+
+        u = e.source
+        v = e.target
+
+        if u in self._vertex_edge_map and v in self._vertex_edge_map:
+            self._vertex_edge_map[u][1].add(u)
+            self._vertex_edge_map[v][0].add(v)
+            self._edges.add(e)
+            return None
+
+        if u not in self._vertex_edge_map and v not in self._vertex_edge_map:
+            raise AttributeError(f"Vertices {u} and {v} are not in graph.")
+
+        elif u in self._vertex_edge_map and v not in self._vertex_edge_map:
+            raise AttributeError(f"Vertex {v} is not in graph.")
+
+        else:   # v in self._vertex_edge_map:
+            raise AttributeError(f"Vertex {u} is not in graph.")
+
+    def add_edges(self, ebunch: Iterable['Graph.Edge']):
         """
-        Removes a single edge from graph.
+        Adds a bunch of edges to the graph.
+        Both the vertices of all edges must be present in the graph.
 
-        :param edge: :class:`Graph.Edge` object to be removed.
+        :raises AttributeError: When at least one of the vertex is not in the graph.
+        :raises AssertionError: When argument `e` is not an :class:`Edge` object.
         """
-        if edge.edge in self._graph.edges():
-            self._graph.remove_edge(edge.edge)
+        for e in ebunch:
+            self.add_edge(e)
 
-    def remove_edges(self, edges: Iterable['Graph.Edge']):
+    def rm_edge(self, e: 'Graph.Edge'):
         """
-        Removes multiple edges from graph.
+        Removes an existing edge from the graph.
 
-        :param edges: A list of :class:`Graph.Edge` object to be removed.
-        """
-        for edge in edges:
-            self.remove_edge(edge)
-
-    def add_vertex_property(self, name: str, of_type: str = "object", default=None):
-        """
-        Creates a new vertex property for the graph.
-
-        :param name: Name of the property. The given name must be unique among all vertex/edge/graph properties.
-        :type name: str
-        :param of_type: One of the supported types of properties. See
-            :data:`VALID_PROPERTY_TYPES <iglsynth.util.VALID_PROPERTY_TYPES>`
-
-        :raises NameError: If given name is already a property.
-        :raises TypeError: If the given type is invalid.
-        """
-        # Validate that name is not already a property
-        if name in self.properties:
-            raise NameError(f"Given vertex property name: {name} is already a property. ")
-
-        # Validate whether the type of property is acceptable
-        if of_type not in self.VALID_PROPERTY_TYPES.values():
-            raise TypeError(f"Given vertex property type: {of_type} is invalid. "
-                            f"Types must be in {self.VALID_PROPERTY_TYPES.values()}")
-
-        if default is not None:
-            self._graph.vertex_properties[name] = self._graph.new_vertex_property(value_type=of_type, val=default)
-        else:
-            self._graph.vertex_properties[name] = self._graph.new_vertex_property(value_type=of_type)
-
-    def add_edge_property(self, name: str, of_type: str = "object", default=None):
-        """
-        Creates a new edge property for the graph.
-
-        :param name: Name of the property. The given name must be unique among all vertex/edge/graph properties.
-        :type name: str
-        :param of_type: One of the supported types of properties. See
-            :data:`VALID_PROPERTY_TYPES <iglsynth.util.VALID_PROPERTY_TYPES>`
-
-        :raises NameError: If given name is already a property.
-        :raises TypeError: If the given type is invalid.
-        """
-        # Validate that name is not already a property
-        if name in self.properties:
-            raise NameError(f"Given edge property name: {name} is already a property. ")
-
-        # Validate whether the type of property is acceptable
-        if of_type not in self.VALID_PROPERTY_TYPES.values():
-            raise TypeError(f"Given edge property type: {of_type} is invalid. "
-                            f"Types must be in {self.VALID_PROPERTY_TYPES.values()}")
-
-        if default is not None:
-            self._graph.edge_properties[name] = self._graph.new_edge_property(value_type=of_type, default=None)
-        else:
-            self._graph.edge_properties[name] = self._graph.new_edge_property(value_type=of_type)
-
-    def add_graph_property(self, name: str, of_type: str = "object", default=None):
-        """
-        Creates a new graph property for the graph.
-
-        :param name: Name of the property. The given name must be unique among all vertex/edge/graph properties.
-        :type name: str
-        :param of_type: One of the supported types of properties. See
-            :data:`VALID_PROPERTY_TYPES <iglsynth.util.VALID_PROPERTY_TYPES>`
-
-        :raises NameError: If given name is already a property.
-        :raises TypeError: If the given type is invalid.
-        """
-        # Validate that name is not already a property
-        if name in self.properties:
-            raise NameError(f"Given graph property name: {name} is already a property. ")
-
-        # Validate whether the type of property is acceptable
-        if of_type not in self.VALID_PROPERTY_TYPES.values():
-            raise TypeError(f"Given graph property type: {of_type} is invalid. "
-                            f"Types must be in {self.VALID_PROPERTY_TYPES.values()}")
-
-        if default is not None:
-            self._graph.graph_properties[name] = self._graph.new_graph_property(value_type=of_type, val=default)
-        else:
-            self._graph.graph_properties[name] = self._graph.new_graph_property(value_type=of_type)
-
-    def has_vertex_property(self, name: str, of_type: str = None) -> bool:
-        """
-        Checks if graph has a vertex property with give name. If type is provided, it checks whether the vertex property
-        with given name and type exists.
-
-        :param name: Name of vertex property.
-        :type name: str
-
-        :param of_type: Expected type of the property.
-        :type of_type: str (a value from :data:`VALID_PROPERTY_TYPES <iglsynth.util.VALID_PROPERTY_TYPES>`)
-        """
-        if of_type is not None:
-            if name in self.vertex_properties:
-                return of_type == self.typeof_vertex_property(name=name)
-
-            return False
-
-        return name in self.vertex_properties
-
-    def has_edge_property(self, name: str, of_type: str = None) -> bool:
-        """
-        Checks if graph has a edge property with give name. If type is provided, it checks whether the edge property
-        with given name and type exists.
-
-        :param name: Name of edge property.
-        :type name: str
-
-        :param of_type: Expected type of the property.
-        :type of_type: str (a value from :data:`VALID_PROPERTY_TYPES <iglsynth.util.VALID_PROPERTY_TYPES>`)
-        """
-        if of_type is not None:
-            if name in self.edge_properties:
-                return of_type == self.typeof_edge_property(name=name)
-
-            return False
-
-        return name in self.edge_properties
-
-    def has_graph_property(self, name: str, of_type: str = None) -> bool:
-        """
-        Checks if graph has a graph property with give name. If type is provided, it checks whether the graph property
-        with given name and type exists.
-
-        :param name: Name of graph property.
-        :type name: str
-
-        :param of_type: Expected type of the property.
-        :type of_type: str (a value from :data:`VALID_PROPERTY_TYPES <iglsynth.util.VALID_PROPERTY_TYPES>`)
+        .. todo: Implement this function.
         """
 
-        if of_type is not None:
-            if name in self.graph_properties:
-                return of_type == self.typeof_graph_property(name=name)
+        # assert isinstance(e, Graph.Edge), \
+        #     f"e must be an object of Graph.Edge class or its sub-class. Got {e.__class__.__name__}"
+        #
+        # if e not in self._edges:
+        #     warnings.warn(f"Edge {e} is not present in graph. Ignoring request to remove edge.")
+        #     return None
+        #
+        # u = e.source
+        # v = e.target
+        #
+        # self._vertex_edge_map[u][1].remove(u)
+        # self._vertex_edge_map[v][0].remove(v)
+        # self._edges.remove(e)
+        raise NotImplementedError
 
-            return False
-
-        return name in self.graph_properties
-
-    def get_vertex_property(self, name: str, vid: int = None):
+    def rm_edges(self, elist: Iterable['Graph.Edge']):
         """
-        Get the value of vertex property for a given vertex.
+        Removes a bunch of existing edges from the graph.
 
-        :param name: Name of vertex property.
-        :type name: str
-
-        :param vid: Vertex ID of the vertex for which the property value is to be extracted.
-            If vertex ID is not given then complete dictionary of property {vid: prop_value} is returned.
-        :type vid: int
-
-        :return: Value of the property.
+        .. todo: Implement this function.
         """
-        if vid is None:
-            if name in self.vertex_properties:
-                return dict(zip(range(self.num_vertices), self._graph.vertex_properties[name].ma))
+        for e in elist:
+            self.rm_edge(e)
 
-        else:
-            if name in self.vertex_properties and vid in self.vertices:
-                return self._graph.vertex_properties[name].python_value_type()(self._graph.vertex_properties[name][vid])
-
-    def get_edge_property(self, name: str, edge: 'Graph.Edge' = None):
+    def in_edges(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
         """
-        Get the value of edge property for a given edge.
+        Returns an iterator over incoming edges to given vertex or vertices.
+        In case of vertices, the iterator is defined over the union of set of
+        incoming edges of individual vertices.
 
-        :param name: Name of edge property.
-        :type name: str
+        :param v: (:class:`Vertex`) Vertex of graph.
 
-        :param edge: Edge for which the property value is to be extracted.
-        :type edge: :class:`Graph.Edge`
-
-        :return: Value of the property.
-
-        .. todo: Make ``edge`` to be an optional parameter. When ``edge = None`` return the properties for all edges
-            as a dictionary.
+        :raises AssertionError: When `v` is neither a :class:`Vertex` object
+            nor an iterable of :class:`Vertex` objects.
         """
-        if edge is None:
-            if name in self.edge_properties:
-                return dict(zip((Graph.Edge(graph=self, gt_edge=edge) for edge in self._graph.edges()),
-                                self._graph.edge_properties[name].ma))
+        if isinstance(v, Graph.Vertex):
+            return iter(self._vertex_edge_map[v][0])
 
-        else:
-            if name in self.edge_properties and edge.edge in self._graph.edges():
-                return self._graph.edge_properties[name].python_value_type()(self._graph.
-                                                                             edge_properties[name][edge.edge])
+        elif isinstance(v, Iterable):
+            in_edges = (self._vertex_edge_map[u][0] for u in v)
+            return iter(reduce(set.union, in_edges))
 
-    def get_graph_property(self, name: str):
+        raise AssertionError("v must be a single or an iterable of Graph.Vertex (or its sub-class) objects.")
+
+    def out_edges(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
         """
-         Get the value of graph property.
+        Returns an iterator over outgoing edges to given vertex or vertices.
+        In case of vertices, the iterator is defined over the union of set of
+        incoming edges of individual vertices.
 
-         :param name: Name of graph property.
-         :type name: str
+        :param v: (:class:`Vertex`) Vertex of graph.
 
-         :return: Value of the property.
-         """
-        if name in self.graph_properties:
-            return self._graph.graph_properties[name]
-
-    def set_vertex_property(self, name: str, vid: int, value):
-        if name in self.vertex_properties:
-            self._graph.vertex_properties[name][vid] = value
-        else:
-            raise NameError(f"{name} is not a valid vertex property.")
-
-    def set_edge_property(self, name: str, edge: 'Graph.Edge', value):
-        if name in self.edge_properties and edge.edge in self._graph.edges():
-            self._graph.edge_properties[name][edge.edge] = value
-
-        else:
-            raise NameError(f"{name} is not a valid edge property.")
-
-    def set_graph_property(self, name: str, value):
-        if name in self.graph_properties:
-            self._graph.graph_properties[name] = value
-
-        else:
-            raise NameError(f"{name} is not a valid graph property.")
-
-    def typeof_vertex_property(self, name: str):
+        :raises AssertionError: When `v` is neither a :class:`Vertex` object
+            nor an iterable of :class:`Vertex` objects.
         """
-        Returns the type of vertex property.
+        if isinstance(v, Graph.Vertex):
+            return iter(self._vertex_edge_map[v][1])
 
-        :param name: Name of property.
-        :type name: str
+        elif isinstance(v, Iterable):
+            in_edges = (self._vertex_edge_map[u][1] for u in v)
+            return iter(reduce(set.union, in_edges))
 
-        :return: Type of property from :data:`VALID_PROPERTY_TYPES <iglsynth.util.VALID_PROPERTY_TYPES>`.
+        raise AssertionError("v must be a single or an iterable of Graph.Vertex (or its sub-class) objects.")
+
+    def in_neighbors(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
         """
-        if not self.has_vertex_property(name=name):
-            raise NameError("'{0}' is not a vertex property of graph '{1}'".format(name, self))
+        Returns an iterator over sources of incoming edges to given vertex or vertices.
+        In case of vertices, the iterator is defined over the union of set of
+        incoming edges of individual vertices.
 
-        prop = self._graph.vertex_properties[name]
-        return self.VALID_PROPERTY_TYPES[prop.python_value_type()]
+        :param v: (:class:`Vertex`) Vertex of graph.
 
-    def typeof_edge_property(self, name: str):
+        :raises AssertionError: When `v` is neither a :class:`Vertex` object
+            nor an iterable of :class:`Vertex` objects.
         """
-        Returns the type of edge property.
+        if isinstance(v, Graph.Vertex):
+            return iter(e.source for e in self._vertex_edge_map[v][0])
 
-        :param name: Name of property.
-        :type name: str
+        elif isinstance(v, Iterable):
+            return iter(e.source for u in v for e in self._vertex_edge_map[u][0])
 
-        :return: Type of property from :data:`VALID_PROPERTY_TYPES <iglsynth.util.VALID_PROPERTY_TYPES>`.
+        raise ValueError("v must be a single or an iterable of Graph.Vertex (or its sub-class) objects.")
+
+    def out_neighbors(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
         """
-        if not self.has_edge_property(name=name):
-            raise NameError("'{0}' is not a edge property of graph '{1}'".format(name, self))
+        Returns an iterator over targets of incoming edges to given vertex or vertices.
+        In case of vertices, the iterator is defined over the union of set of
+        incoming edges of individual vertices.
 
-        prop = self._graph.edge_properties[name]
-        return self.VALID_PROPERTY_TYPES[prop.python_value_type()]
+        :param v: (:class:`Vertex`) Vertex of graph.
 
-    def typeof_graph_property(self, name: str):
+        :raises AssertionError: When `v` is neither a :class:`Vertex` object
+            nor an iterable of :class:`Vertex` objects.
         """
-        Returns the type of graph property.
+        if isinstance(v, Graph.Vertex):
+            return iter(e.target for e in self._vertex_edge_map[v][1])
 
-        :param name: Name of property.
-        :type name: str
+        elif isinstance(v, Iterable):
+            return iter(e.target for u in v for e in self._vertex_edge_map[u][1])
 
-        :return: Type of property from :data:`VALID_PROPERTY_TYPES <iglsynth.util.VALID_PROPERTY_TYPES>`.
-        """
-        if not self.has_graph_property(name=name):
-            raise NameError("'{0}' is not a graph property of graph '{1}'".format(name, self))
+        raise ValueError("v must be a single or an iterable of Graph.Vertex (or its sub-class) objects.")
 
-        # PATCH #2: Support all python object types, by casting them into "object" if they are not from the list of
-        #   VALID_PROPERTY_TYPES.
-        prop = self._graph.graph_properties[name]
-        if type(prop) in self.VALID_PROPERTY_TYPES:
-            return self.VALID_PROPERTY_TYPES[type(prop)]
-        return "object"
+    def prune(self, v: 'Graph.Vertex'):
+        raise NotImplementedError
 
-    def in_edges(self, vid: int):
-        return iter(Graph.Edge(graph=self, gt_edge=edge) for edge in self._graph.get_in_edges(vid))
+    def save(self, filename: str = None, ext: str = 'xml'):
+        raise NotImplementedError
 
-    def out_edges(self, vid: int):
-        return iter(Graph.Edge(graph=self, gt_edge=edge) for edge in self._graph.get_out_edges(vid))
+    # ------------------------------------------------------------------------------------------------------------------
+    # PRIVATE METHODS
+    # ------------------------------------------------------------------------------------------------------------------
+    def _load(self, filename: str):
+        raise NotImplementedError
 
-    def in_neighbors(self, vid: int):
-        return iter(int(v) for v in self._graph.get_in_neighbors(vid))
-
-    def out_neighbors(self, vid: int):
-        return iter(int(v) for v in self._graph.get_out_neighbors(vid))
+    def _instantiate_by_graph(self, graph):
+        raise NotImplementedError
 
 
 class SubGraph(Graph):
@@ -558,23 +384,6 @@ class SubGraph(Graph):
         """
 
     def __init__(self, graph: Graph, vfilt_name: str = None, efilt_name: str = None):
-        super(SubGraph, self).__init__()
+        raise NotImplementedError
 
-        # Add vertex and/or edge filter that define the sub-graph. By default, they are treated bool.
-        assert vfilt_name is not None or efilt_name is not None, "At least one of vfilt/efilt must be given."
-        self._vfilt_name = vfilt_name
-        self._efilt_name = efilt_name
-        gt_vfilt = gt_efilt = None
 
-        # Add (internalize) vertex and edge filters to graph
-
-        if vfilt_name is not None:
-            graph.add_vertex_property(name=vfilt_name, of_type="bool", default=False)
-            gt_vfilt = graph._graph.vertex_properties[vfilt_name]
-
-        if efilt_name is not None:
-            graph.add_edge_property(name=efilt_name, of_type="bool", default=True)
-            gt_efilt = graph._graph.edge_properties[efilt_name]
-
-        # Update internal graph representation
-        self._graph = gt.GraphView(g=graph._graph, vfilt=gt_vfilt, efilt=gt_efilt)
