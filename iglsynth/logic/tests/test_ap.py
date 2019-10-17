@@ -54,3 +54,20 @@ def test_evaluation():
     assert not false(10)
 
 
+def test_tree():
+    # Every AP has the same tree structure, a single (root) node of kind: 3 (ap).
+    p = AP("p")
+    true = AP("true")
+    false = AP("false")
+
+    tree = p.tree
+    print([v for v in tree.vertices])
+    assert tree.num_vertices == 1
+
+    tree = true.tree
+    print([v for v in tree.vertices])
+    assert tree.num_vertices == 1
+
+    tree = false.tree
+    print([v for v in tree.vertices])
+    assert tree.num_vertices == 1
