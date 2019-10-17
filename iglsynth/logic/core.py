@@ -103,6 +103,9 @@ class SyntaxTree(Graph):
         def __hash__(self):
             return spot.formula(self._formula).__hash__()
 
+        def __repr__(self):
+            return f"SyntaxTree.Vertex(formula='{self._formula}', kind={self.operator})"
+
         @property
         def formula(self):
             return self._formula
