@@ -15,6 +15,9 @@ class ILogic(ABC):
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
+    def __hash__(self):
+        raise NotImplementedError
+
     def __and__(self, other):
         return self._logical_and(other)
 
@@ -176,6 +179,9 @@ class AP(ILogic):
     def __eq__(self, other):
         res = spot.formula(self.formula) == spot.formula(other.formula)
         return res
+
+    def __hash__(self):
+        return self.formula.__hash__()
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
