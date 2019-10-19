@@ -71,3 +71,31 @@ def test_tree():
     tree = false.tree
     print([v for v in tree.vertices])
     assert tree.num_vertices == 1
+
+
+def test_translate():
+    # Define an AP
+    @ap
+    def is_colliding(st, *args, **kwargs):
+        return st == 0
+
+    aut = is_colliding.translate()
+    assert aut.num_edges == 4
+    assert aut.num_vertices == 3
+    assert Automaton.Vertex(name="0") in aut.final
+
+    # Define a AP; true
+    true = TRUE
+    aut = true.translate()
+    assert aut.num_edges == 1
+    assert aut.num_vertices == 1
+    assert Automaton.Vertex(name="0") in aut.final
+
+    # Define a AP; false
+    false = AP.FALSE
+    aut = false.translate()
+    assert aut.num_edges == 1
+    assert aut.num_vertices == 1
+    assert Automaton.Vertex(name="0") in aut.final
+
+
