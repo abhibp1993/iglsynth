@@ -469,7 +469,7 @@ class Automaton(Graph):
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC VARIABLES
     # ------------------------------------------------------------------------------------------------------------------
-    ACC_REACHABILITY = "Reachability"
+    # ACC_REACHABILITY = "Reachability"
     ACC_SAFETY = "Safety"
     ACC_COSAFE = "Co-Safety"
     ACC_BUCHI = "Persistence"
@@ -547,11 +547,12 @@ class Automaton(Graph):
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def __init__(self, acc_cond=None, alphabet=None, vtype=None, etype=None, graph=None, file=None):
-        assert acc_cond in [self.ACC_BUCHI, self.ACC_COBUCHI, self.ACC_COSAFE, self.ACC_REACHABILITY, self.ACC_SAFETY]
+        assert acc_cond in [self.ACC_BUCHI, self.ACC_COBUCHI, self.ACC_COSAFE, self.ACC_SAFETY]
         assert isinstance(alphabet, Alphabet) or alphabet is None
 
-        super(Automaton, self).__init__(vtype=Automaton.Vertex, etype=Automaton.Edge, graph=graph, file=file)
+        super(Automaton, self).__init__(vtype=vtype, etype=etype, graph=graph, file=file)
 
+        self.name = None
         self._acc_condition = acc_cond
         self._alphabet = alphabet
         self._final = dict()            # Map of type {<acc_set_num>: <set: acc_set>}
@@ -586,7 +587,8 @@ class Automaton(Graph):
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def initialize(self, init_st):
-        raise NotImplementedError
+        assert init_st in self.vertices
+        self._init_st = init_st
 
     def mark_final_st(self, v, acc_set=0):
         assert v in self.vertices

@@ -27,6 +27,10 @@ class LTL(PL):
     def tree(self):
         return self._tree
 
+    @property
+    def mp_class(self):
+        return spot.mp_class(spot.formula(self.formula))
+
     # ------------------------------------------------------------------------------------------------------------------
     # PRIVATE METHODS
     # ------------------------------------------------------------------------------------------------------------------
@@ -91,9 +95,62 @@ class LTL(PL):
         raise NotImplementedError
 
     def translate(self):
-        spot_hoa = spot.translate(self.formula, "BA", "SBAcc").to_str('HOA')
-        # TODO: Define DFA type.
-        #  return DFA.from_hoa(string=spot_hoa)
+        # Translate LTL formula to spot automaton using spot
+        spot_aut = spot.translate(self.formula, "BA", "High", "SBAcc", "Complete")
+
+        num_vertices = spot_aut.num_states()
+        init_st = spot_aut.get_init_state_number()
+
+        bdict = spot_aut.get_dict()
+        ap_dict = dict()
+        for p in spot_aut.ap():
+            ap_dict[bdict.varnum(p)] = p
+
+        # Construct IGLSynth.Automaton object from spot automaton
+        # Ref: https://spot.lrde.epita.fr/tut21.html
+        # Decide the acceptance condition by looking at Manna-Pnueli Hierarchy
+        mp_class = self.mp_class
+        if mp_class == "B" or mp_class == "G":
+            acc_cond = Automaton.ACC_COSAFE
+        elif mp_class == "S":
+            acc_cond = Automaton.ACC_SAFETY
+        elif mp_class == "R":
+            acc_cond = Automaton.ACC_BUCHI
+        elif mp_class == "P":
+            acc_cond = Automaton.ACC_COBUCHI
+        else:
+            acc_cond = None
+
+        igl_aut = Automaton(acc_cond=acc_cond)
+        igl_aut.name = spot_aut.get_name()
+
+        # Add vertices, edges to iglsynth automaton
+        for u in range(0, num_vertices):
+            source = Automaton.Vertex(name=str(u))
+            igl_aut.add_vertex(source)
+
+            is_source_accepting = True
+            for e in spot_aut.out(u):
+                target = Automaton.Vertex(name=str(e.dst))
+                igl_aut.add_vertex(target)
+
+                edge = Automaton.Edge(u=source, v=target, f=spot.bdd_format_formula(bdict, e.cond))
+                igl_aut.add_edge(edge)
+
+                # PATCH: e.acc returns a spot-specific mark_t object. I'm not sure how to iterate over these.
+                #  Now, the translate function generates a Buchi Automaton, where it is guaranteed that
+                #  acceptance set will always be a singleton. Hence, presently we only check if the length
+                #  of str(e.acc) is greater than 2; which means there's some acceptance set in e.acc.
+                if len(str(e.acc)) <= 2:
+                    is_source_accepting = False
+
+            if is_source_accepting:
+                igl_aut.mark_final_st(v=source)
+
+        # Set initial state
+        igl_aut.initialize(Automaton.Vertex(name=str(init_st)))
+
+        return igl_aut
 
     def is_equivalent(self, other):
         assert isinstance(other, ILogic)
