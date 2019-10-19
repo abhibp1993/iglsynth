@@ -1,4 +1,4 @@
-from iglsynth.logic.pl import *
+from iglsynth.logic.core import *
 
 
 class LTL(PL):

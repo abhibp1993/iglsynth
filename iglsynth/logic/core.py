@@ -209,13 +209,13 @@ class AP(ILogic):
     # PRIVATE METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def _logical_and(self, other):
-        raise NotImplementedError
+        return PL(f"({self.formula} & {other.formula})")
 
     def _logical_or(self, other):
-        raise NotImplementedError
+        return PL(f"({self.formula} | {other.formula})")
 
     def _logical_neg(self):
-        raise NotImplementedError
+        return AP(f"(!{self.formula})", eval_func=lambda st, *args, **kwargs: not self._eval_func(st, *args, **kwargs))
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
@@ -311,8 +311,10 @@ class AP(ILogic):
             e22 = Automaton.Edge(u=v2, v=v2, f=AP("true"))
             e10 = Automaton.Edge(u=v1, v=v0, f=self)
             e12 = Automaton.Edge(u=v1, v=v2,
-                                 f=AP(formula="!"+self.formula,
-                                      eval_func=lambda st, *args, **kwargs: not self._eval_func(st, args, kwargs)))
+                                 f=self.__class__(
+                                     formula="!"+self.formula,
+                                     eval_func=lambda st, *args, **kwargs: not self._eval_func(st, args, kwargs))
+                                 )
 
             igl_aut.add_edges([e00, e10, e12, e22])
 
@@ -341,6 +343,105 @@ class AP(ILogic):
         except TypeError:
             raise ValueError(f"Given evaluation function does not conform to required signature."
                              f"An evaluation must be:: func(st, *args, **kwargs)")
+
+
+class PL(AP):
+    # ------------------------------------------------------------------------------------------------------------------
+    # INTERNAL METHODS
+    # ------------------------------------------------------------------------------------------------------------------
+    __hash__ = AP.__hash__
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # PROPERTIES
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def alphabet(self):
+        return self._alphabet
+
+    @property
+    def size(self):
+        """
+        Reference: https://stackoverflow.com/questions/17920304/what-is-the-size-of-an-ltl-formula
+        """
+        spot_formula = spot.formula(self.formula)
+        unabbr_formula = str(spot.unabbreviate(spot_formula, "FGRMWie^"))
+        return unabbr_formula.count("U") + unabbr_formula.count("X")
+
+    @property
+    def tree(self):
+        return self._tree
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # PRIVATE METHODS
+    # ------------------------------------------------------------------------------------------------------------------
+    def _logical_neg(self):
+        return PL(f"(!{self.formula})")
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # PUBLIC METHODS
+    # ------------------------------------------------------------------------------------------------------------------
+    def parse(self, formula: str):
+        # Invoke spot parser
+        try:
+            spot_formula = spot.formula(formula)
+        except SyntaxError:
+            raise ParsingError(f"The string {formula} is NOT an acceptable PL formula name.")
+
+        # Check if the formula is propositional logic formula
+        mp_class = spot.mp_class(spot_formula)
+        if mp_class != "B" and not spot_formula.is_tt() and not spot_formula.is_ff():
+            raise ParsingError(f"The string {formula} is NOT an acceptable PL formula.")
+
+        # If input string is acceptable PL formula, then generate syntax tree and update internal variables
+        tree = SyntaxTree()
+        tree.build_from_spot_formula(spot_formula)
+
+        # Set tree and formula string for PL formula
+        self._tree = tree
+        self._formula = formula
+
+        # Update alphabet
+        sigma = {AP(str(ap)) for ap in spot.atomic_prop_collect(spot_formula)}
+        if self._alphabet is None:
+            self._alphabet = Alphabet(sigma)
+        else:
+            assert sigma.issubset(self._alphabet), f"Input formula contains APs not in alphabet, {self._alphabet}"
+
+        # Special APs: true and false
+        if spot_formula.is_tt():
+            self._eval_func = lambda st, *args, **kwargs: True
+
+        if spot_formula.is_ff():
+            self._eval_func = lambda st, *args, **kwargs: False
+
+    def substitute(self, subs_map: dict):
+        """
+        Substitutes the current AP with another AP according to given substitution map.
+
+        :param subs_map: (dict[<Logic>: <Logic>]) A substitution map.
+        :return: (AP) Substituted AP object.
+
+        :raises KeyError: When subs_map does not contain the AP "self".
+        """
+        raise NotImplementedError
+
+    def simplify(self):
+        raise NotImplementedError
+
+    def is_equivalent(self, other):
+        assert isinstance(other, ILogic)
+        return spot.formula(self.formula) == spot.formula(other.formula)
+
+    def is_contained_in(self, other):
+        assert isinstance(other, ILogic)
+        checker = spot.language_containment_checker()
+        return checker.contained(spot.formula(self.formula), spot.formula(other.formula))
+
+    def evaluate(self, st, *args, **kwargs):
+        # Evaluate alphabet to get a substitution map
+        # Substitute valuation of APs in PL formula
+        # Simplify the formula
+        raise NotImplementedError
 
 
 class Alphabet(set):
@@ -525,6 +626,14 @@ def ap(func):
 RESERVED = set()        #: Set of reserved keywords or symbols
 _SPOT_OP_MAP = {0: 'ff', 1: 'tt', 3: 'ap', 4: '!',  5: 'X', 6: 'F', 7: 'G', 11: '^',
                 12: '->', 13: ' <->', 14: 'U', 21: '|', 23: '&'}
+MP_CLASS = {"B": "PL",
+            "G": "Reachability",
+            "S": "Safety",
+            "O": "Obligation",
+            "P": "Persistence",
+            "R": "Recurrence",
+            "T": "Reactivity"
+            }
 
 TRUE = AP(formula="true", eval_func=lambda st, *args, **kwargs: True)
 FALSE = AP(formula="false", eval_func=lambda st, *args, **kwargs: False)
