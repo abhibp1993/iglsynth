@@ -283,7 +283,7 @@ class AP(ILogic):
         #     acc sets = {}
 
         # Create automaton
-        igl_aut = Automaton(acc_cond=Automaton.ACC_REACHABILITY)
+        igl_aut = Automaton(acc_cond=Automaton.ACC_COSAFE)
 
         # If AP is either true or false, then automaton has exactly one state.
         if self == AP.TRUE or self == AP.FALSE:
