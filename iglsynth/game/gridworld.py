@@ -18,8 +18,6 @@ class Gridworld(TSys):
             a 2-tuple of 2-tuples ((p1.x, p1.y), (p2.x, p2.y)) as per their choice.
         -
         """
-        __hash__ = object.__hash__
-
         def __init__(self, coord, is_hard_obs=False, is_bouncy_obs=False):
             assert isinstance(coord, tuple)
             assert isinstance(is_hard_obs, bool) and isinstance(is_bouncy_obs, bool)
@@ -34,6 +32,12 @@ class Gridworld(TSys):
                 return f"Vertex(coord={self._coord}, turn={self._turn})"
 
             return f"Vertex(coord={self._coord})"
+
+        def __hash__(self):
+            return self.coordinate.__hash__()
+
+        def __eq__(self, other):
+            return self.coordinate == other.coordinate
 
         @property
         def coordinate(self):
