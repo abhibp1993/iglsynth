@@ -423,7 +423,29 @@ class PL(AP):
 
         :raises KeyError: When subs_map does not contain the AP "self".
         """
-        raise NotImplementedError
+        # Copy the formula into a local variable
+        formula = self.formula
+
+        # For all APs in alphabet, substitute AP name in formula with it's evaluation
+        # FIXME: SyntaxTree substitution is needed.
+        #  The string replace will fail if some AP name is a substring of other.
+        for p in self.alphabet:
+            p_name = p.formula
+
+            if subs_map[p] is True:
+                formula = formula.replace(p_name, "true")
+
+            elif subs_map[p] is False:
+                formula = formula.replace(p_name, "false")
+
+            elif isinstance(subs_map[p], (PL, AP)):
+                formula = formula.replace(p_name, subs_map[p].formula)
+
+            else:
+                raise ValueError(f"Substition failed, "
+                                 f"subs_map[{p}] = {subs_map[p]} which is none of True/False or AP/PL object.")
+
+        return formula
 
     def simplify(self):
         raise NotImplementedError
@@ -439,9 +461,19 @@ class PL(AP):
 
     def evaluate(self, st, *args, **kwargs):
         # Evaluate alphabet to get a substitution map
+        subs_map = self.alphabet.evaluate(st, args, kwargs)
+
         # Substitute valuation of APs in PL formula
+        formula = self.substitute(subs_map)
+
         # Simplify the formula
-        raise NotImplementedError
+        spot_formula = spot.formula(formula)
+        if spot_formula.is_tt():
+            return True
+        elif spot_formula.is_ff():
+            return False
+
+        raise ValueError(f"Evaluation failed.")
 
 
 class Alphabet(set):
