@@ -47,9 +47,10 @@ def generate_graph(self: Gridworld):
         # Apply actions on vertex to generate neighbors
         neighbors = []
         for act in actions:
-            new_coord = act(coord=coord, dim=(nrows, ncols))
-            if new_coord is not None:
-                neighbors.append(Gridworld.Vertex(coord=new_coord))
+            v = act(v=u)
+            p1x, p1y, p2x, p2y, _ = v.coordinate
+            if 0 <= p1x < nrows and 0 <= p1y < ncols and 0 <= p2x < nrows and 0 <= p2y < ncols:
+                neighbors.append(v)
 
         # Generate edges using neighbors
         edges = [Gridworld.Edge(u=u, v=neighbors[i], act=actions[i]) for i in range(len(neighbors))]
@@ -75,8 +76,8 @@ class Action(object):
     def __repr__(self):
         return f"Action({self._name})"
 
-    def __call__(self, coord, dim):
-        return self._func(coord, dim)
+    def __call__(self, v):
+        return self._func(v)
 
 
 def action(func):
@@ -88,127 +89,66 @@ def action(func):
 
 
 @action
-def N(coord, dim):
-    p1x, p1y, p2x, p2y, turn = coord
-    dimx, dimy = dim
-
-    if turn == 1 and p1y + 1 < dimy:
-        return p1x, p1y + 1, p2x, p2y, 2
-
-    elif turn == 2 and p2y + 1 < dimy:
-        return p1x, p1y, p2x, p2y + 1, 1
-
-    else:
-        return None
+def N(v):
+    p1x, p1y, p2x, p2y, turn = v.coordinate
+    return Gridworld.Vertex(coord=(p1x, p1y + 1, p2x, p2y, 2)) if turn == 1 else \
+        Gridworld.Vertex(coord=(p1x, p1y, p2x, p2y + 1, 1))
 
 
 @action
-def E(coord, dim):
-    p1x, p1y, p2x, p2y, turn = coord
-    dimx, dimy = dim
-
-    if turn == 1 and p1x + 1 < dimx:
-        return p1x + 1, p1y, p2x, p2y, 2
-
-    elif turn == 2 and p2x + 1 < dimx:
-        return p1x, p1y, p2x + 1, p2y, 1
-
-    else:
-        return None
+def E(v):
+    p1x, p1y, p2x, p2y, turn = v.coordinate
+    return Gridworld.Vertex(coord=(p1x + 1, p1y, p2x, p2y, 2)) if turn == 1 else \
+        Gridworld.Vertex(coord=(p1x, p1y, p2x + 1, p2y, 1))
 
 
 @action
-def S(coord, dim):
-    p1x, p1y, p2x, p2y, turn = coord
-    dimx, dimy = dim
-
-    if turn == 1 and p1y - 1 >= 0:
-        return p1x, p1y - 1, p2x, p2y, 2
-
-    elif turn == 2 and p2y - 1 >= 0:
-        return p1x, p1y, p2x, p2y - 1, 1
-
-    else:
-        return None
+def S(v):
+    p1x, p1y, p2x, p2y, turn = v.coordinate
+    return Gridworld.Vertex(coord=(p1x, p1y - 1, p2x, p2y, 2)) if turn == 1 else \
+        Gridworld.Vertex(coord=(p1x, p1y, p2x, p2y - 1, 1))
 
 
 @action
-def W(coord, dim):
-    p1x, p1y, p2x, p2y, turn = coord
-    dimx, dimy = dim
-
-    if turn == 1 and p1x - 1 >= 0:
-        return p1x - 1, p1y, p2x, p2y, 2
-
-    elif turn == 2 and p2x - 1 >= 0:
-        return p1x, p1y, p2x - 1, p2y, 1
-
-    else:
-        return None
+def W(v):
+    p1x, p1y, p2x, p2y, turn = v.coordinate
+    return Gridworld.Vertex(coord=(p1x - 1, p1y, p2x, p2y, 2)) if turn == 1 else \
+        Gridworld.Vertex(coord=(p1x, p1y, p2x - 1, p2y, 1))
 
 
 @action
-def NE(coord, dim):
-    p1x, p1y, p2x, p2y, turn = coord
-    dimx, dimy = dim
-
-    if turn == 1 and p1y + 1 < dimy and p1x + 1 < dimx:
-        return p1x + 1, p1y + 1, p2x, p2y, 2
-
-    elif turn == 2 and p2y + 1 < dimy and p2x + 1 < dimx:
-        return p1x, p1y, p2x + 1, p2y + 1, 1
-
-    else:
-        return None
+def NE(v):
+    p1x, p1y, p2x, p2y, turn = v.coordinate
+    return Gridworld.Vertex(coord=(p1x + 1, p1y + 1, p2x, p2y, 2)) if turn == 1 else \
+        Gridworld.Vertex(coord=(p1x, p1y, p2x + 1, p2y + 1, 1))
 
 
 @action
-def NW(coord, dim):
-    p1x, p1y, p2x, p2y, turn = coord
-    dimx, dimy = dim
-
-    if turn == 1 and p1y + 1 < dimy and p1x - 1 >= 0:
-        return p1x - 1, p1y + 1, p2x, p2y, 2
-
-    elif turn == 2 and p2y + 1 < dimy and p2x - 1 >= 0:
-        return p1x, p1y, p2x - 1, p2y + 1, 1
-
-    else:
-        return None
+def NW(v):
+    p1x, p1y, p2x, p2y, turn = v.coordinate
+    return Gridworld.Vertex(coord=(p1x - 1, p1y + 1, p2x, p2y, 2)) if turn == 1 else \
+        Gridworld.Vertex(coord=(p1x, p1y, p2x - 1, p2y + 1, 1))
 
 
 @action
-def SE(coord, dim):
-    p1x, p1y, p2x, p2y, turn = coord
-    dimx, dimy = dim
-
-    if turn == 1 and p1y - 1 >= 0 and p1x + 1 < dimx:
-        return p1x + 1, p1y - 1, p2x, p2y, 2
-
-    elif turn == 2 and p2y - 1 >= 0 and p2x + 1 < dimx:
-        return p1x, p1y, p2x + 1, p2y - 1, 1
-
-    else:
-        return None
+def SE(v):
+    p1x, p1y, p2x, p2y, turn = v.coordinate
+    return Gridworld.Vertex(coord=(p1x + 1, p1y - 1, p2x, p2y, 2)) if turn == 1 else \
+        Gridworld.Vertex(coord=(p1x, p1y, p2x + 1, p2y - 1, 1))
 
 
 @action
-def SW(coord, _):
-    p1x, p1y, p2x, p2y, turn = coord
-
-    if turn == 1 and p1y - 1 >= 0 and p1x - 1 >= 0:
-        return p1x - 1, p1y - 1, p2x, p2y, 2
-
-    elif turn == 2 and p2y - 1 >= 0 and p2x - 1 >= 0:
-        return p1x, p1y, p2x - 1, p2y - 1, 1
-
-    else:
-        return None
+def SW(v):
+    p1x, p1y, p2x, p2y, turn = v.coordinate
+    return Gridworld.Vertex(coord=(p1x - 1, p1y - 1, p2x, p2y, 2)) if turn == 1 else \
+        Gridworld.Vertex(coord=(p1x, p1y, p2x - 1, p2y - 1, 1))
 
 
 @action
-def STAY(coord, _):
-    return coord
+def STAY(v):
+    p1x, p1y, p2x, p2y, turn = v.coordinate
+    return Gridworld.Vertex(coord=(p1x, p1y, p2x, p2y, 2)) if turn == 1 else \
+        Gridworld.Vertex(coord=(p1x, p1y, p2x, p2y, 1))
 
 
 ACTIONS = [N, E, S, W, NE, NW, SE, SW, STAY]
