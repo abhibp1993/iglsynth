@@ -186,3 +186,4 @@ def test_2x2_world():
 
 if __name__ == '__main__':
     test_1x1_world()
+    test_2x2_world()
