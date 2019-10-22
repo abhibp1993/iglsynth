@@ -34,8 +34,6 @@ def product_tsys_aut(self, tsys, aut):
     #
     # Hint 3: Note that AP objects are callable. Hence, an AP `p` can be evaluated
     #   at a TSys.Vertex `v` as `p(v) -> True/False`.
-    #
-    # Hint 4: To get the label of a vertex `v`; use <Alphabet Object>.evaluate().
 
     pass
 
