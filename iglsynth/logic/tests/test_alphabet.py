@@ -26,3 +26,13 @@ def test_contains():
     assert q in sigma
     assert not r in sigma
     assert not AP("true") in sigma
+
+
+def test_evaluate():
+    p = AP("p", lambda st, *args, **kwargs: True)
+    q = AP("q", lambda st, *args, **kwargs: False)
+
+    sigma = Alphabet([p, q])
+    evaluation = sigma.evaluate(10)
+    assert {p: True, q: False} == evaluation
+

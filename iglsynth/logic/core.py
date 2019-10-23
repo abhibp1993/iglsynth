@@ -490,7 +490,11 @@ class Alphabet(set):
         super(Alphabet, self).add(p)
 
     def evaluate(self, st, *args, **kwargs):
-        return iter(p(st, args, kwargs) for p in self)
+        ap_label = dict()
+        for p in self:
+            ap_label[p] = p(st, args, kwargs)
+
+        return ap_label
 
 
 class Automaton(Graph):
