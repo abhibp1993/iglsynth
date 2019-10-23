@@ -8,39 +8,9 @@ Instructor: Jie Fu
 Author: Abhishek N. Kulkarni
 """
 
-from .gw_graph import *
+from iglsynth.game.gridworld import *
 from iglsynth.logic.ltl import *
 
-
-########################################################################################################################
-# UPDATE THE FOLLOWING FUNCTION ONLY
-########################################################################################################################
-
-def product_tsys_aut(self, tsys, aut):
-    """
-    Computes the product of transition system and automaton.
-
-    :param self: Game object whose vertex and edge set is being constructed.
-    :param tsys: TSys object.
-    :param aut: Specification automaton.
-    :return: None
-    """
-    # Hint 1: Use Game.Vertex object to represent vertices.
-    #   Use Game.Edge object to represent edges.
-    #   See documentation for both below.
-    #
-    # Hint 2: Note self is a game object, which inherits from Graph.
-    #   Hence, self.add_vertex, self.add_edge etc. are all available methods.
-    #
-    # Hint 3: Note that AP objects are callable. Hence, an AP `p` can be evaluated
-    #   at a TSys.Vertex `v` as `p(v) -> True/False`.
-
-    pass
-
-
-########################################################################################################################
-# HELPER DEFINITIONS: DO NOT CHANGE
-########################################################################################################################
 
 class Game(Graph):
     # ------------------------------------------------------------------------------------------------------------------
@@ -144,10 +114,11 @@ class Game(Graph):
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def _define_by_graph(self, graph):
-        raise NotImplementedError
+        raise NotImplementedError("***********DO NOT IMPLEMENT THIS**************")
 
     def _define_by_tsys_aut(self, tsys, aut):
-        raise NotImplementedError
+        # TODO: Implement this one!
+        pass
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
@@ -163,5 +134,34 @@ class Game(Graph):
             AttributeError("Either provide a graph or (tsys and aut) parameter, but not both.")
 
 
-Game._define_by_tsys_aut = product_tsys_aut
+def test_ts_aut_product():
 
+    # 1. Define atomic propositions
+    #   TODO: Change the implementation of AP's based on your LTL formula.
+    a = AP("a", lambda st, *args, **kwargs: True)
+    b = AP("b", lambda st, *args, **kwargs: False)
+
+    sigma = Alphabet([a, b])
+
+    # 2. Define a transition system.
+    #   (Hint: You may want to use Gridworld from gw_graph.)
+    tsys = TSys(kind=TURN_BASED, props=sigma)
+
+    # 3. Define an automaton object.
+    #   Use spot to get automaton for some COSAFE specification,
+    #   e.g. phi = F(a & Fb)
+    #
+    # REMARK. Automaton.translate() function is broken. DO NOT USE IT.
+    aut = Automaton(acc_cond=Automaton.ACC_COSAFE)
+
+    # Create a game.
+    game = Game(kind=TURN_BASED)
+    game.define(tsys=tsys, aut=aut)
+
+    # Write assert statements that test whether the construction is correct or not.
+    assert game.num_vertices == 0           # TODO: Change the number, by theoretically calculation
+    assert game.num_edges == 0              # TODO: Change the number, by theoretically calculation
+
+
+if __name__ == '__main__':
+    test_ts_aut_product()
