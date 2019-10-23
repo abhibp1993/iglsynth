@@ -25,7 +25,7 @@ class Kripke(Graph):
         else:
             assert issubclass(etype, Kripke.Edge), "etype must be a sub-class of Kripke.Edge."
 
-        assert all([isinstance(p, AP) for p in props]) or props is None
+        # TODO assert all([isinstance(p, AP) for p in props]) or props is None
         assert isinstance(label_func, Callable) or label_func is None   # TODO: Change this to signature validation.
 
         # Base class constructor

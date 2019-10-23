@@ -67,7 +67,7 @@ class TSys(Kripke):
         assert issubclass(vtype, TSys.Vertex), "vtype must be a sub-class of TSys.Vertex."
         assert issubclass(etype, TSys.Edge), "etype must be a sub-class of TSys.Edge."
 
-        assert all([isinstance(p, AP) for p in props])
+        # TODO: assert all([isinstance(p, AP) for p in props])
         assert isinstance(label_func, Callable) or label_func is None   # TODO: Change this to signature validation.
 
         # Base class constructor
