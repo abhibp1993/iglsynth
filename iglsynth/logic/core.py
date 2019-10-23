@@ -164,7 +164,7 @@ class AP(ILogic):
     def __init__(self, formula: str, eval_func: Callable = None):
         assert isinstance(formula, str)
 
-        self._alphabet = None
+        # self._alphabet = None
         self._formula = None
         self._tree = None
         self._eval_func = eval_func
@@ -350,6 +350,12 @@ class PL(AP):
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
     __hash__ = AP.__hash__
+
+    def __init__(self, formula: str, alphabet: 'Alphabet' = None):
+        assert isinstance(formula, str)
+
+        self._alphabet = alphabet
+        super(PL, self).__init__(formula=formula, eval_func=None)
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
