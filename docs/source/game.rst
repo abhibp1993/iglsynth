@@ -1,7 +1,7 @@
 Game Module
 ===========
 
-.. currentmodule:: iglsynth.game.game
+.. currentmodule:: iglsynth.game.core
 
 ------------
 
@@ -16,31 +16,69 @@ Global Variables
 
 -----------------
 
-Deterministic Game
-------------------
+Kripke Structure
+-----------------
 
-A deterministic two-player game is defined as the graph
+.. autoclass:: iglsynth.game.kripke.Kripke.Vertex
+    :members:
+    :show-inheritance:
+    :inherited-members:
 
-    :math:`{\cal G} = \langle V, E, vprops, eprops, gprops \rangle`
 
-where
+.. autoclass:: iglsynth.game.kripke.Kripke.Edge
+    :members:
+    :show-inheritance:
+    :inherited-members:
 
-* :math:`V` is a set of vertices.
-* :math:`E` is a set of edges.
-* :math:`vprops` are vertex properties.
+.. autoclass:: iglsynth.game.kripke.Kripke
+    :members:
+    :show-inheritance:
+    :inherited-members:
 
-    * Vertex properties must include ``is_final`` of type ``bool``.
-    * When :math:`\cal G` is turn-based, vertex properties must include ``turn`` of type ``int``.
 
-* :math:`eprops` are edge properties.
+-----------------
 
-    * Edge properties must include ``act`` of type ``int``.
+Transition System
+-----------------
 
-* :math:`gprops` are graph properties.
+.. autoclass:: iglsynth.game.tsys.TSys.Vertex
+    :members:
+    :show-inheritance:
+    :inherited-members:
 
-    * Graph property ``kind`` represents whether the game is Concurrent or Turn-based.
 
-|
+.. autoclass:: iglsynth.game.tsys.TSys.Edge
+    :members:
+    :show-inheritance:
+    :inherited-members:
 
-.. autoclass:: Game
-    :members: define, kind, graph
+.. autoclass:: iglsynth.game.tsys.TSys
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
+
+
+-----------------
+
+Gridworld
+---------
+
+.. autoclass:: iglsynth.game.gridworld.Gridworld.Vertex
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
+
+.. autoclass:: iglsynth.game.gridworld.Gridworld.Edge
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoclass:: iglsynth.game.gridworld.Gridworld
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
+
+
