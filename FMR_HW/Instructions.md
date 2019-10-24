@@ -2,6 +2,12 @@
 
 
 
+**Step 0: Note that IGLSynth API has changed since last class!!!**
+
+Visit [ https://www.iglsynth.akulkarni.me/en/v0.2/ ]( https://www.iglsynth.akulkarni.me/en/v0.2/ ) for latest documentation. 
+
+
+
 **Step 1: Get the Docker Image**
 
 Assuming you have installed Docker. 
@@ -31,6 +37,8 @@ iglsynth                          <------------- (base)
 		
 	- ...
 ```
+
+
 
 
 
