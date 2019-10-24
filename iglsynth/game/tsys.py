@@ -1,6 +1,6 @@
 from iglsynth.game.kripke import *
 from iglsynth.game.arena import *
-from iglsynth.game.bases import Player
+from iglsynth.game.core import Player
 
 TURN_BASED = "Turn-based"
 CONCURRENT = "Concurrent"

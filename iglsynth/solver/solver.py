@@ -1,4 +1,4 @@
-from iglsynth.game.bases import *
+from iglsynth.game.core import *
 
 
 class Solver(abc.ABC):
