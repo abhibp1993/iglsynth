@@ -30,8 +30,8 @@ class Game(Graph):
         """
 
         def __init__(self, name, tsys_v=None, aut_v=None):
-            assert issubclass(tsys_v, TSys.Vertex) or tsys_v is None
-            assert issubclass(aut_v, Automaton.Vertex) or aut_v is None
+            assert issubclass(tsys_v.__class__, TSys.Vertex) or tsys_v is None
+            assert issubclass(aut_v.__class__, Automaton.Vertex) or aut_v is None
 
             self._name = name
             self._tsys_v = tsys_v
@@ -82,7 +82,7 @@ class Game(Graph):
         :param act: (pyobject) An action label of edge. (Default: None)
         """
         def __init__(self, u: 'Game.Vertex', v: 'Game.Vertex', act=None):
-            super(Graph.Edge, self).__init__(u=u, v=v)
+            super(Game.Edge, self).__init__(u=u, v=v)
             self._act = act
 
         def __eq__(self, other):
