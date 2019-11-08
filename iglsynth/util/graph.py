@@ -133,21 +133,6 @@ class Graph(object):
         """ Returns the number of edges in graph. """
         return len(self._edges)
 
-    @property
-    def vp_names(self) -> List[str]:
-        """ Returns the a list of vertex property names in graph. """
-        raise NotImplementedError
-
-    @property
-    def ep_names(self):
-        """ Returns a list of edge property names in graph. """
-        raise NotImplementedError
-
-    @property
-    def gp_names(self):
-        """ Returns a list of graph property names in graph. """
-        raise NotImplementedError
-
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
