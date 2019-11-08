@@ -19,5 +19,5 @@ before_install:
   
 
 script:
-  - docker run -v $(pwd):/home/iglsynth/ abhibp1993/iglsynth:dev /bin/sh -c "cd /home/iglsynth/ && python3 -m pytest -v --cov=./ && codecov --token=0b680656-8c0b-4717-a2f1-79f1205a85f7"
+  - docker run -v $(pwd):/home/iglsynth/ abhibp1993/iglsynth:dev /bin/sh -c "cd /home/iglsynth/ && python3 -m pytest -v --cov=./ && codecov --token=0b680656-8c0b-4717-a2f1-79f1205a85f7 && pwd"
 
