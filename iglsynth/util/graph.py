@@ -133,6 +133,10 @@ class Graph(object):
         """ Returns the number of edges in graph. """
         return len(self._edges)
 
+    @property
+    def is_multigraph(self):
+        raise NotImplementedError
+
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
