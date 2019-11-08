@@ -277,9 +277,13 @@ class Graph(object):
             nor an iterable of :class:`Vertex` objects.
         """
         if isinstance(v, self.vtype):
+            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
             return iter(self._vertex_edge_map[v][0])
 
         elif isinstance(v, Iterable):
+            assert all(isinstance(u, self.vtype) for u in v), \
+                f"All vertices in input: {v} must be of type={self.vtype}."
+
             in_edges = (self._vertex_edge_map[u][0] for u in v)
             return iter(reduce(set.union, in_edges))
 
@@ -297,11 +301,15 @@ class Graph(object):
             nor an iterable of :class:`Vertex` objects.
         """
         if isinstance(v, self.vtype):
+            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
             return iter(self._vertex_edge_map[v][1])
 
         elif isinstance(v, Iterable):
-            in_edges = (self._vertex_edge_map[u][1] for u in v)
-            return iter(reduce(set.union, in_edges))
+            assert all(isinstance(u, self.vtype) for u in v), \
+                f"All vertices in input: {v} must be of type={self.vtype}."
+
+            out_edges = (self._vertex_edge_map[u][1] for u in v)
+            return iter(reduce(set.union, out_edges))
 
         raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
 
@@ -317,12 +325,16 @@ class Graph(object):
             nor an iterable of :class:`Vertex` objects.
         """
         if isinstance(v, self.vtype):
+            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
             return iter(e.source for e in self._vertex_edge_map[v][0])
 
         elif isinstance(v, Iterable):
+            assert all(isinstance(u, self.vtype) for u in v), \
+                f"All vertices in input: {v} must be of type={self.vtype}."
+
             return iter(e.source for u in v for e in self._vertex_edge_map[u][0])
 
-        raise ValueError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
+        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
 
     def out_neighbors(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
         """
@@ -336,12 +348,16 @@ class Graph(object):
             nor an iterable of :class:`Vertex` objects.
         """
         if isinstance(v, self.vtype):
+            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
             return iter(e.target for e in self._vertex_edge_map[v][1])
 
         elif isinstance(v, Iterable):
+            assert all(isinstance(u, self.vtype) for u in v), \
+                f"All vertices in input: {v} must be of type={self.vtype}."
+
             return iter(e.target for u in v for e in self._vertex_edge_map[u][1])
 
-        raise ValueError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
+        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
 
     def prune(self, v: 'Graph.Vertex'):
         raise NotImplementedError
