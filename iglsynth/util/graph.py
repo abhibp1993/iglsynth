@@ -76,15 +76,19 @@ class Graph(object):
     def __init__(self, vtype=None, etype=None, graph=None, file=None):
 
         # Validate input data-types
+        _class = self.__class__
+
         if vtype is None:
-            vtype = Graph.Vertex
+            vtype = _class.Vertex
         else:
-            assert issubclass(vtype, Graph.Vertex), "vtype must be a sub-class of Graph.Vertex."
+            assert issubclass(vtype, self.Vertex), \
+                f"vtype must be a sub-class of {_class}.Vertex class. Received {vtype}."
 
         if etype is None:
-            etype = Graph.Edge
+            etype = _class.Edge
         else:
-            assert issubclass(etype, Graph.Edge), "etype must be a sub-class of Graph.Edge."
+            assert issubclass(etype, self.Edge), \
+                f"etype must be a sub-class of {_class}.Edge class. Received {vtype}."
 
         # Define internal data structure
         self.vtype = vtype                                          # Vertex class used in graph
