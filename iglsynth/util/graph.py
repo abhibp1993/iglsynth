@@ -218,13 +218,13 @@ class Graph(object):
             return None
 
         if u not in self._vertex_edge_map and v not in self._vertex_edge_map:
-            raise AttributeError(f"Vertices {u} and {v} are not in graph.")
+            raise AssertionError(f"Vertices {u} and {v} are not in graph.")
 
         elif u in self._vertex_edge_map and v not in self._vertex_edge_map:
-            raise AttributeError(f"Vertex {v} is not in graph.")
+            raise AssertionError(f"Vertex {v} is not in graph.")
 
         else:   # v in self._vertex_edge_map:
-            raise AttributeError(f"Vertex {u} is not in graph.")
+            raise AssertionError(f"Vertex {u} is not in graph.")
 
     def add_edges(self, ebunch: Iterable['Graph.Edge']):
         """
@@ -240,8 +240,6 @@ class Graph(object):
     def rm_edge(self, e: 'Graph.Edge'):
         """
         Removes an existing edge from the graph.
-
-        .. todo: Implement this function.
         """
 
         assert isinstance(e, Graph.Edge), \
