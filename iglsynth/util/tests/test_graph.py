@@ -4,7 +4,7 @@ from iglsynth.util.graph import *
 
 def test_graph_instantiation():
     # 1. Default Constructor
-    graph = Graph()
+    _ = Graph()
 
     # 2. Constructor with UserVertex, UserEdge types
     class UserVertex(Graph.Vertex):
@@ -16,10 +16,10 @@ def test_graph_instantiation():
             super(UserEdge, self).__init__(u, v)
             self.name = name
 
-    graph = Graph(vtype=UserVertex, etype=UserEdge)
+    _ = Graph(vtype=UserVertex, etype=UserEdge)
 
     with pytest.raises(AssertionError):
-        graph = Graph(vtype=UserEdge, etype=UserVertex)
+        _ = Graph(vtype=UserEdge, etype=UserVertex)
 
     # 3. Copy Constructor -- TODO
     # graph = Graph(graph=graph)
@@ -48,6 +48,18 @@ def test_add_vertex():
         graph.add_vertex(10)
 
 
+def test_add_vertices():
+    graph = Graph()
+
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+
+    graph.add_vertices([v0, v1])
+
+    with pytest.raises(AssertionError):
+        graph.add_vertex([v0, 10])
+
+
 def test_rm_vertex():
     graph = Graph()
 
@@ -56,18 +68,48 @@ def test_rm_vertex():
 
     graph.add_vertices([v0, v1])
 
+    # Remove one vertex
     graph.rm_vertex(v0)
     assert graph.num_vertices == 1
     assert v0 not in list(graph.vertices)
 
+    # Remove an absent vertex
     graph.rm_vertex(v0)
     assert graph.num_vertices == 1
     assert v0 not in list(graph.vertices)
 
+    # Remove another vertex
     graph.rm_vertex(v1)
     assert graph.num_vertices == 0
     assert v0 not in list(graph.vertices)
     assert v1 not in list(graph.vertices)
+
+    # Remove from empty graph
+    graph.rm_vertex(v1)
+    assert graph.num_vertices == 0
+    assert v0 not in list(graph.vertices)
+    assert v1 not in list(graph.vertices)
+
+    with pytest.raises(AssertionError):
+        graph.rm_vertex(10)
+
+
+def test_rm_vertices():
+    graph = Graph()
+
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+
+    graph.add_vertices([v0, v1])
+
+    # Remove one vertex
+    graph.rm_vertices([v0, v1])
+    assert graph.num_vertices == 0
+    assert v0 not in list(graph.vertices)
+    assert v1 not in list(graph.vertices)
+
+    with pytest.raises(AssertionError):
+        graph.rm_vertex([10, v0])
 
 
 def test_add_edge():
@@ -107,9 +149,54 @@ def test_add_edge():
     with pytest.raises(AssertionError):
         graph.add_edge((0, 1))
 
+    with pytest.raises(AssertionError):
+        graph.add_edge(UserEdge(name="edge", u=v0, v=10))
 
-@pytest.mark.skip(reason="Removal of Multi-Digraph edge is tricky. Yet to be implemented.")
+    with pytest.raises(AssertionError):
+        graph.add_edge(UserEdge(name="edge", u=10, v=v0))
+
+    with pytest.raises(AssertionError):
+        graph.add_edge(UserEdge(name="edge", u=90, v=10))
+
+
+def test_add_edges():
+    graph = Graph()
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+    graph.add_vertices([v0, v1])
+
+    # Add multiple edges
+    e0 = Graph.Edge(v0, v1)
+    e1 = Graph.Edge(v0, v0)
+
+    graph.add_edges([])
+    assert graph.num_edges == 0
+
+    graph.add_edges([e0])
+    assert graph.num_edges == 1
+
+    graph.add_edges([e0, e1])
+    assert graph.num_edges == 2
+
+    with pytest.raises(AssertionError):
+        graph.add_edges((0, 1))
+
+    with pytest.raises(AssertionError):
+        graph.add_edge(graph.Edge(u=v0, v=10))
+
+    with pytest.raises(AssertionError):
+        graph.add_edge(graph.Edge(u=10, v=v0))
+
+    with pytest.raises(AssertionError):
+        graph.add_edge(graph.Edge(u=90, v=10))
+
+
 def test_rm_edge():
+    """
+    .. note: rm_edge should never raise a KeyError (while removing some edge
+        from vertex-edge-map. If this happens, check add_edge function to ensure
+        whether the vertex-edge-map is properly handled or not.
+    """
     graph = Graph()
 
     v0 = Graph.Vertex()
@@ -134,6 +221,35 @@ def test_rm_edge():
     graph.rm_edges([e01, e11])
     assert graph.num_edges == 0
     assert e00 not in list(graph.edges) and e01 not in list(graph.edges) and e11 not in list(graph.edges)
+
+    with pytest.raises(AssertionError):
+        graph.rm_edge(10)
+
+    with pytest.warns(UserWarning):
+        graph.rm_edge(e01)
+
+
+def test_rm_edges():
+    """
+    .. note: rm_edge should never raise a KeyError (while removing some edge
+        from vertex-edge-map. If this happens, check add_edge function to ensure
+        whether the vertex-edge-map is properly handled or not.
+    """
+    graph = Graph()
+
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+    graph.add_vertices([v0, v1])
+
+    e00 = Graph.Edge(v0, v0)
+    e01 = Graph.Edge(v0, v1)
+    e11 = Graph.Edge(v1, v1)
+    graph.add_edges([e00, e01, e11])
+
+    # Remove edges
+    graph.rm_edges([e01, e11])
+    assert graph.num_edges == 1
+    assert e00 in list(graph.edges) and e01 not in list(graph.edges) and e11 not in list(graph.edges)
 
 
 def test_graph_properties():
@@ -168,16 +284,89 @@ def test_graph_properties():
     assert set(graph.vertices) == {v1, v2, v3}
     assert set(graph.edges) == {e1, e2, e3, e4}
 
-    # TODO Yet to be implemented properties
-    # assert graph.vp_names
-    # assert graph.ep_names
-    # assert graph.gp_names
-    # assert graph.is_multigraph
+    # TODO assert graph.is_multigraph
 
 
-# if __name__ == '__main__':
-    # test_graph_instantiation()
-    # test_graph_properties()
-    # test_add_edges()
-    # test_remove_vertices()
-    # test_get_set_v_e_g_property()
+def test_graph_neighbors():
+
+    # Define a graph
+    graph = Graph()
+
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+    graph.add_vertices([v0, v1])
+
+    e00 = Graph.Edge(v0, v0)
+    e01 = Graph.Edge(v0, v1)
+    e11 = Graph.Edge(v1, v1)
+    graph.add_edges([e00, e01, e11])
+
+    # Check in-neighbors
+    assert v0 in graph.in_neighbors(v=v0)
+    assert v1 not in graph.in_neighbors(v=v0)
+    assert v1 in graph.in_neighbors(v=v1)
+    assert v0 in graph.in_neighbors(v=v1)
+
+    assert v0 in graph.in_neighbors([v0, v1])
+    assert v1 in graph.in_neighbors([v0, v1])
+
+    # Check out-neighbors
+    assert v0 in graph.out_neighbors(v=v0)
+    assert v0 not in graph.out_neighbors(v=v1)
+    assert v1 in graph.out_neighbors(v=v0)
+    assert v1 in graph.out_neighbors(v=v1)
+
+    assert v0 in graph.out_neighbors([v0, v1])
+    assert v1 in graph.out_neighbors([v0, v1])
+
+    # Check in-edges
+    assert e00 in graph.in_edges(v=v0)
+    assert e01 in graph.in_edges(v=v1)
+    assert e11 in graph.in_edges(v=v1)
+
+    assert e00 in graph.in_edges([v0, v1])
+    assert e01 in graph.in_edges([v0, v1])
+    assert e11 in graph.in_edges([v0, v1])
+
+    # Check out-edges
+    assert e00 in graph.out_edges(v=v0)
+    assert e01 in graph.out_edges(v=v0)
+    assert e11 in graph.out_edges(v=v1)
+
+    assert e00 in graph.out_edges([v0, v1])
+    assert e01 in graph.out_edges([v0, v1])
+    assert e11 in graph.out_edges([v0, v1])
+
+    with pytest.raises(AssertionError):
+        graph.in_edges(10)
+
+    with pytest.raises(AssertionError):
+        graph.out_edges(10)
+
+    with pytest.raises(AssertionError):
+        graph.in_neighbors(10)
+
+    with pytest.raises(AssertionError):
+        graph.out_neighbors(10)
+
+    with pytest.raises(AssertionError):
+        graph.in_edges([10, v0])
+
+    with pytest.raises(AssertionError):
+        graph.out_edges([10, v0])
+
+    with pytest.raises(AssertionError):
+        graph.in_neighbors([10, v0])
+
+    with pytest.raises(AssertionError):
+        graph.out_neighbors([10, v0])
+
+
+@pytest.mark.skip("Not Implemented")
+def test_prune():
+    pass
+
+
+@pytest.mark.skip("Not Implemented")
+def test_save():
+    pass
