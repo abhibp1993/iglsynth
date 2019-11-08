@@ -370,3 +370,116 @@ def test_prune():
 @pytest.mark.skip("Not Implemented")
 def test_save():
     pass
+
+
+def test_derived_class_instantiation_1():
+    """
+    This test tests whether the necessary functionality
+    to be provided by Graph class holds for derived classes.
+    """
+
+    # Define a class without overriding Vertex, Edge Classes.
+    class ChildGraph(Graph):
+        pass
+
+    graph = ChildGraph()
+    assert issubclass(graph.vtype, ChildGraph.Vertex)
+    assert issubclass(graph.etype, ChildGraph.Edge)
+
+
+def test_derived_class_instantiation_2():
+    """
+    This test tests whether the necessary functionality
+    to be provided by Graph class holds for derived classes.
+    """
+
+    # Define a class overriding Vertex Class, but not Edge Class
+    class ChildGraph(Graph):
+        class Vertex(Graph.Vertex):
+            pass
+
+    graph = ChildGraph()
+    assert issubclass(graph.vtype, ChildGraph.Vertex)
+    assert issubclass(graph.etype, ChildGraph.Edge)
+
+
+def test_derived_class_instantiation_3():
+    """
+    This test tests whether the necessary functionality
+    to be provided by Graph class holds for derived classes.
+    """
+
+    # Define a class overriding Edge Class, but not Vertex Class
+    class ChildGraph(Graph):
+        class Edge(Graph.Edge):
+            pass
+
+    graph = ChildGraph()
+    assert issubclass(graph.vtype, ChildGraph.Vertex)
+    assert issubclass(graph.etype, ChildGraph.Edge)
+
+
+def test_derived_class_instantiation_4():
+    """
+    This test tests whether the necessary functionality
+    to be provided by Graph class holds for derived classes.
+    """
+
+    # Define a class overriding Vertex Class and Edge Class AND user supplies UserVertex class
+    class ChildGraph(Graph):
+        class Vertex(Graph.Vertex):
+            pass
+
+    class UserVertex(ChildGraph.Vertex):
+        pass
+
+    graph = ChildGraph(vtype=UserVertex)
+    assert issubclass(graph.vtype, ChildGraph.Vertex)
+    assert issubclass(graph.etype, ChildGraph.Edge)
+
+    # Failure case 1: UserVertex is sub class of parent class, but not ChildGraph.
+    class UserVertex(Graph.Vertex):
+        pass
+
+    with pytest.raises(AssertionError):
+        graph = ChildGraph(vtype=UserVertex)
+
+    # Failure case 2: UserVertex is not a sub-class of any Graph class
+    class UserVertex():
+        pass
+
+    with pytest.raises(AssertionError):
+        graph = ChildGraph(vtype=UserVertex)
+
+
+def test_derived_class_instantiation_5():
+    """
+    This test tests whether the necessary functionality
+    to be provided by Graph class holds for derived classes.
+    """
+
+    # Define a class overriding Vertex Class and Edge Class AND user supplies UserEdge class
+    class ChildGraph(Graph):
+        class Edge(Graph.Edge):
+            pass
+
+    class UserEdge(ChildGraph.Edge):
+        pass
+
+    graph = ChildGraph(etype=UserEdge)
+    assert issubclass(graph.vtype, ChildGraph.Vertex)
+    assert issubclass(graph.etype, ChildGraph.Edge)
+
+    # Failure case 1: UserEdge is sub class of parent class, but not ChildGraph.
+    class UserEdge(Graph.Edge):
+        pass
+
+    with pytest.raises(AssertionError):
+        _ = ChildGraph(etype=UserEdge)
+
+    # Failure case 2: UserVertex is not a sub-class of any Graph class
+    class UserEdge:
+        pass
+
+    with pytest.raises(AssertionError):
+        _ = ChildGraph(etype=UserEdge)
