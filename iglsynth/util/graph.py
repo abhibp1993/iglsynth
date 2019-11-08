@@ -240,20 +240,19 @@ class Graph(object):
         .. todo: Implement this function.
         """
 
-        # assert isinstance(e, Graph.Edge), \
-        #     f"e must be an object of Graph.Edge class or its sub-class. Got {e.__class__.__name__}"
-        #
-        # if e not in self._edges:
-        #     warnings.warn(f"Edge {e} is not present in graph. Ignoring request to remove edge.")
-        #     return None
-        #
-        # u = e.source
-        # v = e.target
-        #
-        # self._vertex_edge_map[u][1].remove(u)
-        # self._vertex_edge_map[v][0].remove(v)
-        # self._edges.remove(e)
-        raise NotImplementedError
+        assert isinstance(e, Graph.Edge), \
+            f"e must be an object of Graph.Edge class or its sub-class. Got {e.__class__.__name__}"
+
+        if e not in self._edges:
+            warnings.warn(f"Edge {e} is not present in graph. Ignoring request to remove edge.")
+            return None
+
+        u = e.source
+        v = e.target
+
+        self._vertex_edge_map[u][1].remove(e)
+        self._vertex_edge_map[v][0].remove(e)
+        self._edges.remove(e)
 
     def rm_edges(self, elist: Iterable['Graph.Edge']):
         """
