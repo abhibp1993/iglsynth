@@ -1,7 +1,7 @@
 import pytest
 from iglsynth.game.arena import *
 
-
+@pytest.mark.skip(reason="Arena module is to be updated to v0.2.")
 def test_arena_instantiation():
     # 1. Default Constructor
     arena = Arena()
@@ -41,6 +41,7 @@ def test_arena_instantiation():
     # graph = Graph(vtype=UserVertex, etype=UserEdge, file="")
 
 
+@pytest.mark.skip(reason="Arena module is to be updated to v0.2.")
 def test_add_edge():
     arena = Arena()
     v0 = Graph.Vertex()

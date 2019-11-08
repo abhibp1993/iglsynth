@@ -18,3 +18,11 @@ def test_game_basic():
 
     print(game.kind)
     print(type(graph.is_final), graph.is_final)
+
+
+@pytest.mark.skip(reason="Game module is to be updated to v0.2.")
+def test_game_instantiation():
+    # TODO: Check edge types for kind=TURN_BASED and kind=CONCURRENT
+    # TODO: Check isinstance, issubclass on vtype and etype.
+    pass
+

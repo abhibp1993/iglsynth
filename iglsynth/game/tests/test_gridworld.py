@@ -2,6 +2,7 @@ import pytest
 from iglsynth.game.gridworld import *
 
 
+@pytest.mark.skip("Not yet implemented. ")
 def test_instantiation():
     # Simple instantiation
     _ = Gridworld(kind=CONCURRENT, dim=(3, 3), conn=4)
