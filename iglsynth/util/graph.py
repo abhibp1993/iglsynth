@@ -88,7 +88,7 @@ class Graph(object):
             etype = _class.Edge
         else:
             assert issubclass(etype, self.Edge), \
-                f"etype must be a sub-class of {_class}.Edge class. Received {vtype}."
+                f"etype must be a sub-class of {_class}.Edge class. Received {etype}."
 
         # Define internal data structure
         self.vtype = vtype                                          # Vertex class used in graph
