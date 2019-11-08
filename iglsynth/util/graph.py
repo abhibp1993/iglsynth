@@ -208,8 +208,8 @@ class Graph(object):
         v = e.target
 
         if u in self._vertex_edge_map and v in self._vertex_edge_map:
-            self._vertex_edge_map[u][1].add(u)
-            self._vertex_edge_map[v][0].add(v)
+            self._vertex_edge_map[u][1].add(e)
+            self._vertex_edge_map[v][0].add(e)
             self._edges.add(e)
             return None
 
