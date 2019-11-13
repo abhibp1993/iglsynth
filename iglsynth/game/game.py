@@ -5,6 +5,7 @@ License goes here...
 """
 
 
+from iglsynth.game.core import Action
 from iglsynth.game.tsys import *
 from iglsynth.logic.core import *
 
@@ -27,7 +28,7 @@ class Game(Graph):
         """
 
         def __init__(self, name, turn=None, tsys_v=None, aut_v=None):
-            assert isinstance(tsys_v, (TSys.TurnBasedVertex, TSys.ConcurrentVertex)) or tsys_v is None
+            # assert isinstance(tsys_v, TSys.Vertex) or tsys_v is None          TODO: Fix TSys.Vertex
             assert isinstance(aut_v, Automaton.Vertex) or aut_v is None
             assert isinstance(turn, int) or turn is None
 
@@ -51,18 +52,20 @@ class Game(Graph):
         def __eq__(self, other):
             return self._name == other._name
 
-        def __getattr__(self, item):
-            try:
-                return self._tsys_v.__getattr__(item)
-            except AttributeError:
-                pass
-
-            try:
-                return self._aut_v.__getattr__(item)
-            except AttributeError:
-                pass
-
-            raise AttributeError(f"Attribute {item} is not Game/TSys/Automaton attribute.")
+        # TODO: Overriding __getattr__ in following way can lead to conflict when tsys_v and aut_v have same property.
+        #  Instead, it's better to use "game_v.tsys_v.<property_name>".
+        # def __getattr__(self, item):
+        #     try:
+        #         return self._tsys_v.__getattr__(item)
+        #     except AttributeError:
+        #         pass
+        #
+        #     try:
+        #         return self._aut_v.__getattr__(item)
+        #     except AttributeError:
+        #         pass
+        #
+        #     raise AttributeError(f"Attribute {item} is not Game/TSys/Automaton attribute.")
 
         @property
         def name(self):
@@ -87,7 +90,7 @@ class Game(Graph):
         def aut_vertex(self):
             return self._aut_v
 
-    class TurnBasedEdge(Graph.Edge):
+    class Edge(Graph.Edge):
         """
         Represents an action-labeled edge of a turn-based game.
 
@@ -100,7 +103,22 @@ class Game(Graph):
         :param act: (pyobject) An action label of edge. (Default: None)
         """
         def __init__(self, u: 'Game.Vertex', v: 'Game.Vertex', act=None):
-            super(Game.TurnBasedEdge, self).__init__(u=u, v=v)
+            # Validate type of action
+            if isinstance(act, Action):
+                pass
+
+            elif isinstance(act, (tuple, list)):
+                assert len(act) == 2
+                assert isinstance(act[0], Action)
+                assert isinstance(act[1], Action)
+
+            elif act is None:
+                pass
+
+            else:
+                raise AssertionError(f"Input parameter act must be an Action or a 2-tuple (Action, Action) or None.")
+
+            super(Game.Edge, self).__init__(u=u, v=v)
             self._act = act
 
         def __eq__(self, other):
@@ -112,60 +130,13 @@ class Game(Graph):
         @property
         def action(self):
             return self._act
-
-    class ConcurrentEdge(Graph.Edge):
-        """
-        Represents an action-labeled edge of a turn-based game.
-
-        - :class:`Edge` represents a directed edge labeled with an action.
-        - Two edges are equal if they share equal source and target vertices
-            and have identical action labels.
-
-        :param u: (:class:`Vertex`) Source vertex of edge.
-        :param v: (:class:`Vertex`) Target vertex of edge.
-        :param act: (pyobject) An action label of edge. (Default: None)
-        """
-
-        def __init__(self, u: 'Game.Vertex', v: 'Game.Vertex', act=None):
-            assert act is None or (isinstance(act, (list, tuple)) and len(act) == 2), \
-                f"Parameter 'act' of ConcurrentEdge must be None or " \
-                f"a list/tuple of length of 2 representing (act1, act2)."
-
-            super(Game.ConcurrentEdge, self).__init__(u=u, v=v)
-            self._act = act
-
-        def __eq__(self, other):
-            return self.source == other.source and self.target == other.target and self.action == other.action
-
-        def __hash__(self):
-            return (self.source, self.target, self.action).__hash__()
-
-        @property
-        def action(self):
-            return self._act
-
-        @property
-        def p1_action(self):
-            return self._act[0]
-
-        @property
-        def p2_action(self):
-            return self._act[1]
 
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def __init__(self, kind, vtype=None, etype=None, graph=None, file=None):
 
-        # Validate type of game
-        if kind == TURN_BASED:
-            etype = Game.TurnBasedEdge if etype is None else etype
-
-        elif kind == CONCURRENT:
-            etype = Game.ConcurrentEdge if etype is None else etype
-
-        else:
-            assert kind in [TURN_BASED, CONCURRENT], \
+        assert kind in [TURN_BASED, CONCURRENT], \
                 f"Parameter 'kind' must be either TURN_BASED or CONCURRENT. Got {kind}."
 
         # Initialize internal variables
@@ -182,9 +153,6 @@ class Game(Graph):
     # ------------------------------------------------------------------------------------------------------------------
     # PRIVATE METHODS
     # ------------------------------------------------------------------------------------------------------------------
-    # def _define_by_graph(self, graph):
-    #     raise NotImplementedError("***********DO NOT IMPLEMENT THIS**************")
-
     def _define_by_tsys_aut(self, tsys, aut):
         # TODO: Implement this one!
         pass
@@ -192,6 +160,26 @@ class Game(Graph):
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
+    def add_vertex(self, v: 'Game.Vertex'):
+        if self._kind == TURN_BASED:
+            assert v.turn is not None
+        else:   # kind is CONCURRENT
+            assert v.turn is None
+
+        super(Game, self).add_vertex(v)
+
+    def add_edge(self, e: 'Game.Edge'):
+
+        if self._kind == TURN_BASED:
+            assert isinstance(e.action, Action) or e.action is None
+        else:   # kind is CONCURRENT
+            act = e.action
+            assert len(act) == 2
+            assert isinstance(act[0], Action)
+            assert isinstance(act[1], Action)
+        
+        super(Game, self).add_edge(e)
+
     def define(self, tsys=None, aut=None):
         if tsys is not None and aut is not None:
             self._define_by_tsys_aut(tsys, aut)
