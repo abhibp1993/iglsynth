@@ -28,7 +28,7 @@ class Game(Graph):
         """
 
         def __init__(self, name, turn=None, tsys_v=None, aut_v=None):
-            # assert isinstance(tsys_v, TSys.Vertex) or tsys_v is None          TODO: Fix TSys.Vertex
+            assert isinstance(tsys_v, TSys.Vertex) or tsys_v is None          
             assert isinstance(aut_v, Automaton.Vertex) or aut_v is None
             assert isinstance(turn, int) or turn is None
 
