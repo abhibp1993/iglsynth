@@ -445,28 +445,50 @@ class PL(AP):
         :raises KeyError: When subs_map does not contain the AP "self".
         """
         # Copy the formula into a local variable
-        formula = self.formula
+        formula = spot.formula(self.formula)
 
-        # For all APs in alphabet, substitute AP name in formula with it's evaluation
-        # FIXME: SyntaxTree substitution is needed.
-        #  The string replace will fail if some AP name is a substring of other.
-        for p in self.alphabet:
-            p_name = p.formula
+        # For all keys in substitution map, we try replacing self.formula with provided substitutions
+        for p in subs_map:
 
-            if subs_map[p] is True:
-                formula = formula.replace(p_name, "true")
+            # Validate type of q. If q is True/False, replace with their logical equivalent.
+            q = subs_map[p]
+            if q is True:
+                q = AP.TRUE
 
-            elif subs_map[p] is False:
-                formula = formula.replace(p_name, "false")
+            if q is False:
+                q = AP.FALSE
 
-            elif isinstance(subs_map[p], (PL, AP)):
-                formula = formula.replace(p_name, subs_map[p].formula)
+            if not isinstance(p, AP) or not isinstance(q, AP):
+                warnings.warn("PL.substitute(...) does not support substitution for non-AP objects. "
+                              "The results of substitution may not be correct!")
 
-            else:
-                raise ValueError(f"Substition failed, "
-                                 f"subs_map[{p}] = {subs_map[p]} which is none of True/False or AP/PL object.")
+            spot_p = spot.formula(p.formula)
+            spot_q = spot.formula(q.formula)
 
-        return formula
+            formula = formula.substitute(formula=spot_p, new_formula=spot_q)
+
+        return PL(formula=str(formula))
+
+        # # For all APs in alphabet, substitute AP name in formula with it's evaluation
+        # # FIXME: SyntaxTree substitution is needed.
+        # #  The string replace will fail if some AP name is a substring of other.
+        # for p in self.alphabet:
+        #     p_name = p.formula
+        #
+        #     if subs_map[p] is True:
+        #         formula = formula.replace(p_name, "true")
+        #
+        #     elif subs_map[p] is False:
+        #         formula = formula.replace(p_name, "false")
+        #
+        #     elif isinstance(subs_map[p], (PL, AP)):
+        #         formula = formula.replace(p_name, subs_map[p].formula)
+        #
+        #     else:
+        #         raise ValueError(f"Substition failed, "
+        #                          f"subs_map[{p}] = {subs_map[p]} which is none of True/False or AP/PL object.")
+        #
+        # return formula
 
     def simplify(self):
         raise NotImplementedError
@@ -485,10 +507,10 @@ class PL(AP):
         subs_map = self.alphabet.evaluate(st, args, kwargs)
 
         # Substitute valuation of APs in PL formula
-        formula = self.substitute(subs_map)
+        plf = self.substitute(subs_map)
 
         # Simplify the formula
-        spot_formula = spot.formula(formula)
+        spot_formula = spot.formula(plf.formula)
         if spot_formula.is_tt():
             return True
         elif spot_formula.is_ff():
