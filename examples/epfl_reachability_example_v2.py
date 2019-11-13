@@ -1,5 +1,6 @@
 from iglsynth.game.game import *
-from iglsynth.solver.zielonka import ZielonkaSolver
+# from iglsynth.solver.zielonka import ZielonkaSolver
+
 
 def construct_game():
 
@@ -24,7 +25,7 @@ def construct_game():
     for uid, vid in edge_list:
         u = vertices[uid]
         v = vertices[vid]
-        game.add_edge(game.TurnBasedEdge(u=u, v=v))
+        game.add_edge(game.Edge(u=u, v=v))
 
     return game
 
@@ -41,11 +42,11 @@ if __name__ == '__main__':
     for e in game.edges:
         print(e)
 
-    # Zielonka Solver
-    solver = ZielonkaSolver(game)
-    solver.configure(win1=True, win2=True)
-    solver.run()
-
-    # Print results of running the solver
-    print(solver.win1)
-    print(solver.win2)
+    # # Zielonka Solver
+    # solver = ZielonkaSolver(game)
+    # solver.configure(win1=True, win2=True)
+    # solver.run()
+    #
+    # # Print results of running the solver
+    # print(solver.win1)
+    # print(solver.win2)

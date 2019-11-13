@@ -12,7 +12,6 @@ CONCURRENT = "Concurrent"
 TURN_BASED = "Turn-based"
 
 
-
 class Kripke(abc.ABC):
     pass
 
@@ -21,3 +20,5 @@ class Player(object):
     pass
 
 
+class Action(object):
+    pass

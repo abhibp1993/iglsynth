@@ -1,6 +1,6 @@
 from iglsynth.game.kripke import *
 from iglsynth.game.arena import *
-from iglsynth.game.core import Player
+from iglsynth.game.core import Player, Action
 
 TURN_BASED = "Turn-based"
 CONCURRENT = "Concurrent"
@@ -11,12 +11,9 @@ class TSys(Kripke):
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC CLASSES
     # ------------------------------------------------------------------------------------------------------------------
-    class ConcurrentVertex(Kripke.Vertex):
-        pass
-
-    class TurnBasedVertex(Kripke.Vertex):
-        def __init__(self, turn):
-            assert isinstance(turn, int) and turn >= 0, \
+    class Vertex(Kripke.Vertex):
+        def __init__(self, turn=None):
+            assert isinstance(turn, int) or turn is None, \
                 f"Parameter 'turn' must be an integer, greater equal 0. Received {turn}."
 
             self._turn = turn
@@ -25,46 +22,27 @@ class TSys(Kripke):
         def turn(self):
             return self._turn
 
-    class ConcurrentEdge(Kripke.Edge):
+    class Edge(Kripke.Edge):
         ACTIONS = set()
 
-        def __init__(self, u, v, a1, a2):
-            super(TSys.ConcurrentEdge, self).__init__(u, v)
-            self._a1 = a1
-            self._a2 = a2
-            self.__class__.ACTIONS.add(a1)
-            self.__class__.ACTIONS.add(a2)
+        def __init__(self, u, v, act=None):
+            super(TSys.Edge, self).__init__(u, v)
+            self._act = act
+            self.__class__.ACTIONS.add(act)
 
         def __hash__(self):
-            return (self._source, self._target, self._a1, self._a2).__hash__()
+            return (self._source, self._target, self._act).__hash__()
 
         def __repr__(self):
             return f"{self.__class__.__name__}." \
-                f"ConcurrentEdge(u={self._source}, v={self._target}, a1={self._a1}, a2={self._a2})"
+                f"ConcurrentEdge(u={self._source}, v={self._target}, a1={self._act})"
 
-        def __eq__(self, other: 'TSys.ConcurrentEdge'):
-            return self._source == other._source and self._target == other._target and \
-                   self._a1 == other._a1 and self._a2 == other._a2
+        def __eq__(self, other: 'TSys.Edge'):
+            return self._source == other._source and self._target == other._target and self._act == other._act
 
-    class TurnBasedEdge(Kripke.Edge):
-        ACTIONS = set()
-
-        def __init__(self, u, v, a):
-            super(TSys.TurnBasedEdge, self).__init__(u, v)
-            self._a = a
-            self.__class__.ACTIONS.add(a)
-
-        def __hash__(self):
-            return (self._source, self._target, self._a).__hash__()
-
-        def __repr__(self):
-            return f"{self.__class__.__name__}." \
-                f"TurnBasedEdge(u={self._source}, v={self._target}, a={self._a})"
-
-        def __eq__(self, other: 'TSys.TurnBasedEdge'):
-            return self._source == other._source and self._target == other._target and self._a == other._a
-
-    Vertex = Edge = None
+        @property
+        def action(self):
+            return self._act
 
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
@@ -140,6 +118,26 @@ class TSys(Kripke):
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
+    def add_vertex(self, v: 'TSys.Vertex'):
+        if self._kind == TURN_BASED:
+            assert v.turn is not None
+        else:  # kind is CONCURRENT
+            assert v.turn is None
+
+        super(TSys, self).add_vertex(v)
+
+    def add_edge(self, e: 'TSys.Edge'):
+
+        if self._kind == TURN_BASED:
+            assert isinstance(e.action, Action) or e.action is None
+        else:  # kind is CONCURRENT
+            act = e.action
+            assert len(act) == 2
+            assert isinstance(act[0], Action)
+            assert isinstance(act[1], Action)
+
+        super(TSys, self).add_edge(e)
+
     def initialize(self, init_st: 'TSys.Vertex'):
         assert isinstance(init_st, self.Vertex)
         super(TSys, self).initialize(init_st)
