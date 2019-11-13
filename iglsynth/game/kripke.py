@@ -1,18 +1,18 @@
 from typing import Callable
 from iglsynth.util.graph import *
-# from iglsynth.logic.core import AP
-
-
-# PATCH - Until logic.AP is defined.
-class AP:
-    pass
+from iglsynth.logic.core import AP
 
 
 class Kripke(Graph):
     """
     A graph representing a Kripke structure.
     """
-    def __init__(self, props=None, label_func=None, vtype=None, etype=None, graph=None, file=None):
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # INTERNAL METHODS
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def __init__(self, alphabet=None, label_func=None, vtype=None, etype=None, graph=None, file=None):
 
         # Validate input data-types
         if vtype is None:
@@ -25,16 +25,21 @@ class Kripke(Graph):
         else:
             assert issubclass(etype, Kripke.Edge), "etype must be a sub-class of Kripke.Edge."
 
-        # TODO assert all([isinstance(p, AP) for p in props]) or props is None
+        assert all([isinstance(p, AP) for p in alphabet]) or alphabet is None
         assert isinstance(label_func, Callable) or label_func is None   # TODO: Change this to signature validation.
 
         # Base class constructor
         super(Kripke, self).__init__(vtype=vtype, etype=etype, graph=graph, file=file)
 
         # Defining parameters
-        self._props = props                                                  # Set of atomic propositions
+        # FIXME: Do we need labeling function? It's simply formula.evaluate()!!!
+        self._props = alphabet                                               # Set of atomic propositions
         self._label_fcn = label_func                                         # Labeling function
         self._init_st = None                                                 # Set of initial states
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # PROPERTIES
+    # ------------------------------------------------------------------------------------------------------------------
 
     @property
     def is_left_total(self):
@@ -43,6 +48,10 @@ class Kripke(Graph):
     @property
     def props(self):
         return self.props
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # PUBLIC METHODS
+    # ------------------------------------------------------------------------------------------------------------------
 
     def initialize(self, init_st):
         if isinstance(init_st, Iterable):

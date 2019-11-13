@@ -124,6 +124,10 @@ class SyntaxTree(Graph):
         super(SyntaxTree, self).__init__(vtype=SyntaxTree.Vertex)
         self._root = None
 
+    def __copy__(self):
+        # TODO: Implement
+        pass
+
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
     # ------------------------------------------------------------------------------------------------------------------
@@ -151,6 +155,17 @@ class SyntaxTree(Graph):
             for spot_child in spot_formula:
                 igl_vertex_child = SyntaxTree.Vertex(spot_formula=spot_child)
                 stack.append(igl_vertex_child)
+
+    def substitute(self, spot_formula, new_spot_formula):
+        """
+        Mutates this tree
+
+        :param spot_formula:
+        :param new_spot_formula:
+        :return:
+        """
+        # TODO: Implement
+        pass
 
 
 ########################################################################################################################
