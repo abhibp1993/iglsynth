@@ -193,7 +193,7 @@ class AP(ILogic):
     # ------------------------------------------------------------------------------------------------------------------
     @property
     def alphabet(self):
-        return Alphabet()
+        return Alphabet((self,))
 
     @property
     def formula(self):
