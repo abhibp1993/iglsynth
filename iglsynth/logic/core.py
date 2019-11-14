@@ -192,8 +192,10 @@ class AP(ILogic):
         return self.evaluate(st, args, kwargs)
 
     def __eq__(self, other):
-        res = spot.formula(self.formula) == spot.formula(other.formula)
-        return res
+        assert isinstance(other, ILogic), f"An AP can only be compared with another ILogic formula. " \
+            f"Received other={type(other)}"
+
+        return spot.formula(self.formula) == spot.formula(other.formula)
 
     def __hash__(self):
         return self.formula.__hash__()
@@ -224,10 +226,16 @@ class AP(ILogic):
     # PRIVATE METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def _logical_and(self, other):
-        return PL(f"({self.formula} & {other.formula})")
+        if type(other) == PL:
+            return PL(f"({self.formula} & {other.formula})")
+
+        raise NotImplementedError(f"AND-ing of AP and {type(other)} is not supported.")
 
     def _logical_or(self, other):
-        return PL(f"({self.formula} | {other.formula})")
+        if type(other) in (AP, PL):
+            return PL(f"({self.formula} | {other.formula})")
+
+        raise NotImplementedError(f"OR-ing of AP and {type(other)} is not supported.")
 
     def _logical_neg(self):
         return AP(f"(!{self.formula})", eval_func=lambda st, *args, **kwargs: not self._eval_func(st, *args, **kwargs))
@@ -270,6 +278,9 @@ class AP(ILogic):
 
         :raises KeyError: When subs_map does not contain the AP "self".
         """
+        assert isinstance(subs_map[self], AP), f"AP can only be substituted by another ILogic formula. " \
+            f"Received subs_map[{self}] as obj={subs_map[self]} of type={type(subs_map[self])}"
+
         return subs_map[self]
 
     def simplify(self):
@@ -346,6 +357,9 @@ class AP(ILogic):
         return checker.contained(spot.formula(self.formula), spot.formula(other.formula))
 
     def evaluate(self, st, *args, **kwargs):
+        if self._eval_func is None:
+            raise NotImplementedError
+
         try:
             result = self._eval_func(st, args, kwargs)
 

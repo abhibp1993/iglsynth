@@ -21,18 +21,59 @@ def test_instantiation():
     with pytest.raises(ParsingError):
         y = AP(formula="U")
 
+    with pytest.raises(NotImplementedError):
+        p = AP(formula="p")
+        p(10)
+
+    with pytest.raises(ValueError):
+        p = AP(formula="p", eval_func=lambda st, *args, **kwargs: 10)
+        p(10)
+
+    with pytest.raises(ValueError):
+        p = AP(formula="p", eval_func=lambda st: 10)
+        p(10)
+
 
 def test_equality():
     p = AP(formula="p")
     q = AP(formula="p")
     r = AP(formula="r")
+    s = PL(formula="s")
 
     assert p == q
     assert p != r
+    assert p != s
+
+    with pytest.raises(AssertionError):
+        assert p == 10
+
+    with pytest.raises(AssertionError):
+        assert p is True
 
 
 def test_substitution():
-    pass
+    a = AP("a")
+    b = AP("b")
+    tt = AP("true")
+    ff = AP("false")
+
+    # Substitute a
+    new_f = a.substitute({a: tt})
+    assert new_f == tt
+
+    new_f = a.substitute({a: ff})
+    assert new_f == ff
+
+    new_f = a.substitute({a: b})
+    assert new_f == b
+
+    with pytest.raises(AssertionError):
+        new_f = a.substitute({a: True})
+        assert new_f == tt
+
+    with pytest.raises(AssertionError):
+        new_f = a.substitute({a: False})
+        assert new_f == ff
 
 
 def test_evaluation():
