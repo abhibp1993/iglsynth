@@ -468,27 +468,6 @@ class PL(AP):
 
         return PL(formula=str(formula))
 
-        # # For all APs in alphabet, substitute AP name in formula with it's evaluation
-        # # FIXME: SyntaxTree substitution is needed.
-        # #  The string replace will fail if some AP name is a substring of other.
-        # for p in self.alphabet:
-        #     p_name = p.formula
-        #
-        #     if subs_map[p] is True:
-        #         formula = formula.replace(p_name, "true")
-        #
-        #     elif subs_map[p] is False:
-        #         formula = formula.replace(p_name, "false")
-        #
-        #     elif isinstance(subs_map[p], (PL, AP)):
-        #         formula = formula.replace(p_name, subs_map[p].formula)
-        #
-        #     else:
-        #         raise ValueError(f"Substition failed, "
-        #                          f"subs_map[{p}] = {subs_map[p]} which is none of True/False or AP/PL object.")
-        #
-        # return formula
-
     def simplify(self):
         raise NotImplementedError
 
