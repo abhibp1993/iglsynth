@@ -483,3 +483,9 @@ def test_derived_class_instantiation_5():
 
     with pytest.raises(AssertionError):
         _ = ChildGraph(etype=UserEdge)
+
+
+def test_repr():
+    graph = Graph()
+    assert graph.__str__() == f"Graph(|V|=0 of type=<class 'iglsynth.util.graph.Graph.Vertex'>, " \
+        f"|E|=0 of type=<class 'iglsynth.util.graph.Graph.Edge'>)"

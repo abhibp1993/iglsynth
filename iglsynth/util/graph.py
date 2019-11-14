@@ -97,14 +97,14 @@ class Graph(object):
         self._edges = set()                                         # Set of all edges of graph
 
         # TODO: Initialize graph by provided (optional) inputs
-        if graph is not None and file is None:
+        if graph is not None and file is None:                      # pragma: no cover
             self._instantiate_by_graph(graph)
 
         # TODO: If file argument is given, then load graph from the file.
-        elif file is not None and graph is None:
+        elif file is not None and graph is None:                    # pragma: no cover
             self._load(filename=file)
 
-        elif file is not None and graph is not None:
+        elif file is not None and graph is not None:                # pragma: no cover
             raise ValueError("file and graph parameters should not be provided simultaneously.")
 
     def __repr__(self):
