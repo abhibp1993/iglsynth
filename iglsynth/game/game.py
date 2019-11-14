@@ -5,7 +5,6 @@ License goes here...
 """
 
 
-from iglsynth.game.core import Action
 from iglsynth.game.tsys import *
 from iglsynth.logic.core import *
 
@@ -50,7 +49,7 @@ class Game(Graph):
             return self.name.__hash__()
 
         def __eq__(self, other):
-            return self._name == other._name
+            return self._name == other._name and self._turn == other._turn
 
         # TODO: Overriding __getattr__ in following way can lead to conflict when tsys_v and aut_v have same property.
         #  Instead, it's better to use "game_v.tsys_v.<property_name>".
@@ -111,6 +110,7 @@ class Game(Graph):
                 assert len(act) == 2
                 assert isinstance(act[0], Action)
                 assert isinstance(act[1], Action)
+                act = tuple(act)
 
             elif act is None:
                 pass
@@ -174,9 +174,11 @@ class Game(Graph):
             assert isinstance(e.action, Action) or e.action is None
         else:   # kind is CONCURRENT
             act = e.action
-            assert len(act) == 2
-            assert isinstance(act[0], Action)
-            assert isinstance(act[1], Action)
+            if act is not None:
+                assert isinstance(act, (list, tuple))
+                assert len(act) == 2
+                assert isinstance(act[0], Action)
+                assert isinstance(act[1], Action)
         
         super(Game, self).add_edge(e)
 
