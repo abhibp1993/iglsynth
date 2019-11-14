@@ -94,6 +94,10 @@ def test_evaluation():
     assert true(10)
     assert not false(10)
 
+    with pytest.raises(ValueError):
+        a = AP(formula="a", eval_func=lambda st: 10)
+        a(10)
+
 
 def test_tree():
     # Every AP has the same tree structure, a single (root) node of kind: 3 (ap).
