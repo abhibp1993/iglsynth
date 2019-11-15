@@ -96,6 +96,9 @@ def test_spot_substitute_pl():
     new_f = phi0.substitute(formula=a, new_formula=b)
     assert new_f == spot.formula("!b")
 
+    new_f = phi0.substitute(formula=phi0, new_formula=b)
+    assert new_f == spot.formula("b")
+
     # Substitute phi1
     new_f = phi1.substitute(formula=a, new_formula=tt)
     assert new_f == spot.formula("b")
@@ -111,3 +114,8 @@ def test_spot_substitute_pl():
     assert new_f == spot.formula("b")
 
 
+def test_spot_substitute_error():
+    a = spot.formula("a U b")
+
+    with pytest.raises(ValueError):
+        a.substitute(formula=a, new_formula=spot.formula("true"))

@@ -17,8 +17,7 @@ def substitute(self, formula, new_formula, *args):
 
         return self
 
-    elif k in (op_Not, op_X, op_F, op_G, op_Closure,
-             op_NegClosure, op_NegClosureMarked):
+    elif k in (op_Not, op_X, op_F, op_G):
 
         if self == formula:
             return new_formula
@@ -26,23 +25,22 @@ def substitute(self, formula, new_formula, *args):
         f = substitute(self[0], formula, new_formula, *args)
         return formula.unop(k, f)
 
-    elif k in (op_Xor, op_Implies, op_Equiv, op_U, op_R, op_W,
-             op_M, op_EConcat, op_EConcatMarked, op_UConcat):
+    # TODO: Add these operators when we add support for LTL substitution.
+    # elif k in (op_Xor, op_Implies, op_Equiv, op_U, op_R, op_W, op_M):
+    #
+    #     if self[0] == formula:
+    #         f1 = new_formula
+    #     else:
+    #         f1 = substitute(self[0], formula, new_formula, *args)
+    #
+    #     if self[1] == formula:
+    #         f2 = new_formula
+    #     else:
+    #         f2 = substitute(self[1], formula, new_formula, *args)
+    #
+    #     return formula.binop(k, f1, f2)
 
-        if self[0] == formula:
-            f1 = new_formula
-        else:
-            f1 = substitute(self[0], formula, new_formula, *args)
-
-        if self[1] == formula:
-            f2 = new_formula
-        else:
-            f2 = substitute(self[1], formula, new_formula, *args)
-
-        return formula.binop(k, f1, f2)
-
-    elif k in (op_Or, op_OrRat, op_And, op_AndRat, op_AndNLM,
-             op_Concat, op_Fusion):
+    elif k in (op_Or, op_And):
 
         f = []
         for x in self:
@@ -55,10 +53,7 @@ def substitute(self, formula, new_formula, *args):
 
         return formula.multop(k, f)
 
-    elif k in (op_Star, op_FStar):
-        ValueError("IGLSynth does not support op_Star and op_FStar operators for substitution.")
-
-    raise ValueError("unknown type of formula")
+    raise ValueError(f"IGLSynth does not support operator of kind={k} for substitution.")
 
 
 formula.substitute = substitute
