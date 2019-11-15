@@ -14,8 +14,11 @@ def test_game_instantiation():
     # TODO: Check isinstance, issubclass on vtype and etype.
 
     # Simple instantiation
-    _ = Game(kind=TURN_BASED)
-    _ = Game(kind=CONCURRENT)
+    game1 = Game(kind=TURN_BASED)
+    game2 = Game(kind=CONCURRENT)
+
+    assert game1.kind == TURN_BASED
+    assert game2.kind == CONCURRENT
 
     with pytest.raises(AssertionError):
         _ = Game(kind="conc")
