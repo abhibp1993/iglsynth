@@ -10,6 +10,20 @@ from iglsynth.logic.core import *
 
 
 class Game(Graph):
+    """
+    Represents a two-player deterministic game.
+
+        * The game could be concurrent or turn-based.
+        * Game instance can be constructed by adding vertices and edges (See :ref:`Example Game Graph Construction`).
+
+    :param kind: (:data:`CONCURRENT <iglsynth.game.core.CONCURRENT>`
+        or :data:`TURN_BASED <iglsynth.game.core.TURN_BASED>`) Whether the game is concurrent or turn-based.
+    :param vtype: (:class:`Game.Vertex` or sub-class) The vertex type used to define the game instance.
+    :param etype: (:class:`Game.Edge` or sub-class) The edge type used to define the game instance.
+    :param graph: (:class:`Game`) A game instance from which "self" instance should be created.
+    :param file: (str) An absolute path of file from which the game should be loaded.
+
+    """
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC CLASSES
@@ -18,14 +32,25 @@ class Game(Graph):
         """
         Represents a vertex in game.
 
-        A game vertex is a 3-tuple, (name, tsys.v, aut.v). When game is
-        defined using a graph, `tsys.v` and `aut.v` are set to None.
+        A game vertex is a 3-tuple, ``(name, tsys.v, aut.v)``. When game is
+        defined using a graph, `tsys.v` and `aut.v` are both set to None.
 
-        - Vertex has a name. Generally, name is a string "(tsys_v.name, aut_v.name)".
-        - When game is constructed from transition system and an automaton
-            the vertex stores tsys and aut vertices.
+        - Vertex must have a name.
+        - When game is constructed from transition system and an automaton the vertex stores tsys and aut vertices.
+
+        :param name: (str) The name of the vertex.
+        :param turn: (int) The id of player who will make the move at this state.
+        :param tsys_v: (:class:`iglsynth.game.tsys.TSys.Vertex`) Vertex of transition system.
+        :param aut_v: (:class:`iglsynth.logic.core.Automaton.Vertex`) Vertex of automaton.
+
+        .. note:: When game is defined using transition system and automaton, it is conventional to name vertices
+            as ``(tsys_v.name, aut_v.name)``.
+
         """
 
+        # ------------------------------------------------------------------------------------------------------------------
+        # INTERNAL CLASSES
+        # ------------------------------------------------------------------------------------------------------------------
         def __init__(self, name, turn=None, tsys_v=None, aut_v=None):
             assert isinstance(tsys_v, TSys.Vertex) or tsys_v is None          
             assert isinstance(aut_v, Automaton.Vertex) or aut_v is None
@@ -51,35 +76,18 @@ class Game(Graph):
         def __eq__(self, other):
             return self._name == other._name and self._turn == other._turn
 
-        # TODO: Overriding __getattr__ in following way can lead to conflict when tsys_v and aut_v have same property.
-        #  Instead, it's better to use "game_v.tsys_v.<property_name>".
-        # def __getattr__(self, item):
-        #     try:
-        #         return self._tsys_v.__getattr__(item)
-        #     except AttributeError:
-        #         pass
-        #
-        #     try:
-        #         return self._aut_v.__getattr__(item)
-        #     except AttributeError:
-        #         pass
-        #
-        #     raise AttributeError(f"Attribute {item} is not Game/TSys/Automaton attribute.")
-
+        # ------------------------------------------------------------------------------------------------------------------
+        # PUBLIC PROPERTIES
+        # ------------------------------------------------------------------------------------------------------------------
         @property
         def name(self):
+            """ Returns the name of game vertex. """
             return self._name
 
         @property
         def turn(self):
+            """ Returns the id of player who will make move in current state. """
             return self._turn
-
-        # @turn.setter
-        # def turn(self, player_id):
-        #     if self._turn is None:
-        #         self._turn = player_id
-        #     else:
-        #         warnings.warn(f"Property setter call '{self}.turn = {player_id}' is ignored.")
 
         @property
         def tsys_vertex(self):
@@ -91,15 +99,21 @@ class Game(Graph):
 
     class Edge(Graph.Edge):
         """
-        Represents an action-labeled edge of a turn-based game.
+        Represents an action-labeled edge of a game.
 
-        - :class:`Edge` represents a directed edge labeled with an action.
+        - :class:`Edge <iglsynth.game.game.Game.Edge>` represents a directed edge labeled with an action.
         - Two edges are equal if they share equal source and target vertices
-            and have identical action labels.
+          and have identical action labels.
 
         :param u: (:class:`Vertex`) Source vertex of edge.
         :param v: (:class:`Vertex`) Target vertex of edge.
-        :param act: (pyobject) An action label of edge. (Default: None)
+        :param act: (:class:`Action <iglsynth.game.core.Action>` or None) An action label of edge. (Default: None)
+
+        .. note:: We have following cases depending on whether game is turn-based or concurrent.
+
+            * (Turn-based) Action must be an :class:`Action <iglsynth.game.core.Action>` object.
+            * (Concurrent) Action must be a 2-tuple of (:class:`Action <iglsynth.game.core.Action>`,
+              :class:`Action <iglsynth.game.core.Action>`)
         """
         def __init__(self, u: 'Game.Vertex', v: 'Game.Vertex', act=None):
             # Validate type of action
@@ -122,13 +136,13 @@ class Game(Graph):
             self._act = act
 
         def __eq__(self, other):
-            return self.source == other.source and self.target == other.target and self.action == other.action
+            return self.source == other.source and self.target == other.target and self.act == other.act
 
         def __hash__(self):
-            return (self.source, self.target, self.action).__hash__()
+            return (self.source, self.target, self.act).__hash__()
 
         @property
-        def action(self):
+        def act(self):
             return self._act
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -148,6 +162,10 @@ class Game(Graph):
     # ------------------------------------------------------------------------------------------------------------------
     @property
     def kind(self):
+        """
+        Returns the kind of game, whether :data:`TURN_BASED <iglsynth.game.core.TURN_BASED>` or
+        :data:`CONCURRENT <iglsynth.game.core.CONCURRENT>`.
+        """
         return self._kind
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -171,9 +189,9 @@ class Game(Graph):
     def add_edge(self, e: 'Game.Edge'):
 
         if self._kind == TURN_BASED:
-            assert isinstance(e.action, Action) or e.action is None
+            assert isinstance(e.act, Action) or e.act is None
         else:   # kind is CONCURRENT
-            act = e.action
+            act = e.act
             if act is not None:
                 assert isinstance(act, (list, tuple))
                 assert len(act) == 2

@@ -37,8 +37,9 @@ Indices and tables
     :maxdepth: 2
 
     Home Page <self>
-    api
-..    Solver Module <solver>
+    Examples <examples>
+    API Documentation <api>
+
 
 
 
