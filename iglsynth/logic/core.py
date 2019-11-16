@@ -466,13 +466,27 @@ class AP(ILogic):
 
 
 class PL(AP):
+    """
+    Represents an propositional logic formula.
+
+    :param formula: (str) A formula string constructed from
+
+        * Atomic propositions (AP names can be alphanumeric strings
+          that are not "true" or "false" (case insensitive) and do
+          not contain ``F, G, M, R, U, V, W, X, xor`` as a sub-string.
+        * Operators: Negation (!), And(&), Or(|)
+
+    :param alphabet: (:class:`Alphabet`) A set of atomic propositions.
+
+    """
+
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
     __hash__ = AP.__hash__
 
     def __init__(self, formula: str, alphabet: 'Alphabet' = None):
-        assert isinstance(formula, str)
+        assert isinstance(formula, str), f"Input parameter formula must be a string.Received formula={formula}."
 
         self._alphabet = alphabet
         super(PL, self).__init__(formula=formula, eval_func=None)
@@ -567,26 +581,38 @@ class PL(AP):
                 warnings.warn("PL.substitute(...) does not support substitution for non-AP objects. "
                               "The results of substitution may not be correct!")
 
+            # Create instances of spot formula
             spot_p = spot.formula(p.formula)
             spot_q = spot.formula(q.formula)
 
+            # Invoke spot.formula.substitute (defined in iglsynth.util.spot)
             formula = formula.substitute(formula=spot_p, new_formula=spot_q)
 
         return PL(formula=str(formula))
 
     def simplify(self):
-        raise NotImplementedError
+        raise NotImplementedError("PL.simplify is not yet implemented.")
 
-    def is_equivalent(self, other):
-        assert isinstance(other, ILogic)
-        return spot.formula(self.formula) == spot.formula(other.formula)
+    # def is_equivalent(self, other):
+    #     assert isinstance(other, ILogic)
+    #     return spot.formula(self.formula) == spot.formula(other.formula)
 
-    def is_contained_in(self, other):
-        assert isinstance(other, ILogic)
-        checker = spot.language_containment_checker()
-        return checker.contained(spot.formula(self.formula), spot.formula(other.formula))
+    # def is_contained_in(self, other):
+    #     assert isinstance(other, ILogic)
+    #     checker = spot.language_containment_checker()
+    #     return checker.contained(spot.formula(self.formula), spot.formula(other.formula))
 
     def evaluate(self, st, *args, **kwargs):
+        """
+        Evaluates the PL formula over the given state.
+
+        :param st: (pyobject) An object representing state. It is user's duty to ensure the implementation
+            of given ``eval_func`` consumes the given state object correctly.
+
+        :return: (bool) If PL formula is evaluated to be ``True`` or ``False`` over given state.
+        :raises ValueError: When result of evaluation is not a boolean.
+
+        """
         # Evaluate alphabet to get a substitution map
         subs_map = self.alphabet.evaluate(st, args, kwargs)
 
@@ -595,12 +621,15 @@ class PL(AP):
 
         # Simplify the formula
         spot_formula = spot.formula(plf.formula)
+
         if spot_formula.is_tt():
             return True
+
         elif spot_formula.is_ff():
             return False
 
-        raise ValueError(f"Evaluation failed.")
+        raise ValueError(f"{self.formula}.evaluate(st={st}, args={args}, kwargs={kwargs})"
+                         f"returned {plf}, which is not a boolean. Was the substitution map complete?")
 
 
 class Alphabet(set):
