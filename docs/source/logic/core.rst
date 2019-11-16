@@ -47,6 +47,19 @@ Atomic Propositions
     :inherited-members:
 
 
+
+-----------------
+
+Alphabet
+-------------------
+
+.. autoclass:: iglsynth.logic.core.Alphabet
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
+
+
 -----------------
 
 Propositional Logic Formulas

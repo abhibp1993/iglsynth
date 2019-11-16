@@ -646,10 +646,24 @@ class Alphabet(set):
         super(Alphabet, self).add(p)
 
     def evaluate(self, st, *args, **kwargs):
+        """
+        Evaluates the alphabet over the given state.
+
+        :param st: (pyobject) An object representing state. It is user's duty to ensure the implementation
+            of given ``eval_func`` consumes the given state object correctly.
+
+        :return: (dict(key=AP, value=bool)) A mapping of atomic proposition with it's evaluation at the given state.
+        :raises ValueError: When result of evaluation is not a boolean.
+
+        """
+        # Initialize a dictionary
         ap_label = dict()
+
+        # For every atomic proposition in alphabet, evaluate it
         for p in self:
             ap_label[p] = p(st, args, kwargs)
 
+        # Return the dictionary
         return ap_label
 
 
