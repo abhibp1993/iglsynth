@@ -1,23 +1,27 @@
+
 Logic Module
 ==============
 
 .. currentmodule:: iglsynth.logic.core
 
-------------
 
 Global Variables
 ----------------
 
-.. data:: TRUE
-    :annotation: = True
+.. autodata:: TRUE
+
+.. autodata:: FALSE
 
 -----------------
 
-Automaton
----------
+ILogic (Interface Class)
+------------------------
 
-.. autoclass:: iglsynth.logic.core.Automaton
+.. autoclass:: iglsynth.logic.core.ILogic
     :members:
     :show-inheritance:
     :inherited-members:
+
+
+
 

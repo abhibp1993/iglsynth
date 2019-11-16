@@ -10,13 +10,16 @@ import iglsynth.util.spot as spot
 
 class ILogic(ABC):
     """
-    Interface class to define logic classes.
+    :class:`ILogic` is an interface class to represent logic classes in IGLSynth.
+    All logic classes must implement the methods of this class.
+
+    .. caution:: DO NOT INSTANTIATE THIS CLASS!
     """
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def __hash__(self):
-        raise NotImplementedError
+        raise NotImplementedError("ILogic.__hash__ is abstract method. The derived class must override it.")
 
     def __and__(self, other):
         return self._logical_and(other)
@@ -36,52 +39,86 @@ class ILogic(ABC):
     # ------------------------------------------------------------------------------------------------------------------
     @property
     def alphabet(self):
-        raise NotImplementedError
+        """
+        Returns the set of atomic propositions (as :class:`Alphabet <iglsynth.logic.core.Alphabet>` object)
+        over which the logic formula is defined.
+        """
+        raise NotImplementedError("ILogic.alphabet is abstract property. The derived class must override it.")
 
     @property
     def formula(self):
-        raise NotImplementedError
+        """ Returns a string representing the logic formula. """
+        raise NotImplementedError("ILogic.formula is abstract property. The derived class must override it.")
 
     @property
     def size(self):
-        raise NotImplementedError
+        """ Returns the size of formula. """
+        raise NotImplementedError("ILogic.size is abstract property. The derived class must override it.")
 
     @property
     def tree(self):
-        raise NotImplementedError
+        """ Returns the abstract syntax tree (as :class:`SyntaxTree <>` object) of the logic formula. """
+        raise NotImplementedError("ILogic.tree is abstract property. The derived class must override it.")
 
     # ------------------------------------------------------------------------------------------------------------------
     # PRIVATE METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def _logical_and(self, other):
-        raise NotImplementedError
+        """ Returns a new logic formula representing the AND-ing of "self" and "other" formulas. """
+        raise NotImplementedError("ILogic._logical_and is abstract method. The derived class must override it.")
 
     def _logical_or(self, other):
-        raise NotImplementedError
+        """ Returns a new logic formula representing the OR-ing of "self" and "other" formulas. """
+        raise NotImplementedError("ILogic._logical_or is abstract method. The derived class must override it.")
 
     def _logical_neg(self):
-        raise NotImplementedError
+        """ Returns a new logic formula representing the NEG-ation of "self" formula. """
+        raise NotImplementedError("ILogic._logical_neg is abstract method. The derived class must override it.")
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def parse(self, formula: str):
-        raise NotImplementedError
+        """ Parses the given formula string to return a simplified parsed string. """
+        raise NotImplementedError("ILogic.parse is abstract method. The derived class must override it.")
 
     def substitute(self, subs_map: dict):
-        raise NotImplementedError
+        """ Returns a new logic formula with substituted formulas. """
+        raise NotImplementedError("ILogic.substitute is abstract method. The derived class must override it.")
 
     def simplify(self):
-        raise NotImplementedError
+        """ Returns a new logic formula with a simplified formula. """
+        raise NotImplementedError("ILogic.simplify is abstract method. The derived class must override it.")
 
     def translate(self):
-        raise NotImplementedError
+        """
+        Returns an :class:`Automaton <iglsynth.logic.core.Automaton> object
+        representing an equivalent automaton for the logic formula.
+        """
+        raise NotImplementedError("ILogic.translate is abstract method. The derived class must override it.")
 
     def is_equivalent(self, other):
-        raise NotImplementedError
+        """
+        Checks whether given logic formula accepts the same language as the current (self) formula.
+
+        :param other: (:class:`ILogic <iglsynth.logic.core.ILogic>`) A logic formula.
+        :return: (bool) Whether self and other accept same language (True) or not (False).
+
+        .. note:: ``p.is_equivalent(q)`` is not the same as ``p == q``.
+          The first  checks whether the languagesof formulas ``p`` and ``q``
+          are equal or not, whereas the latter (``p == q``) whether
+          ``p`` and ``q`` are syntactically equivalent or not.
+        """
+        raise NotImplementedError("ILogic.is_equivalent is abstract method. The derived class must override it.")
 
     def is_contained_in(self, other):
-        raise NotImplementedError
+        """
+        Checks whether language of "self" formula is contained within the language of given formula (other).
+
+        :param other: (:class:`ILogic <iglsynth.logic.core.ILogic>`) A logic formula.
+        :return: (bool) Whether language of "self" is contained in "other" (True) or not (False).
+        """
+        raise NotImplementedError("ILogic.is_contained_in is abstract method. The derived class must override it.")
 
 
 ########################################################################################################################
