@@ -1,6 +1,11 @@
 .. currentmodule:: iglsynth.logic.ltl
 
-logic.ltl
-=========
+Linear Temporal Logic
+=====================
 
-in progress..
+
+.. autoclass:: iglsynth.logic.ltl.LTL
+    :members:
+    :show-inheritance:
+    :inherited-members:
+

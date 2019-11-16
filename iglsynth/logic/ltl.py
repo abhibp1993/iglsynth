@@ -2,6 +2,21 @@ from iglsynth.logic.core import *
 
 
 class LTL(PL):
+    """
+    Represents an temporal logic formula.
+
+    :param formula: (str) A formula string constructed from
+
+        * Atomic propositions (AP names can be alphanumeric strings
+          that are not "true" or "false" (case insensitive) and do
+          not contain ``F, G, M, R, U, V, W, X, xor`` as a sub-string.
+        * Operators: Negation (!), And(&), Or(|), Eventually(F),
+          Always(G), Next(X), Until(U).
+
+    :param alphabet: (:class:`Alphabet`) A set of atomic propositions.
+
+    """
+
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
@@ -29,18 +44,28 @@ class LTL(PL):
 
     @property
     def mp_class(self):
+        """
+        Returns the class of LTL formula as per Manna-Pnueli hierarchy.
+
+        :return: (str) A character from {'B', 'S', 'G', 'O', 'R', 'P', 'T'}.
+
+        .. seealso:: A discussion on `Manna-Pnueli Hierarchy <https://spot.lrde.epita.fr/hierarchy.html>`_
+        """
         return spot.mp_class(spot.formula(self.formula))
 
     # ------------------------------------------------------------------------------------------------------------------
     # PRIVATE METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def _logical_and(self, other):
+        # FIXME: Use parenthesis around sub-formulas.
         return LTL(self.formula + " & " + other.formula)
 
     def _logical_or(self, other):
+        # FIXME: Use parenthesis around sub-formulas.
         return LTL(self.formula + " | " + other.formula)
 
     def _logical_neg(self):
+        # FIXME: Use parenthesis around sub-formulas.
         return LTL("!" + self.formula)
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -81,20 +106,13 @@ class LTL(PL):
             self._eval_func = lambda st, *args, **kwargs: False
 
     def substitute(self, subs_map: dict):
-        """
-        Substitutes the current AP with another AP according to given substitution map.
-
-        :param subs_map: (dict[<Logic>: <Logic>]) A substitution map.
-        :return: (AP) Substituted AP object.
-
-        :raises KeyError: When subs_map does not contain the AP "self".
-        """
-        raise NotImplementedError
+        raise NotImplementedError("LTL.substitute is not yet implemented.")
 
     def simplify(self):
-        raise NotImplementedError
+        raise NotImplementedError("LTL.simplify is not yet implemented.")
 
     def translate(self):
+
         # Translate LTL formula to spot automaton using spot
         spot_aut = spot.translate(self.formula, "BA", "High", "SBAcc", "Complete")
 
@@ -152,14 +170,19 @@ class LTL(PL):
 
         return igl_aut
 
-    def is_equivalent(self, other):
-        assert isinstance(other, ILogic)
-        return spot.formula(self.formula) == spot.formula(other.formula)
-
-    def is_contained_in(self, other):
-        assert isinstance(other, ILogic)
-        checker = spot.language_containment_checker()
-        return checker.contained(spot.formula(self.formula), spot.formula(other.formula))
+    # def is_equivalent(self, other):
+    #     assert isinstance(other, ILogic)
+    #     return spot.formula(self.formula) == spot.formula(other.formula)
+    #
+    # def is_contained_in(self, other):
+    #     assert isinstance(other, ILogic)
+    #     checker = spot.language_containment_checker()
+    #     return checker.contained(spot.formula(self.formula), spot.formula(other.formula))
 
     def evaluate(self, st, *args, **kwargs):
-        raise NotImplementedError
+        """
+        Evaluates the LTL formula over the given state.
+
+        .. warning:: This function is not yet implemented.
+        """
+        raise NotImplementedError("LTL.evaluate method is not yet implemented.")
