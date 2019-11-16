@@ -8,9 +8,11 @@ Logic Module
 Global Variables
 ----------------
 
-.. autodata:: TRUE
+.. data:: TRUE
+    :annotation: = AP(name=true)
 
-.. autodata:: FALSE
+.. data:: FALSE
+    :annotation: = AP(name=false)
 
 -----------------
 
@@ -33,6 +35,16 @@ SyntaxTree
     :show-inheritance:
 
 
+
+-----------------
+
+Atomic Propositions
+-------------------
+
+.. autoclass:: iglsynth.logic.core.AP
+    :members:
+    :show-inheritance:
+    :inherited-members:
 
 
 

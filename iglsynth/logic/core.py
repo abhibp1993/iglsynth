@@ -225,23 +225,58 @@ class SyntaxTree(Graph):
 ########################################################################################################################
 
 class AP(ILogic):
+    """
+    Represents an atomic proposition.
+
+    :param formula: (str) The name of atomic proposition. Acceptable strings are alphanumeric
+        strings that are not "true" or "false" (case insensitive) and do not contain 'F', 'G',
+        'M', 'R', 'U', 'V', 'W', 'X', 'xor'.
+
+    :param eval_func: (function) A function that evaluates whether the AP is true or false in a
+        given state. The acceptable function templates are
+
+            * ``res <- eval_func(st)``
+            * ``res <- eval_func(st, *args)``
+            * ``res <- eval_func(st, *kwargs)``
+            * ``res <- eval_func(st, *args, **kwargs)``
+
+        where ``res`` must be a boolean.
+
+    """
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def __init__(self, formula: str, eval_func: Callable = None):
         assert isinstance(formula, str)
 
-        # self._alphabet = None
+        # self._alphabet = None         # TODO: Why is this commented?
         self._formula = None
         self._tree = None
         self._eval_func = eval_func
 
         # Note: It is important to call parse after setting _eval_func.
-        #   because "parse" function overrides eval_func if AP name is true/false.
+        # because "parse" function overrides eval_func if AP name is true/false.
         self.parse(formula)
 
     def __call__(self, st, *args, **kwargs):
-        return self.evaluate(st, args, kwargs)
+        # A __call__ function wraps AP.evaluate function by providing additional
+        # protection to "evaluate" functionality by checking if user has defined
+        # the ``eval_func`` or not.
+
+        # Handle the case when user has not provided evaluation function.
+        if self._eval_func is None:
+            raise NotImplementedError(f"{self}.eval_func is None. Did you provide the evaluation function for this AP?")
+
+        # Try evaluating the AP over given state.
+        # If evaluation fails because of function template not matching given inputs,
+        # raise appropriate error explaining the reason.
+        # If evaluation fails due to some other reason, do not handle it here.
+        try:
+            return self.evaluate(st, *args, **kwargs)
+
+        except TypeError:
+            raise ValueError(f"Given evaluation function does not conform to required signature."
+                             f"An evaluation must be:: func(st, *args, **kwargs)")
 
     def __eq__(self, other):
         assert isinstance(other, ILogic), f"An AP can only be compared with another ILogic formula. " \
@@ -337,7 +372,7 @@ class AP(ILogic):
 
     def simplify(self):
         # No simplification possible for an AP.
-        pass
+        return AP(formula=self.formula, eval_func=self._eval_func)
 
     def translate(self):
 
@@ -409,21 +444,25 @@ class AP(ILogic):
         return checker.contained(spot.formula(self.formula), spot.formula(other.formula))
 
     def evaluate(self, st, *args, **kwargs):
-        if self._eval_func is None:
-            raise NotImplementedError
+        """
+        Evaluates the AP over the given state.
 
-        try:
-            result = self._eval_func(st, args, kwargs)
+        :param st: (pyobject) An object representing state. It is user's duty to ensure the implementation
+            of given ``eval_func`` consumes the given state object correctly.
 
-            if isinstance(result, bool):
-                return result
-            else:
-                raise ValueError(f"{self.formula}.evaluate(st={st}, args={args}, kwargs={kwargs})"
-                                 f"returned {result}, which is not a boolean.")
+        :return: (bool) If AP is evaluated to be True/False over given state.
+        :raises ValueError: When result of evaluation is not a boolean.
 
-        except TypeError:
-            raise ValueError(f"Given evaluation function does not conform to required signature."
-                             f"An evaluation must be:: func(st, *args, **kwargs)")
+        """
+        # Call user-provided evaluation function
+        result = self._eval_func(st, *args, **kwargs)
+
+        # Check if result is boolean
+        if isinstance(result, bool):
+            return result
+        else:
+            raise ValueError(f"{self.formula}.evaluate(st={st}, args={args}, kwargs={kwargs})"
+                             f"returned {result}, which is not a boolean.")
 
 
 class PL(AP):
@@ -763,5 +802,5 @@ MP_CLASS = {"B": "PL",
 
 TRUE = AP(formula="true", eval_func=lambda st, *args, **kwargs: True)
 FALSE = AP(formula="false", eval_func=lambda st, *args, **kwargs: False)
-AP.TRUE = TRUE
-AP.FALSE = FALSE
+AP.TRUE = TRUE          #: Hello
+AP.FALSE = FALSE        #: Bye
