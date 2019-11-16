@@ -1,8 +1,15 @@
+
 Utilities
-===========
+=========
 
 .. currentmodule:: iglsynth.util.graph
 
 
 
-in proigress..
+Graph Class
+------------------------
+
+.. autoclass:: iglsynth.util.graph.Graph
+    :members:
+
+

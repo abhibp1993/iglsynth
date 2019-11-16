@@ -13,19 +13,19 @@ class Graph(object):
     """
     Base class to represent graph-based objects in IGLSynth.
 
-    - :class:`Graph` may represent a Digraph or a Multi-Digraph.
-    - :class:`Edge` may represent a self-loop, i.e. `source = target`.
-    - :class:`Graph` stores objects of :class:`Graph.Vertex` and :class:`Graph.Edge` classes or
-    their sub-classes, which users may define.
-    - :class:`Vertex` and :class:`Edge` may have attributes, which represent the vertex
-    and edge properties of the graph.
+        * :class:`Graph` may represent a Digraph or a Multi-Digraph.
+        * :class:`Graph.Edge` may represent a self-loop, i.e. `source = target`.
+        * :class:`Graph` stores objects of :class:`Graph.Vertex` and :class:`Graph.Edge` classes or
+          their sub-classes, which users may define.
+        * :class:`Graph.Vertex` and :class:`Graph.Edge` may have attributes, which represent the vertex
+          and edge properties of the graph.
 
     :param vtype: (class) Class representing vertex objects.
     :param etype: (class) Class representing edge objects.
     :param graph: (:class:`Graph`) Copy constructor. Copies the input graph into new Graph object.
     :param file: (str) Name of file (with absolute path) from which to load the graph.
 
-    .. todo: The copy-constructor and load-from-file functionality.
+    .. todo:: The copy-constructor and load-from-file functionality.
     """
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -35,8 +35,8 @@ class Graph(object):
         """
         Base class for representing a vertex of graph.
 
-        - :class:`Vertex` constructor takes no arguments.
-        - Two vertices are equal, if the two :class:`Vertex` objects are same.
+        - :class:`Graph.Vertex` constructor takes no arguments.
+        - Two vertices are equal, if the two :class:`Graph.Vertex` objects are same.
         """
         __hash__ = object.__hash__
 
@@ -44,11 +44,11 @@ class Graph(object):
         """
         Base class for representing a edge of graph.
 
-        - :class:`Edge` represents a directed edge.
-        - Two edges are equal, if the two :class:`Edge` objects are same.
+        - :class:`Graph.Edge` represents a directed edge.
+        - Two edges are equal, if the two :class:`Graph.Edge` objects are same.
 
-        :param u: (:class:`Vertex`) Source vertex of edge.
-        :param v: (:class:`Vertex`) Target vertex of edge.
+        :param u: (:class:`Graph.Vertex` or its sub-class) Source vertex of edge.
+        :param v: (:class:`Graph.Vertex` or its sub-class) Target vertex of edge.
         """
 
         __hash__ = object.__hash__
@@ -58,7 +58,7 @@ class Graph(object):
             self._target = v
 
         def __repr__(self):
-            return f"Edge(source={self.source}, target={self.target})"
+            return f"{self.__class__.__name__}.Edge(source={self.source}, target={self.target})"
 
         @property
         def source(self):
@@ -104,11 +104,12 @@ class Graph(object):
         elif file is not None and graph is None:                    # pragma: no cover
             self._load(filename=file)
 
-        elif file is not None and graph is not None:                # pragma: no cover
-            raise ValueError("file and graph parameters should not be provided simultaneously.")
+        elif file is not None and graph is not None:
+            raise ValueError("Input parameters 'file' and 'graph' should not be provided simultaneously.")
 
     def __repr__(self):
-        return f"Graph(|V|={self.num_vertices} of type={self.vtype}, |E|={self.num_edges} of type={self.etype})"
+        return f"{self.__class__.__name__}(|V|={self.num_vertices} of type={self.vtype}, " \
+            f"|E|={self.num_edges} of type={self.etype})"
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
@@ -135,7 +136,7 @@ class Graph(object):
 
     @property
     def is_multigraph(self):
-        raise NotImplementedError
+        raise NotImplementedError(f"{self.__class__.__name__}.is_multigraph property is not yet implemented.")
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
@@ -145,7 +146,7 @@ class Graph(object):
         Adds a new vertex to graph.
         An attempt to add existing vertex will be ignored, with a warning.
 
-        :param v: (:class:`Vertex`) Vertex to be added to graph.
+        :param v: (:class:`Graph.Vertex`) Vertex to be added to graph.
         """
         assert isinstance(v, self.vtype), \
             f"Vertex {v} must be object of {self.vtype}. Given, v is {v.__class__.__name__}"
@@ -161,7 +162,7 @@ class Graph(object):
         Adds a bunch of vertices to graph.
         An attempt to add existing vertex will be ignored, with a warning.
 
-        :param vbunch: (Iterable over :class:`Vertex`) Vertices to be added to graph.
+        :param vbunch: (Iterable over :class:`Graph.Vertex`) Vertices to be added to graph.
         """
         for v in vbunch:
             self.add_vertex(v)
@@ -171,7 +172,7 @@ class Graph(object):
         Removes a vertex from the graph.
         An attempt to remove a non-existing vertex will be ignored, with a warning.
 
-        :param v: (:class:`Vertex`) Vertex to be removed.
+        :param v: (:class:`Graph.Vertex`) Vertex to be removed.
         """
         assert isinstance(v, self.vtype), \
             f"Vertex {v} must be object of {self.vtype}. Given, v is {v.__class__.__name__}"
@@ -188,7 +189,7 @@ class Graph(object):
         Removes a bunch of vertices from the graph.
         An attempt to remove a non-existing vertex will be ignored, with a warning.
 
-        :param vbunch: (Iterable over :class:`Vertex`) Vertices to be removed.
+        :param vbunch: (Iterable over :class:`Graph.Vertex`) Vertices to be removed.
         """
         for v in vbunch:
             self.rm_vertex(v)
@@ -199,7 +200,7 @@ class Graph(object):
         Both the vertices must be present in the graph.
 
         :raises AttributeError: When at least one of the vertex is not in the graph.
-        :raises AssertionError: When argument `e` is not an :class:`Edge` object.
+        :raises AssertionError: When argument `e` is not an :class:`Graph.Edge` object.
         """
         assert isinstance(e, self.etype), \
             f"Edge {e} must be an object of {self.etype} class. Got {e.__class__.__name__}"
@@ -232,37 +233,44 @@ class Graph(object):
         Both the vertices of all edges must be present in the graph.
 
         :raises AttributeError: When at least one of the vertex is not in the graph.
-        :raises AssertionError: When argument `e` is not an :class:`Edge` object.
+        :raises AssertionError: When argument `e` is not an :class:`Graph.Edge` object.
         """
         for e in ebunch:
             self.add_edge(e)
 
     def rm_edge(self, e: 'Graph.Edge'):
         """
-        Removes an existing edge from the graph.
+        Removes an edge from the graph.
+        An attempt to remove a non-existing edge will be ignored, with a warning.
+
+        :param e: (:class:`Graph.Edge`) Edge to be removed.
         """
-
+        # Check the type of input edge
         assert isinstance(e, Graph.Edge), \
-            f"e must be an object of Graph.Edge class or its sub-class. Got {e.__class__.__name__}"
+            f"e must be an object of {self.__class__.__name__}.Edge class or its sub-class. Got {e.__class__.__name__}"
 
+        # If edge is not in graph, warn the user and return
         if e not in self._edges:
             warnings.warn(f"Edge {e} is not present in graph. Ignoring request to remove edge.")
             return None
 
+        # Extract source and target of edge
         u = e.source
         v = e.target
 
+        # Remove the edge
         self._vertex_edge_map[u][1].remove(e)
         self._vertex_edge_map[v][0].remove(e)
         self._edges.remove(e)
 
-    def rm_edges(self, elist: Iterable['Graph.Edge']):
+    def rm_edges(self, ebunch: Iterable['Graph.Edge']):
         """
-        Removes a bunch of existing edges from the graph.
+        Removes a bunch of edges from the graph.
+        An attempt to remove a non-existing edge will be ignored, with a warning.
 
-        .. todo: Implement this function.
+        :param ebunch: (Iterable over :class:`Graph.Edge`) Edges to be removed.
         """
-        for e in elist:
+        for e in ebunch:
             self.rm_edge(e)
 
     def in_edges(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
@@ -271,10 +279,10 @@ class Graph(object):
         In case of vertices, the iterator is defined over the union of set of
         incoming edges of individual vertices.
 
-        :param v: (:class:`Vertex`) Vertex of graph.
+        :param v: (:class:`Graph.Vertex`) Vertex of graph.
 
-        :raises AssertionError: When `v` is neither a :class:`Vertex` object
-            nor an iterable of :class:`Vertex` objects.
+        :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
+            nor an iterable of :class:`Graph.Vertex` objects.
         """
         if isinstance(v, self.vtype):
             assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
@@ -295,10 +303,10 @@ class Graph(object):
         In case of vertices, the iterator is defined over the union of set of
         incoming edges of individual vertices.
 
-        :param v: (:class:`Vertex`) Vertex of graph.
+        :param v: (:class:`Graph.Vertex`) Vertex of graph.
 
-        :raises AssertionError: When `v` is neither a :class:`Vertex` object
-            nor an iterable of :class:`Vertex` objects.
+        :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
+            nor an iterable of :class:`Graph.Vertex` objects.
         """
         if isinstance(v, self.vtype):
             assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
@@ -319,10 +327,10 @@ class Graph(object):
         In case of vertices, the iterator is defined over the union of set of
         incoming edges of individual vertices.
 
-        :param v: (:class:`Vertex`) Vertex of graph.
+        :param v: (:class:`Graph.Vertex`) Vertex of graph.
 
-        :raises AssertionError: When `v` is neither a :class:`Vertex` object
-            nor an iterable of :class:`Vertex` objects.
+        :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
+            nor an iterable of :class:`Graph.Vertex` objects.
         """
         if isinstance(v, self.vtype):
             assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
@@ -342,10 +350,10 @@ class Graph(object):
         In case of vertices, the iterator is defined over the union of set of
         incoming edges of individual vertices.
 
-        :param v: (:class:`Vertex`) Vertex of graph.
+        :param v: (:class:`Graph.Vertex`) Vertex of graph.
 
-        :raises AssertionError: When `v` is neither a :class:`Vertex` object
-            nor an iterable of :class:`Vertex` objects.
+        :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
+            nor an iterable of :class:`Graph.Vertex` objects.
         """
         if isinstance(v, self.vtype):
             assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
