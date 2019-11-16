@@ -126,14 +126,31 @@ class ILogic(ABC):
 ########################################################################################################################
 
 class SyntaxTree(Graph):
-
+    """
+    Represents an Abstract Syntax Tree of a :class:`ILogic <iglsynth.logic.core.ILogic>` formula.
+    """
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC CLASSES
     # ------------------------------------------------------------------------------------------------------------------
     class Vertex(Graph.Vertex):
+        """
+        Represents a vertex of a :class:`SyntaxTree`.
+
+        A vertex of syntax tree stores two key pieces of information.
+            - A sub-formula string, which is represented by the sub-tree by considering the vertex as the root.
+            - The kind (operator) represented by the vertex.
+
+        :param spot_formula: (spot.formula) The formula represented by the sub-tree with the vertex as the root.
+
+        """
+
+        # ------------------------------------------------------------------------------------------------------------------
+        # INTERNAL METHODS
+        # ------------------------------------------------------------------------------------------------------------------
         def __init__(self, spot_formula):
             super(SyntaxTree.Vertex, self).__init__()
 
+            # Internal variables
             self._formula = str(spot_formula)
             self._node_type = _SPOT_OP_MAP[spot_formula.kind()]
 
@@ -146,12 +163,17 @@ class SyntaxTree(Graph):
         def __repr__(self):
             return f"SyntaxTree.Vertex(formula='{self._formula}', kind={self.operator})"
 
+        # --------------------------------------------------------------------------------------------------------------
+        # PUBLIC PROPERTIES
+        # --------------------------------------------------------------------------------------------------------------
         @property
         def formula(self):
+            """ Returns the formula string represented by the sub-tree with vertex as root. """
             return self._formula
 
         @property
         def operator(self):
+            """ Returns the operator represented by the sub-tree with vertex as root. """
             return self._node_type
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -166,12 +188,19 @@ class SyntaxTree(Graph):
     # ------------------------------------------------------------------------------------------------------------------
     @property
     def root(self):
+        """ Returns the root of :class:`SyntaxTree` as a :class:`SyntaxTree.Vertex`. """
         return self._root
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def build_from_spot_formula(self, spot_formula):
+        """
+        Constructs a syntax tree from a given spot formula.
+
+        :param spot_formula: (:class:`spot.formula`)
+        :return: None
+        """
         # Start with root of tree
         root = SyntaxTree.Vertex(spot_formula=spot_formula)
         self.add_vertex(root)
@@ -180,6 +209,7 @@ class SyntaxTree(Graph):
         # Iteratively visit root in spot formula and build a tree in IGLSynth representation.
         stack = [root]
         while len(stack) > 0:
+
             # Create a vertex for current spot node.
             igl_vertex = stack.pop(0)
             spot_formula = spot.formula(igl_vertex.formula)

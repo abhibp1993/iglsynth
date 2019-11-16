@@ -23,5 +23,16 @@ ILogic (Interface Class)
     :inherited-members:
 
 
+-----------------
+
+SyntaxTree
+-----------
+
+.. autoclass:: iglsynth.logic.core.SyntaxTree
+    :members:
+    :show-inheritance:
+
+
+
 
 
