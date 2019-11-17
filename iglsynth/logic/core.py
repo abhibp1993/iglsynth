@@ -10,13 +10,16 @@ import iglsynth.util.spot as spot
 
 class ILogic(ABC):
     """
-    Interface class to define logic classes.
+    :class:`ILogic` is an interface class to represent logic classes in IGLSynth.
+    All logic classes must implement the methods of this class.
+
+    .. caution:: DO NOT INSTANTIATE THIS CLASS!
     """
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def __hash__(self):
-        raise NotImplementedError
+        raise NotImplementedError("ILogic.__hash__ is abstract method. The derived class must override it.")
 
     def __and__(self, other):
         return self._logical_and(other)
@@ -36,52 +39,86 @@ class ILogic(ABC):
     # ------------------------------------------------------------------------------------------------------------------
     @property
     def alphabet(self):
-        raise NotImplementedError
+        """
+        Returns the set of atomic propositions (as :class:`Alphabet <iglsynth.logic.core.Alphabet>` object)
+        over which the logic formula is defined.
+        """
+        raise NotImplementedError("ILogic.alphabet is abstract property. The derived class must override it.")
 
     @property
     def formula(self):
-        raise NotImplementedError
+        """ Returns a string representing the logic formula. """
+        raise NotImplementedError("ILogic.formula is abstract property. The derived class must override it.")
 
     @property
     def size(self):
-        raise NotImplementedError
+        """ Returns the size of formula. """
+        raise NotImplementedError("ILogic.size is abstract property. The derived class must override it.")
 
     @property
     def tree(self):
-        raise NotImplementedError
+        """ Returns the abstract syntax tree (as :class:`SyntaxTree <>` object) of the logic formula. """
+        raise NotImplementedError("ILogic.tree is abstract property. The derived class must override it.")
 
     # ------------------------------------------------------------------------------------------------------------------
     # PRIVATE METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def _logical_and(self, other):
-        raise NotImplementedError
+        """ Returns a new logic formula representing the AND-ing of "self" and "other" formulas. """
+        raise NotImplementedError("ILogic._logical_and is abstract method. The derived class must override it.")
 
     def _logical_or(self, other):
-        raise NotImplementedError
+        """ Returns a new logic formula representing the OR-ing of "self" and "other" formulas. """
+        raise NotImplementedError("ILogic._logical_or is abstract method. The derived class must override it.")
 
     def _logical_neg(self):
-        raise NotImplementedError
+        """ Returns a new logic formula representing the NEG-ation of "self" formula. """
+        raise NotImplementedError("ILogic._logical_neg is abstract method. The derived class must override it.")
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def parse(self, formula: str):
-        raise NotImplementedError
+        """ Parses the given formula string to return a simplified parsed string. """
+        raise NotImplementedError("ILogic.parse is abstract method. The derived class must override it.")
 
     def substitute(self, subs_map: dict):
-        raise NotImplementedError
+        """ Returns a new logic formula with substituted formulas. """
+        raise NotImplementedError("ILogic.substitute is abstract method. The derived class must override it.")
 
     def simplify(self):
-        raise NotImplementedError
+        """ Returns a new logic formula with a simplified formula. """
+        raise NotImplementedError("ILogic.simplify is abstract method. The derived class must override it.")
 
     def translate(self):
-        raise NotImplementedError
+        """
+        Returns an :class:`Automaton <iglsynth.logic.core.Automaton> object
+        representing an equivalent automaton for the logic formula.
+        """
+        raise NotImplementedError("ILogic.translate is abstract method. The derived class must override it.")
 
     def is_equivalent(self, other):
-        raise NotImplementedError
+        """
+        Checks whether given logic formula accepts the same language as the current (self) formula.
+
+        :param other: (:class:`ILogic <iglsynth.logic.core.ILogic>`) A logic formula.
+        :return: (bool) Whether self and other accept same language (True) or not (False).
+
+        .. note:: ``p.is_equivalent(q)`` is not the same as ``p == q``.
+          The first  checks whether the languagesof formulas ``p`` and ``q``
+          are equal or not, whereas the latter (``p == q``) whether
+          ``p`` and ``q`` are syntactically equivalent or not.
+        """
+        raise NotImplementedError("ILogic.is_equivalent is abstract method. The derived class must override it.")
 
     def is_contained_in(self, other):
-        raise NotImplementedError
+        """
+        Checks whether language of "self" formula is contained within the language of given formula (other).
+
+        :param other: (:class:`ILogic <iglsynth.logic.core.ILogic>`) A logic formula.
+        :return: (bool) Whether language of "self" is contained in "other" (True) or not (False).
+        """
+        raise NotImplementedError("ILogic.is_contained_in is abstract method. The derived class must override it.")
 
 
 ########################################################################################################################
@@ -89,14 +126,31 @@ class ILogic(ABC):
 ########################################################################################################################
 
 class SyntaxTree(Graph):
-
+    """
+    Represents an Abstract Syntax Tree of a :class:`ILogic <iglsynth.logic.core.ILogic>` formula.
+    """
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC CLASSES
     # ------------------------------------------------------------------------------------------------------------------
     class Vertex(Graph.Vertex):
+        """
+        Represents a vertex of a :class:`SyntaxTree`.
+
+        A vertex of syntax tree stores two key pieces of information.
+            - A sub-formula string, which is represented by the sub-tree by considering the vertex as the root.
+            - The kind (operator) represented by the vertex.
+
+        :param spot_formula: (spot.formula) The formula represented by the sub-tree with the vertex as the root.
+
+        """
+
+        # ------------------------------------------------------------------------------------------------------------------
+        # INTERNAL METHODS
+        # ------------------------------------------------------------------------------------------------------------------
         def __init__(self, spot_formula):
             super(SyntaxTree.Vertex, self).__init__()
 
+            # Internal variables
             self._formula = str(spot_formula)
             self._node_type = _SPOT_OP_MAP[spot_formula.kind()]
 
@@ -109,12 +163,17 @@ class SyntaxTree(Graph):
         def __repr__(self):
             return f"SyntaxTree.Vertex(formula='{self._formula}', kind={self.operator})"
 
+        # --------------------------------------------------------------------------------------------------------------
+        # PUBLIC PROPERTIES
+        # --------------------------------------------------------------------------------------------------------------
         @property
         def formula(self):
+            """ Returns the formula string represented by the sub-tree with vertex as root. """
             return self._formula
 
         @property
         def operator(self):
+            """ Returns the operator represented by the sub-tree with vertex as root. """
             return self._node_type
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -129,12 +188,19 @@ class SyntaxTree(Graph):
     # ------------------------------------------------------------------------------------------------------------------
     @property
     def root(self):
+        """ Returns the root of :class:`SyntaxTree` as a :class:`SyntaxTree.Vertex`. """
         return self._root
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def build_from_spot_formula(self, spot_formula):
+        """
+        Constructs a syntax tree from a given spot formula.
+
+        :param spot_formula: (:class:`spot.formula`)
+        :return: None
+        """
         # Start with root of tree
         root = SyntaxTree.Vertex(spot_formula=spot_formula)
         self.add_vertex(root)
@@ -143,6 +209,7 @@ class SyntaxTree(Graph):
         # Iteratively visit root in spot formula and build a tree in IGLSynth representation.
         stack = [root]
         while len(stack) > 0:
+
             # Create a vertex for current spot node.
             igl_vertex = stack.pop(0)
             spot_formula = spot.formula(igl_vertex.formula)
@@ -158,23 +225,58 @@ class SyntaxTree(Graph):
 ########################################################################################################################
 
 class AP(ILogic):
+    """
+    Represents an atomic proposition.
+
+    :param formula: (str) The name of atomic proposition. Acceptable strings are alphanumeric
+        strings that are not "true" or "false" (case insensitive) and do not contain 'F', 'G',
+        'M', 'R', 'U', 'V', 'W', 'X', 'xor'.
+
+    :param eval_func: (function) A function that evaluates whether the AP is true or false in a
+        given state. The acceptable function templates are
+
+            * ``res <- eval_func(st)``
+            * ``res <- eval_func(st, *args)``
+            * ``res <- eval_func(st, *kwargs)``
+            * ``res <- eval_func(st, *args, **kwargs)``
+
+        where ``res`` must be a boolean.
+
+    """
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def __init__(self, formula: str, eval_func: Callable = None):
         assert isinstance(formula, str)
 
-        # self._alphabet = None
+        # self._alphabet = None         # TODO: Why is this commented?
         self._formula = None
         self._tree = None
         self._eval_func = eval_func
 
         # Note: It is important to call parse after setting _eval_func.
-        #   because "parse" function overrides eval_func if AP name is true/false.
+        # because "parse" function overrides eval_func if AP name is true/false.
         self.parse(formula)
 
     def __call__(self, st, *args, **kwargs):
-        return self.evaluate(st, args, kwargs)
+        # A __call__ function wraps AP.evaluate function by providing additional
+        # protection to "evaluate" functionality by checking if user has defined
+        # the ``eval_func`` or not.
+
+        # Handle the case when user has not provided evaluation function.
+        if self._eval_func is None:
+            raise NotImplementedError(f"{self}.eval_func is None. Did you provide the evaluation function for this AP?")
+
+        # Try evaluating the AP over given state.
+        # If evaluation fails because of function template not matching given inputs,
+        # raise appropriate error explaining the reason.
+        # If evaluation fails due to some other reason, do not handle it here.
+        try:
+            return self.evaluate(st, *args, **kwargs)
+
+        except TypeError:
+            raise ValueError(f"Given evaluation function does not conform to required signature."
+                             f"An evaluation must be:: func(st, *args, **kwargs)")
 
     def __eq__(self, other):
         assert isinstance(other, ILogic), f"An AP can only be compared with another ILogic formula. " \
@@ -270,7 +372,7 @@ class AP(ILogic):
 
     def simplify(self):
         # No simplification possible for an AP.
-        pass
+        return AP(formula=self.formula, eval_func=self._eval_func)
 
     def translate(self):
 
@@ -342,31 +444,49 @@ class AP(ILogic):
         return checker.contained(spot.formula(self.formula), spot.formula(other.formula))
 
     def evaluate(self, st, *args, **kwargs):
-        if self._eval_func is None:
-            raise NotImplementedError
+        """
+        Evaluates the AP over the given state.
 
-        try:
-            result = self._eval_func(st, args, kwargs)
+        :param st: (pyobject) An object representing state. It is user's duty to ensure the implementation
+            of given ``eval_func`` consumes the given state object correctly.
 
-            if isinstance(result, bool):
-                return result
-            else:
-                raise ValueError(f"{self.formula}.evaluate(st={st}, args={args}, kwargs={kwargs})"
-                                 f"returned {result}, which is not a boolean.")
+        :return: (bool) If AP is evaluated to be True/False over given state.
+        :raises ValueError: When result of evaluation is not a boolean.
 
-        except TypeError:
-            raise ValueError(f"Given evaluation function does not conform to required signature."
-                             f"An evaluation must be:: func(st, *args, **kwargs)")
+        """
+        # Call user-provided evaluation function
+        result = self._eval_func(st, *args, **kwargs)
+
+        # Check if result is boolean
+        if isinstance(result, bool):
+            return result
+        else:
+            raise ValueError(f"{self.formula}.evaluate(st={st}, args={args}, kwargs={kwargs})"
+                             f"returned {result}, which is not a boolean.")
 
 
 class PL(AP):
+    """
+    Represents an propositional logic formula.
+
+    :param formula: (str) A formula string constructed from
+
+        * Atomic propositions (AP names can be alphanumeric strings
+          that are not "true" or "false" (case insensitive) and do
+          not contain ``F, G, M, R, U, V, W, X, xor`` as a sub-string.
+        * Operators: Negation (!), And(&), Or(|)
+
+    :param alphabet: (:class:`Alphabet`) A set of atomic propositions.
+
+    """
+
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
     __hash__ = AP.__hash__
 
     def __init__(self, formula: str, alphabet: 'Alphabet' = None):
-        assert isinstance(formula, str)
+        assert isinstance(formula, str), f"Input parameter formula must be a string.Received formula={formula}."
 
         self._alphabet = alphabet
         super(PL, self).__init__(formula=formula, eval_func=None)
@@ -461,26 +581,38 @@ class PL(AP):
                 warnings.warn("PL.substitute(...) does not support substitution for non-AP objects. "
                               "The results of substitution may not be correct!")
 
+            # Create instances of spot formula
             spot_p = spot.formula(p.formula)
             spot_q = spot.formula(q.formula)
 
+            # Invoke spot.formula.substitute (defined in iglsynth.util.spot)
             formula = formula.substitute(formula=spot_p, new_formula=spot_q)
 
         return PL(formula=str(formula))
 
     def simplify(self):
-        raise NotImplementedError
+        raise NotImplementedError("PL.simplify is not yet implemented.")
 
-    def is_equivalent(self, other):
-        assert isinstance(other, ILogic)
-        return spot.formula(self.formula) == spot.formula(other.formula)
+    # def is_equivalent(self, other):
+    #     assert isinstance(other, ILogic)
+    #     return spot.formula(self.formula) == spot.formula(other.formula)
 
-    def is_contained_in(self, other):
-        assert isinstance(other, ILogic)
-        checker = spot.language_containment_checker()
-        return checker.contained(spot.formula(self.formula), spot.formula(other.formula))
+    # def is_contained_in(self, other):
+    #     assert isinstance(other, ILogic)
+    #     checker = spot.language_containment_checker()
+    #     return checker.contained(spot.formula(self.formula), spot.formula(other.formula))
 
     def evaluate(self, st, *args, **kwargs):
+        """
+        Evaluates the PL formula over the given state.
+
+        :param st: (pyobject) An object representing state. It is user's duty to ensure the implementation
+            of given ``eval_func`` consumes the given state object correctly.
+
+        :return: (bool) If PL formula is evaluated to be ``True`` or ``False`` over given state.
+        :raises ValueError: When result of evaluation is not a boolean.
+
+        """
         # Evaluate alphabet to get a substitution map
         subs_map = self.alphabet.evaluate(st, args, kwargs)
 
@@ -489,12 +621,15 @@ class PL(AP):
 
         # Simplify the formula
         spot_formula = spot.formula(plf.formula)
+
         if spot_formula.is_tt():
             return True
+
         elif spot_formula.is_ff():
             return False
 
-        raise ValueError(f"Evaluation failed.")
+        raise ValueError(f"{self.formula}.evaluate(st={st}, args={args}, kwargs={kwargs})"
+                         f"returned {plf}, which is not a boolean. Was the substitution map complete?")
 
 
 class Alphabet(set):
@@ -511,10 +646,24 @@ class Alphabet(set):
         super(Alphabet, self).add(p)
 
     def evaluate(self, st, *args, **kwargs):
+        """
+        Evaluates the alphabet over the given state.
+
+        :param st: (pyobject) An object representing state. It is user's duty to ensure the implementation
+            of given ``eval_func`` consumes the given state object correctly.
+
+        :return: (dict(key=AP, value=bool)) A mapping of atomic proposition with it's evaluation at the given state.
+        :raises ValueError: When result of evaluation is not a boolean.
+
+        """
+        # Initialize a dictionary
         ap_label = dict()
+
+        # For every atomic proposition in alphabet, evaluate it
         for p in self:
             ap_label[p] = p(st, args, kwargs)
 
+        # Return the dictionary
         return ap_label
 
 
@@ -696,5 +845,5 @@ MP_CLASS = {"B": "PL",
 
 TRUE = AP(formula="true", eval_func=lambda st, *args, **kwargs: True)
 FALSE = AP(formula="false", eval_func=lambda st, *args, **kwargs: False)
-AP.TRUE = TRUE
-AP.FALSE = FALSE
+AP.TRUE = TRUE          #: Hello
+AP.FALSE = FALSE        #: Bye

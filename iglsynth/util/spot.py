@@ -3,8 +3,11 @@ from spot import *
 
 def substitute(self, formula, new_formula, *args):
     """
-    Substitution is only validated for propositional logic formulas.
-    It has been implemented for LTL, but is not tested.
+    Substitutes a sub-formula in spot.formula with another spot.formula.
+
+    :param formula: (spot.formula) Spot formula to be replaced.
+    :param new_formula: (spot.formula) Spot formula with which the 'formula' should be replaced with.
+
     """
     k = self.kind()
 

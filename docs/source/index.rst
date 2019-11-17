@@ -1,4 +1,5 @@
-.. _contents:
+.. currentmodule:: iglsynth
+
 
 ==================================================================
 IGLSynth: Automatic Strategy Synthesis Library
@@ -22,20 +23,23 @@ IGLSynth consists of 4 modules,
 
 |
 
+
 ----------------
 
 Indices and tables
 ------------------
+.. _contents:
+
+.. automodule:: iglsynth
+
 .. toctree::
-    :caption: API Documentation
+    :caption: IGLSynth Documentation
     :maxdepth: 2
-    :hidden:
 
     Home Page <self>
-    Game Module <game>
-    Logic Module <logic>
-    Solver Module <solver>
-    Utility Module  <util>
+    Examples <examples>
+    API Documentation <api>
+
 
 
 
