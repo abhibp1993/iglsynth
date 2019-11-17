@@ -1,20 +1,20 @@
 from setuptools import setup, find_packages
-print(find_packages())
+from iglsynth.version import get_publish_version, author
 
 
 
 setup(
     name='iglsynth',
     packages=find_packages(),
-    version='0.2.1',
+    version=get_publish_version(),
     description='Infinite Games on graph and Logic-based controller Synthesis',
-    author="Abhishek N. Kulkarni",
+    author=author(),
     author_email='ankulkarni@wpi.edu',
-    download_url='https://github.com/abhibp1993/iglsynth/releases/0.2.1.tar.gz',
-    url='iglsynth.akulkarni.me/en/latest/',
+    download_url=f'https://github.com/abhibp1993/iglsynth/releases/{get_publish_version()}.tar.gz',
+    url='www.akulkarni.me/iglsynth',
     install_requires=['pytest'],
     classifiers=[
-        "Development Status :: 1 - Planning",
+        "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: GNU General Public License (GPL)",
