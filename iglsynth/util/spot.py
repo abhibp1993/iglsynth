@@ -1,7 +1,4 @@
-try:
-    from spot import *
-except ImportError:
-    pass
+from spot import *
 
 
 def substitute(self, formula, new_formula, *args):
