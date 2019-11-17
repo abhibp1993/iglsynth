@@ -11,7 +11,7 @@ There are three ways to define a game on graph, namely
     * By providing a transition system and a formal specification,
     * By providing a game field and player objects.
 
-.. note:: IGLSynth v0.2.1 only supports explicit construction of graph.
+.. note:: IGLSynth v0.2.2 only supports explicit construction of graph.
 
 
 Define Game by Explicit Construction
