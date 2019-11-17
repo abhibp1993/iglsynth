@@ -1,8 +1,8 @@
 Changelog for IGLSynth
 ======================
 
-0.2.1 (16 Nov 2019)
--------------------
+0.2.1 (16 November 2019)
+------------------------
 
 * Game module
     * (core) Action class defined with "@action" decorator.
