@@ -1,14 +1,16 @@
 from setuptools import setup, find_packages
 
 
+
 setup(
     name='iglsynth',
     packages=find_packages(),
-    version='0.1.1',
+    version='0.2.1',
     description='Infinite Games on graph and Logic-based controller Synthesis',
     author='Abhishek N. Kulkarni',
     author_email='ankulkarni@wpi.edu',
-    url='https://github.com/abhibp1993/iglsynth',
+    download_url='https://github.com/abhibp1993/iglsynth/releases/0.2.1.tar.gz',
+    url='iglsynth.akulkarni.me/en/latest/',
     install_requires=['pytest'],
     classifiers=[
         "Intended Audience :: Developers",
