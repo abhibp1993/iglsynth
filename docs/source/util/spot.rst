@@ -1,8 +1,14 @@
 Utilities
-===========
+=========
 
 .. currentmodule:: iglsynth.util.spot
 
 
 
-in proigress..
+Spot Formulas
+-------------
+
+.. autoclass:: iglsynth.util.spot.formula
+    :members: translate, substitute
+
+
