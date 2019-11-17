@@ -3,167 +3,489 @@ from iglsynth.util.graph import *
 
 
 def test_graph_instantiation():
-    # 1. Default constructor
-    graph = Graph()
-    assert str(graph) == "Graph(|V|=0, |E|=0, vprops=[], eprops=[], gprops=[])"
+    # 1. Default Constructor
+    _ = Graph()
 
-    # 2. Construct with specified vertex, edge and graph properties, defaults are empty tuple.
-    graph = Graph(vprops=[("turn", "bool")], eprops=(("act", "int"), ("prob", "float")), gprops=[("name", "string")])
-    assert str(graph) == "Graph(|V|=0, |E|=0, vprops=['turn'], eprops=['act', 'prob'], gprops=['name'])"
+    # 2. Constructor with UserVertex, UserEdge types
+    class UserVertex(Graph.Vertex):
+        def __init__(self, name):
+            self.name = name
 
+    class UserEdge(Graph.Edge):
+        def __init__(self, name, u, v):
+            super(UserEdge, self).__init__(u, v)
+            self.name = name
 
-def test_graph_properties():
-    # Create a graph instance
-    graph = Graph(vprops=[("turn", "bool")], eprops=(("act", "int"), ("prob", "float")), gprops=[("name", "string")])
+    _ = Graph(vtype=UserVertex, etype=UserEdge)
 
-    # Add vertices and edges
-    v1 = graph.add_vertex()
-    v2 = graph.add_vertex()
-    e1 = graph.add_edge(v1, v2)
+    with pytest.raises(AssertionError):
+        _ = Graph(vtype=UserEdge, etype=UserVertex)
 
-    # Check properties
-    assert graph.num_vertices == 2
-    assert graph.num_edges == 1
-    assert str([v for v in graph.vertices]) == "[0, 1]"
-    assert str([e for e in graph.edges]) == "[Edge(source=0, target=1)]"
-    assert {"act", "turn", "prob", "name"} == set(graph.properties)
-    assert {"turn"} == set(graph.vertex_properties)
-    assert {"act", "prob"} == set(graph.edge_properties)
-    assert {"name"} == set(graph.graph_properties)
+    # 3. Copy Constructor -- TODO
+    # graph = Graph(graph=graph)
+
+    # 4. Load Graph -- TODO
+    # graph = Graph(file="")
+    # graph = Graph(vtype=UserVertex, etype=UserEdge, file="")
 
 
 def test_add_vertex():
     graph = Graph()
-    vid = graph.add_vertex()
+
+    # Using default vertex type
+    graph.add_vertex(Graph.Vertex())
     assert graph.num_vertices == 1
-    assert vid == 0
+
+    # Using user-defined vertex class
+    class UserVertex(Graph.Vertex):
+        pass
+
+    graph.add_vertex(UserVertex())
+    assert graph.num_vertices == 2
+
+    # Using an arbitrary class other than Graph.Vertex or its derivative.
+    with pytest.raises(AssertionError):
+        graph.add_vertex(10)
 
 
 def test_add_vertices():
     graph = Graph()
 
-    # Add 1 vertex
-    v0 = graph.add_vertices(num=1)
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+
+    graph.add_vertices([v0, v1])
+
+    with pytest.raises(AssertionError):
+        graph.add_vertex([v0, 10])
+
+
+def test_rm_vertex():
+    graph = Graph()
+
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+
+    graph.add_vertices([v0, v1])
+
+    # Remove one vertex
+    graph.rm_vertex(v0)
     assert graph.num_vertices == 1
-    assert v0 == [0]
+    assert v0 not in list(graph.vertices)
 
-    # Add multiple vertices
-    v1, v2 = graph.add_vertices(num=2)
-    assert graph.num_vertices == 3
-    assert v1 == 1
-    assert v2 == 2
+    # Remove an absent vertex
+    graph.rm_vertex(v0)
+    assert graph.num_vertices == 1
+    assert v0 not in list(graph.vertices)
 
-    # Check if error raised when num <= 0
+    # Remove another vertex
+    graph.rm_vertex(v1)
+    assert graph.num_vertices == 0
+    assert v0 not in list(graph.vertices)
+    assert v1 not in list(graph.vertices)
+
+    # Remove from empty graph
+    graph.rm_vertex(v1)
+    assert graph.num_vertices == 0
+    assert v0 not in list(graph.vertices)
+    assert v1 not in list(graph.vertices)
+
     with pytest.raises(AssertionError):
-        graph.add_vertices(num=0)
+        graph.rm_vertex(10)
+
+
+def test_rm_vertices():
+    graph = Graph()
+
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+
+    graph.add_vertices([v0, v1])
+
+    # Remove one vertex
+    graph.rm_vertices([v0, v1])
+    assert graph.num_vertices == 0
+    assert v0 not in list(graph.vertices)
+    assert v1 not in list(graph.vertices)
 
     with pytest.raises(AssertionError):
-        graph.add_vertices(num=-2)
+        graph.rm_vertex([10, v0])
 
 
 def test_add_edge():
     graph = Graph()
-    v0, v1 = graph.add_vertices(num=2)
-    graph.add_edge(v0, v1)
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+    graph.add_vertices([v0, v1])
 
+    # Add an edge
+    e = Graph.Edge(v0, v1)
+    graph.add_edge(e)
     assert graph.num_edges == 1
+
+    # Attempt repeat addition of same edge
+    graph.add_edge(e)
+    assert graph.num_edges == 1
+
+    # Add a new edge between same vertices
+    e0 = Graph.Edge(v0, v1)
+    graph.add_edge(e0)
+    assert graph.num_edges == 2
+
+    # Add edge using UserDefined Edge type
+    class UserEdge(Graph.Edge):
+        def __init__(self, name, u, v):
+            super(UserEdge, self).__init__(u, v)
+            self.name = name
+
+    graph = Graph(etype=UserEdge)
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+    graph.add_vertices([v0, v1])
+
+    graph.add_edge(UserEdge(name="edge", u=v0, v=v1))
+    assert graph.num_edges == 1
+
+    with pytest.raises(AssertionError):
+        graph.add_edge((0, 1))
+
+    with pytest.raises(AssertionError):
+        graph.add_edge(UserEdge(name="edge", u=v0, v=10))
+
+    with pytest.raises(AssertionError):
+        graph.add_edge(UserEdge(name="edge", u=10, v=v0))
+
+    with pytest.raises(AssertionError):
+        graph.add_edge(UserEdge(name="edge", u=90, v=10))
 
 
 def test_add_edges():
-    edges = [(0, 0), (0, 1), (1, 1)]
     graph = Graph()
-    graph.add_vertices(num=2)
-    graph.add_edges(edges=edges)
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+    graph.add_vertices([v0, v1])
+
+    # Add multiple edges
+    e0 = Graph.Edge(v0, v1)
+    e1 = Graph.Edge(v0, v0)
+
+    graph.add_edges([])
+    assert graph.num_edges == 0
+
+    graph.add_edges([e0])
+    assert graph.num_edges == 1
+
+    graph.add_edges([e0, e1])
+    assert graph.num_edges == 2
+
+    with pytest.raises(AssertionError):
+        graph.add_edges((0, 1))
+
+    with pytest.raises(AssertionError):
+        graph.add_edge(graph.Edge(u=v0, v=10))
+
+    with pytest.raises(AssertionError):
+        graph.add_edge(graph.Edge(u=10, v=v0))
+
+    with pytest.raises(AssertionError):
+        graph.add_edge(graph.Edge(u=90, v=10))
+
+
+def test_rm_edge():
+    """
+    .. note: rm_edge should never raise a KeyError (while removing some edge
+        from vertex-edge-map. If this happens, check add_edge function to ensure
+        whether the vertex-edge-map is properly handled or not.
+    """
+    graph = Graph()
+
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+    graph.add_vertices([v0, v1])
+
+    e00 = Graph.Edge(v0, v0)
+    e01 = Graph.Edge(v0, v1)
+    e11 = Graph.Edge(v1, v1)
+    graph.add_edges([e00, e01, e11])
 
     assert graph.num_edges == 3
 
+    graph.rm_edge(e00)
+    assert graph.num_edges == 2
+    assert e00 not in list(graph.edges) and e01 in list(graph.edges) and e11 in list(graph.edges)
 
-def test_remove_vertex():
+    graph.rm_edge(e00)
+    assert graph.num_edges == 2
+    assert e00 not in list(graph.edges) and e01 in list(graph.edges) and e11 in list(graph.edges)
+
+    graph.rm_edges([e01, e11])
+    assert graph.num_edges == 0
+    assert e00 not in list(graph.edges) and e01 not in list(graph.edges) and e11 not in list(graph.edges)
+
+    with pytest.raises(AssertionError):
+        graph.rm_edge(10)
+
+    with pytest.warns(UserWarning):
+        graph.rm_edge(e01)
+
+
+def test_rm_edges():
+    """
+    .. note: rm_edge should never raise a KeyError (while removing some edge
+        from vertex-edge-map. If this happens, check add_edge function to ensure
+        whether the vertex-edge-map is properly handled or not.
+    """
     graph = Graph()
-    graph.add_vertex()
-    graph.remove_vertex(0)
-    assert graph.num_vertices == 0
+
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+    graph.add_vertices([v0, v1])
+
+    e00 = Graph.Edge(v0, v0)
+    e01 = Graph.Edge(v0, v1)
+    e11 = Graph.Edge(v1, v1)
+    graph.add_edges([e00, e01, e11])
+
+    # Remove edges
+    graph.rm_edges([e01, e11])
+    assert graph.num_edges == 1
+    assert e00 in list(graph.edges) and e01 not in list(graph.edges) and e11 not in list(graph.edges)
 
 
-def test_remove_vertices():
+def test_graph_properties():
+    # Create a graph instance
+    class UserVertex(Graph.Vertex):
+        def __init__(self, name):
+            self.name = name
+
+        def __repr__(self):
+            return self.name
+
+    class UserEdge(Graph.Edge):
+        def __init__(self, u, v):
+            self.name = f"({u}, {v})"
+            super(UserEdge, self).__init__(u, v)
+
+        def __repr__(self):
+            return self.name
+
+    graph = Graph(vtype=UserVertex, etype=UserEdge)
+
+    # Add vertices and edges
+    v1, v2, v3 = list(map(UserVertex, ['a', 'b', 'c']))
+    graph.add_vertices([v1, v2, v3])
+
+    e1, e2, e3, e4 = list(map(UserEdge, [v1, v2, v3, v1], [v2, v3, v1, v1]))
+    graph.add_edges([e1, e2, e3, e4])
+
+    # Test properties
+    assert graph.num_vertices == 3
+    assert graph.num_edges == 4
+    assert set(graph.vertices) == {v1, v2, v3}
+    assert set(graph.edges) == {e1, e2, e3, e4}
+
+    # TODO assert graph.is_multigraph
+
+
+def test_graph_neighbors():
+
+    # Define a graph
     graph = Graph()
 
-    # Single vertex
-    graph.add_vertices(1)
-    graph.remove_vertices([0])
-    assert graph.num_vertices == 0
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+    graph.add_vertices([v0, v1])
 
-    # Multiple vertices
-    graph.add_vertices(num=3)
-    graph.remove_vertices([0, 1, 2])
-    print(list(graph.vertices))
-    assert graph.num_vertices == 0
+    e00 = Graph.Edge(v0, v0)
+    e01 = Graph.Edge(v0, v1)
+    e11 = Graph.Edge(v1, v1)
+    graph.add_edges([e00, e01, e11])
 
-    # Remove non-existing vertex
-    graph.remove_vertices([0, 1])
+    # Check in-neighbors
+    assert v0 in graph.in_neighbors(v=v0)
+    assert v1 not in graph.in_neighbors(v=v0)
+    assert v1 in graph.in_neighbors(v=v1)
+    assert v0 in graph.in_neighbors(v=v1)
 
+    assert v0 in graph.in_neighbors([v0, v1])
+    assert v1 in graph.in_neighbors([v0, v1])
 
-def test_add_v_e_g_property():
-    # Construct with specified vertex, edge and graph properties. Internally, it calls add_<v/e/g/>_property.
-    graph = Graph(vprops=[("turn", "bool")], eprops=(("act", "int"), ("prob", "float")), gprops=[("name", "string")])
-    assert str(graph) == "Graph(|V|=0, |E|=0, vprops=['turn'], eprops=['act', 'prob'], gprops=['name'])"
+    # Check out-neighbors
+    assert v0 in graph.out_neighbors(v=v0)
+    assert v0 not in graph.out_neighbors(v=v1)
+    assert v1 in graph.out_neighbors(v=v0)
+    assert v1 in graph.out_neighbors(v=v1)
 
+    assert v0 in graph.out_neighbors([v0, v1])
+    assert v1 in graph.out_neighbors([v0, v1])
 
-def test_has_v_e_g_property():
-    # Construct with specified vertex, edge and graph properties. Internally, it calls add_<v/e/g/>_property.
-    graph = Graph(vprops=[("turn", "bool")], eprops=(("act", "int"), ("prob", "float")), gprops=[("name", "string")])
+    # Check in-edges
+    assert e00 in graph.in_edges(v=v0)
+    assert e01 in graph.in_edges(v=v1)
+    assert e11 in graph.in_edges(v=v1)
 
-    assert graph.has_vertex_property("turn") is True
-    assert graph.has_edge_property("act") is True
-    assert graph.has_graph_property("name") is True
+    assert e00 in graph.in_edges([v0, v1])
+    assert e01 in graph.in_edges([v0, v1])
+    assert e11 in graph.in_edges([v0, v1])
 
-    assert graph.has_vertex_property("act") is False
-    assert graph.has_edge_property("turn") is False
-    assert graph.has_graph_property("turn") is False
+    # Check out-edges
+    assert e00 in graph.out_edges(v=v0)
+    assert e01 in graph.out_edges(v=v0)
+    assert e11 in graph.out_edges(v=v1)
 
+    assert e00 in graph.out_edges([v0, v1])
+    assert e01 in graph.out_edges([v0, v1])
+    assert e11 in graph.out_edges([v0, v1])
 
-def test_typeof_v_e_g_property():
-    # Construct with specified vertex, edge and graph properties. Internally, it calls add_<v/e/g/>_property.
-    graph = Graph(vprops=[("turn", "bool")], eprops=(("act", "int"), ("prob", "float")), gprops=[("name", "string")])
+    with pytest.raises(AssertionError):
+        graph.in_edges(10)
 
-    assert graph.typeof_vertex_property("turn") == "bool"
-    assert graph.typeof_edge_property("act") == "int"
-    assert graph.typeof_graph_property("name") == "string"
+    with pytest.raises(AssertionError):
+        graph.out_edges(10)
 
+    with pytest.raises(AssertionError):
+        graph.in_neighbors(10)
 
-def test_get_set_v_e_g_property():
-    # Construct with specified vertex, edge and graph properties. Internally, it calls add_<v/e/g/>_property.
-    graph = Graph(vprops=[("turn", "bool")], eprops=(("act", "int"), ("prob", "float")), gprops=[("name", "string")])
+    with pytest.raises(AssertionError):
+        graph.out_neighbors(10)
 
-    # Add vertices and an edge
-    graph.add_vertices(num=2)
-    edge = graph.add_edge(0, 1)
+    with pytest.raises(AssertionError):
+        graph.in_edges([10, v0])
 
-    # Check the default values
-    assert graph.get_vertex_property(name="turn", vid=0) is False
-    assert graph.get_vertex_property(name="turn", vid=1) is False
-    assert graph.get_edge_property(name="act", edge=edge) == 0
-    assert graph.get_graph_property(name="name") == ""
+    with pytest.raises(AssertionError):
+        graph.out_edges([10, v0])
 
-    # Set property
-    graph.set_vertex_property(name="turn", vid=0, value=True)
-    graph.set_vertex_property(name="turn", vid=1, value=True)
-    graph.set_edge_property(name="act", edge=edge, value=10)
-    graph.set_graph_property(name="name", value="hello")
+    with pytest.raises(AssertionError):
+        graph.in_neighbors([10, v0])
 
-    # Check the updated properties
-    assert graph.get_vertex_property(name="turn", vid=0) is True
-    assert graph.get_vertex_property(name="turn", vid=1) is True
-
-    # Access complete maps.
-    print(graph.get_vertex_property(name="turn"))
-    print(graph.get_edge_property(name="act"))
-    print(graph.get_graph_property(name="name"))
+    with pytest.raises(AssertionError):
+        graph.out_neighbors([10, v0])
 
 
-if __name__ == '__main__':
-    # test_graph_instantiation()
-    # test_graph_properties()
-    # test_add_edges()
-    # test_remove_vertices()
-    test_get_set_v_e_g_property()
+@pytest.mark.skip("Not Implemented")
+def test_prune():
+    pass
+
+
+@pytest.mark.skip("Not Implemented")
+def test_save():
+    pass
+
+
+def test_derived_class_instantiation_1():
+    """
+    This test tests whether the necessary functionality
+    to be provided by Graph class holds for derived classes.
+    """
+
+    # Define a class without overriding Vertex, Edge Classes.
+    class ChildGraph(Graph):
+        pass
+
+    graph = ChildGraph()
+    assert issubclass(graph.vtype, ChildGraph.Vertex)
+    assert issubclass(graph.etype, ChildGraph.Edge)
+
+
+def test_derived_class_instantiation_2():
+    """
+    This test tests whether the necessary functionality
+    to be provided by Graph class holds for derived classes.
+    """
+
+    # Define a class overriding Vertex Class, but not Edge Class
+    class ChildGraph(Graph):
+        class Vertex(Graph.Vertex):
+            pass
+
+    graph = ChildGraph()
+    assert issubclass(graph.vtype, ChildGraph.Vertex)
+    assert issubclass(graph.etype, ChildGraph.Edge)
+
+
+def test_derived_class_instantiation_3():
+    """
+    This test tests whether the necessary functionality
+    to be provided by Graph class holds for derived classes.
+    """
+
+    # Define a class overriding Edge Class, but not Vertex Class
+    class ChildGraph(Graph):
+        class Edge(Graph.Edge):
+            pass
+
+    graph = ChildGraph()
+    assert issubclass(graph.vtype, ChildGraph.Vertex)
+    assert issubclass(graph.etype, ChildGraph.Edge)
+
+
+def test_derived_class_instantiation_4():
+    """
+    This test tests whether the necessary functionality
+    to be provided by Graph class holds for derived classes.
+    """
+
+    # Define a class overriding Vertex Class and Edge Class AND user supplies UserVertex class
+    class ChildGraph(Graph):
+        class Vertex(Graph.Vertex):
+            pass
+
+    class UserVertex(ChildGraph.Vertex):
+        pass
+
+    graph = ChildGraph(vtype=UserVertex)
+    assert issubclass(graph.vtype, ChildGraph.Vertex)
+    assert issubclass(graph.etype, ChildGraph.Edge)
+
+    # Failure case 1: UserVertex is sub class of parent class, but not ChildGraph.
+    class UserVertex(Graph.Vertex):
+        pass
+
+    with pytest.raises(AssertionError):
+        graph = ChildGraph(vtype=UserVertex)
+
+    # Failure case 2: UserVertex is not a sub-class of any Graph class
+    class UserVertex():
+        pass
+
+    with pytest.raises(AssertionError):
+        graph = ChildGraph(vtype=UserVertex)
+
+
+def test_derived_class_instantiation_5():
+    """
+    This test tests whether the necessary functionality
+    to be provided by Graph class holds for derived classes.
+    """
+
+    # Define a class overriding Vertex Class and Edge Class AND user supplies UserEdge class
+    class ChildGraph(Graph):
+        class Edge(Graph.Edge):
+            pass
+
+    class UserEdge(ChildGraph.Edge):
+        pass
+
+    graph = ChildGraph(etype=UserEdge)
+    assert issubclass(graph.vtype, ChildGraph.Vertex)
+    assert issubclass(graph.etype, ChildGraph.Edge)
+
+    # Failure case 1: UserEdge is sub class of parent class, but not ChildGraph.
+    class UserEdge(Graph.Edge):
+        pass
+
+    with pytest.raises(AssertionError):
+        _ = ChildGraph(etype=UserEdge)
+
+    # Failure case 2: UserVertex is not a sub-class of any Graph class
+    class UserEdge:
+        pass
+
+    with pytest.raises(AssertionError):
+        _ = ChildGraph(etype=UserEdge)
+
+
+def test_repr():
+    graph = Graph()
+    assert graph.__str__() == f"Graph(|V|=0 of type=<class 'iglsynth.util.graph.Graph.Vertex'>, " \
+        f"|E|=0 of type=<class 'iglsynth.util.graph.Graph.Edge'>)"
