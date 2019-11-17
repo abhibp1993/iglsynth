@@ -62,4 +62,8 @@ def substitute(self, formula, new_formula, *args):
     raise ValueError(f"IGLSynth does not support operator of kind={k} for substitution.")
 
 
-formula.substitute = substitute
+try:
+    formula.substitute = substitute
+
+except NameError:
+    pass
