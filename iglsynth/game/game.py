@@ -4,137 +4,205 @@ iglsynth: game.py
 License goes here...
 """
 
-from iglsynth.util.graph import *
-from iglsynth.game.bases import *
+
+from iglsynth.game.tsys import *
+from iglsynth.logic.core import *
 
 
-class Game(IGame):
+class Game(Graph):
     """
-    Represents a deterministic two-player game. The game may be concurrent or turn-based.
+    Represents a two-player deterministic game.
 
-    :param kind: Whether the game is concurrent or turn-based.
-    :type kind: str, either :data:`CONCURRENT <iglsynth.game.game.CONCURRENT>` or
-        :data:`TURN_BASED <iglsynth.game.game.TURN_BASED>`
+        * The game could be concurrent or turn-based.
+        * Game instance can be constructed by adding vertices and edges (See :ref:`Example Game Graph Construction`).
+
+    :param kind: (:data:`CONCURRENT <iglsynth.game.core.CONCURRENT>`
+        or :data:`TURN_BASED <iglsynth.game.core.TURN_BASED>`) Whether the game is concurrent or turn-based.
+    :param vtype: (:class:`Game.Vertex` or sub-class) The vertex type used to define the game instance.
+    :param etype: (:class:`Game.Edge` or sub-class) The edge type used to define the game instance.
+    :param graph: (:class:`Game`) A game instance from which "self" instance should be created.
+    :param file: (str) An absolute path of file from which the game should be loaded.
+
     """
 
-    def _validate_graph(self, graph: Graph) -> bool:
+    # ------------------------------------------------------------------------------------------------------------------
+    # PUBLIC CLASSES
+    # ------------------------------------------------------------------------------------------------------------------
+    class Vertex(Graph.Vertex):
         """
-        A deterministic two-player game graph must have an edge property: "act : <Int>", where the integer represents
-        action-id. It must also have a vertex property: "is_final : <bool>" that marks
-        whether a vertex is a final state or not.
+        Represents a vertex in game.
 
-        If game is turn-based, then graph must have vertex property: "turn : <Int>", where the integer
-        represents the ID of player who will play at that vertex.
+        A game vertex is a 3-tuple, ``(name, tsys.v, aut.v)``. When game is
+        defined using a graph, `tsys.v` and `aut.v` are both set to None.
 
-        :param graph: An :class:`Graph` object.
-        """
+        - Vertex must have a name.
+        - When game is constructed from transition system and an automaton the vertex stores tsys and aut vertices.
 
-        # Check if graph has necessary properties applicable to both turn-based and concurrent games
-        if self.kind == TURN_BASED:
-            if not graph.has_vertex_property(name="turn", of_type="int"):
-                return False
+        :param name: (str) The name of the vertex.
+        :param turn: (int) The id of player who will make the move at this state.
+        :param tsys_v: (:class:`iglsynth.game.tsys.TSys.Vertex`) Vertex of transition system.
+        :param aut_v: (:class:`iglsynth.logic.core.Automaton.Vertex`) Vertex of automaton.
 
-        # Check if graph has necessary properties applicable to both turn-based and concurrent games
-        if not (graph.has_vertex_property(name="is_final", of_type="bool") and
-                graph.has_edge_property(name="act", of_type="int")):
-            return False
+        .. note:: When game is defined using transition system and automaton, it is conventional to name vertices
+            as ``(tsys_v.name, aut_v.name)``.
 
-        # If all properties are as expected
-        return True
-
-    def _validate_model(self, model: Kripke) -> bool:
-        raise NotImplementedError("Feature yet to be implemented.")
-
-    def _validate_player(self, p: Player) -> bool:
-        raise NotImplementedError("Feature yet to be implemented.")
-
-    def _validate_acc(self, acc: 'Acceptance') -> bool:
-        raise NotImplementedError("Feature yet to be implemented.")
-
-    def _define_by_model(self, model: Kripke, acc1: 'Acceptance', acc2: 'Acceptance' = None):
-        raise NotImplementedError("Feature yet to be implemented.")
-
-    def _define_by_player(self, p1: Player, p2: Player, acc1: 'Acceptance',
-                          rp: 'Distribution' = None, acc2: 'Acceptance' = None):
-        raise NotImplementedError("Feature yet to be implemented.")
-
-    def _define_by_graph(self, graph: 'Graph'):
-        """
-        Configures the game using a graph provided by user.
-
-        :param graph: An :class:`Graph` object satisfying necessary constraints.
-
-        .. note:: The graph is assumed to satisfy the requirements of a deterministic two-player game.
-        """
-        self._p1 = None
-        self._p2 = None
-        self._model = None
-        self._acc = None
-        self._graph = graph
-
-    def define(self, graph: Graph = None, model: Kripke = None, p1: Player = None, p2: Player = None,
-               rp: 'Distribution' = None, acc1: 'Acceptance' = None, acc2: 'Acceptance' = None):
-        """
-        Define a two-player zero-sum game with given parameters.
-        The instantiation checks for the following patterns, in order:
-
-        1. ``game.define(graph=<Graph>)``
-        2. ``game.define(model=<TSys>, acc1=<Acceptance>)``
-        3. ``game.define(p1=<Player>, p2=<Player>, acc1=<Acceptance>)``
-
-        :param graph: Graph object representing game.
-        :type graph: :class:`Graph <iglsynth.util.Graph>`
-
-        :param model: A Kripke structure.
-        :type model: :class:`TSys`
-
-        :param p1: Player 1 profile.
-        :type p1: :class:`Player`
-
-        :param p2: Player 1 profile.
-        :type p2: :class:`Player`
-
-        :param acc1: Winning condition of player 1.
-        :type acc1: :class:`Acceptance`
-
-        .. caution:: Currently, only instantiation using ``graph`` is implemented.
         """
 
-        # Case 1: Definition by graph
-        if graph is not None:
-            if self._validate_graph(graph):
-                self._define_by_graph(graph)
+        # ------------------------------------------------------------------------------------------------------------------
+        # INTERNAL CLASSES
+        # ------------------------------------------------------------------------------------------------------------------
+        def __init__(self, name, turn=None, tsys_v=None, aut_v=None):
+            assert isinstance(tsys_v, TSys.Vertex) or tsys_v is None          
+            assert isinstance(aut_v, Automaton.Vertex) or aut_v is None
+            assert isinstance(turn, int) or turn is None
+
+            self._name = name
+            self._tsys_v = tsys_v
+            self._aut_v = aut_v
+            self._turn = turn
+
+        def __repr__(self):
+            string = f"Vertex(name={self._name}"
+            if self._tsys_v is not None:
+                string += f", TSys.V={self._tsys_v}"        # pragma: no cover
+            if self._aut_v is not None:
+                string += f", Aut.V={self._aut_v}"          # pragma: no cover
+            string += ")"
+            return string
+
+        def __hash__(self):
+            return self.name.__hash__()
+
+        def __eq__(self, other):
+            return self._name == other._name and self._turn == other._turn
+
+        # ------------------------------------------------------------------------------------------------------------------
+        # PUBLIC PROPERTIES
+        # ------------------------------------------------------------------------------------------------------------------
+        @property
+        def name(self):
+            """ Returns the name of game vertex. """
+            return self._name
+
+        @property
+        def turn(self):
+            """ Returns the id of player who will make move in current state. """
+            return self._turn
+
+        @property
+        def tsys_vertex(self):
+            return self._tsys_v         # pragma: no cover
+
+        @property
+        def aut_vertex(self):
+            return self._aut_v          # pragma: no cover
+
+    class Edge(Graph.Edge):
+        """
+        Represents an action-labeled edge of a game.
+
+        - :class:`Edge <iglsynth.game.game.Game.Edge>` represents a directed edge labeled with an action.
+        - Two edges are equal if they share equal source and target vertices
+          and have identical action labels.
+
+        :param u: (:class:`Vertex`) Source vertex of edge.
+        :param v: (:class:`Vertex`) Target vertex of edge.
+        :param act: (:class:`Action <iglsynth.game.core.Action>` or None) An action label of edge. (Default: None)
+
+        .. note:: We have following cases depending on whether game is turn-based or concurrent.
+
+            * (Turn-based) Action must be an :class:`Action <iglsynth.game.core.Action>` object.
+            * (Concurrent) Action must be a 2-tuple of (:class:`Action <iglsynth.game.core.Action>`,
+              :class:`Action <iglsynth.game.core.Action>`)
+        """
+        def __init__(self, u: 'Game.Vertex', v: 'Game.Vertex', act=None):
+            # Validate type of action
+            if isinstance(act, Action):
+                pass
+
+            elif isinstance(act, (tuple, list)):
+                assert len(act) == 2
+                assert isinstance(act[0], Action)
+                assert isinstance(act[1], Action)
+                act = tuple(act)
+
+            elif act is None:
+                pass
+
             else:
-                raise AttributeError("Game could not be defined using provided 'graph'. Validation failed.")
+                raise AssertionError(f"Input parameter act must be an Action or a 2-tuple (Action, Action) or None.")
 
-        # Case 2: Definition by model and winning condition
-        elif model is not None and acc1 is not None:
-            raise NotImplementedError("Feature yet to be implemented.")
-            # if self._validate_model(model) and self._validate_acc(acc1):
-            #     self._define_by_model(model, acc1)
-            # else:
-            #     raise AttributeError("Game could not be defined using provided 'model', 'acc1'. Validation failed.")
+            super(Game.Edge, self).__init__(u=u, v=v)
+            self._act = act
 
-        # Case 2: Definition by player profiles and winning condition
-        elif p1 is not None and p2 is not None and acc1 is not None:
-            raise NotImplementedError("Feature yet to be implemented.")
+        def __eq__(self, other):
+            return self.source == other.source and self.target == other.target and self.act == other.act
 
-            # if self._validate_player(p1) and self._validate_player(p2) and self._validate_acc(acc1):
-            #     self._define_by_player(p1, p2, acc1)
-            # else:
-            #     raise AttributeError("Game could not be defined using provided 'p1', 'p2', 'acc1'. Validation failed.")
+        def __hash__(self):
+            return (self.source, self.target, self.act).__hash__()
 
-        # Case else:
+        @property
+        def act(self):
+            return self._act
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # INTERNAL METHODS
+    # ------------------------------------------------------------------------------------------------------------------
+    def __init__(self, kind, vtype=None, etype=None, graph=None, file=None):
+
+        assert kind in [TURN_BASED, CONCURRENT], \
+                f"Parameter 'kind' must be either TURN_BASED or CONCURRENT. Got {kind}."
+
+        # Initialize internal variables
+        self._kind = kind
+        super(Game, self).__init__(vtype, etype, graph, file)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # PROPERTIES
+    # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def kind(self):
+        """
+        Returns the kind of game, whether :data:`TURN_BASED <iglsynth.game.core.TURN_BASED>` or
+        :data:`CONCURRENT <iglsynth.game.core.CONCURRENT>`.
+        """
+        return self._kind
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # PRIVATE METHODS
+    # ------------------------------------------------------------------------------------------------------------------
+    def _define_by_tsys_aut(self, tsys, aut):
+        # TODO: Implement this one!
+        pass        # pragma: no cover
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # PUBLIC METHODS
+    # ------------------------------------------------------------------------------------------------------------------
+    def add_vertex(self, v: 'Game.Vertex'):
+        if self._kind == TURN_BASED:
+            assert v.turn is not None
+        else:   # kind is CONCURRENT
+            assert v.turn is None
+
+        super(Game, self).add_vertex(v)
+
+    def add_edge(self, e: 'Game.Edge'):
+
+        if self._kind == TURN_BASED:
+            assert isinstance(e.act, Action) or e.act is None
+        else:   # kind is CONCURRENT
+            act = e.act
+            if act is not None:
+                assert isinstance(act, (list, tuple))
+                assert len(act) == 2
+                assert isinstance(act[0], Action)
+                assert isinstance(act[1], Action)
+        
+        super(Game, self).add_edge(e)
+
+    def define(self, tsys=None, aut=None):      # pragma: no cover
+        if tsys is not None and aut is not None:
+            self._define_by_tsys_aut(tsys, aut)
+
         else:
-            raise AttributeError('Game cannot be defined using given parameters. See docs for acceptable definitions.')
-
-    def construct(self, model_product: Callable = None, game_product: Callable = None):
-        """
-        Yet to be implemented...
-
-        :param model_product:
-        :param game_product:
-        :return:
-        """
-        raise NotImplementedError("Feature yet to be implemented.")
-
+            AttributeError("Either provide a graph or (tsys and aut) parameter, but not both.")
