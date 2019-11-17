@@ -40,7 +40,7 @@ Indices and tables
     install
     API Documentation <api>
     Examples <examples>
-
+    changelog
 
 
 
