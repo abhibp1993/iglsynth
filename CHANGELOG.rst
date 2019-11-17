@@ -1,5 +1,25 @@
-Changelog for IGLSynth
-======================
+Release Notes
+=============
+
+0.2.2 (17 November 2019)
+------------------------
+
+* Docker images
+
+    * Updated ``latest`` and ``dev`` docker images on docker hub. The latest image now ships with iglsynth installed.
+    * Set up a GitHub - DockerHub webhook. All pushes to master branch will trigger a docker image build.
+
+* Documentation
+
+    * Added two examples:
+
+        - Game graph construction
+        - Logic formula definition
+
+    * Added installation instructions.
+    * Fixed bugs in documentation.
+
+
 
 0.2.1 (16 November 2019)
 ------------------------
