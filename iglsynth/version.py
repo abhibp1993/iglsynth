@@ -4,7 +4,7 @@
 _major = 0
 _minor = 2
 _micro = 1
-_build = 1
+_build = 2                                                  # Reason: Dockerfiles updated
 __version__ = f"{_major}.{_minor}.{_micro}"
 
 # Contributors
