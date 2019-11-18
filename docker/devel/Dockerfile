@@ -25,7 +25,7 @@ RUN apt-get update && \
 	apt-get install -y spot libspot-dev spot-doc python3-spot
 
 # Install coverage tools
-RUN pip3 install pytest-cov
+RUN pip3 install pytest-cov coverage codecov
 
 # Install additional packages, libraries
 RUN pip3 install matplotlib
