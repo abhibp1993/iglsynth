@@ -33,5 +33,10 @@ RUN apt-get update && \
 	apt-get install -y python3-graph-tool
 
 # Get and install latest iglsynth
-RUN cd / && wget https://github.com/abhibp1993/iglsynth/archive/0.1.0.tar.gz && tar xvzf 0.1.0.tar.gz
-RUN cd iglsynth-0.1.0/ && pip3 install -e .
+RUN pip3 install iglsynth --upgrade
+
+# Install coverage tools
+RUN pip3 install pytest-cov coverage codecov
+
+# Install additional packages, libraries
+RUN pip3 install matplotlib

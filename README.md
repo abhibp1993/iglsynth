@@ -1,6 +1,6 @@
 # iglsynth 
-[![Build Status](https://travis-ci.com/abhibp1993/iglsynth.svg?branch=master)](https://travis-ci.com/abhibp1993/iglsynth)
-[![Coverage Status](https://codecov.io/gh/abhibp1993/iglsynth/branch/master/graph/badge.svg)](https://codecov.io/gh/abhibp1993/iglsynth/branch/v0.2)
+[![Build Status](https://travis-ci.com/abhibp1993/iglsynth.svg?branch=devel)](https://travis-ci.com/abhibp1993/iglsynth)
+[![Coverage Status](https://codecov.io/gh/abhibp1993/iglsynth/branch/devel/graph/badge.svg)](https://codecov.io/gh/abhibp1993/iglsynth/branch/devel)
 
 IGLSynth (Infinite Games on graph &amp; Logic-based controller Synthesis) is a high-level Python API for defining and solving Infinite Games and Logic-based strategy Synthesis. 
 

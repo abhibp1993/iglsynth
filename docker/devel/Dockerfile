@@ -24,10 +24,9 @@ RUN apt-get update && \
 	RUNLEVEL=1 DEBIAN_FRONTEND=noninteractive && \
 	apt-get install -y spot libspot-dev spot-doc python3-spot
 
-# Install graph-tool
-RUN echo 'deb http://downloads.skewed.de/apt/disco disco universe' >> /etc/apt/sources.list
-RUN echo 'deb-src http://downloads.skewed.de/apt/disco disco universe' >> /etc/apt/sources.list
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 7A80C8ED4FCCBE09
-RUN apt-get update && \
-	RUNLEVEL=1 DEBIAN_FRONTEND=noninteractive && \
-	apt-get install -y python3-graph-tool
+# Install coverage tools
+RUN pip3 install pytest-cov coverage codecov
+
+# Install additional packages, libraries
+RUN pip3 install matplotlib
+

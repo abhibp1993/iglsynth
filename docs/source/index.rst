@@ -37,8 +37,9 @@ Indices and tables
     :maxdepth: 2
 
     Home Page <self>
-    Examples <examples>
+    install
     API Documentation <api>
+    Examples <examples>
 
 
 
