@@ -9,4 +9,5 @@ IGLSynth Examples
 .. toctree::
     :maxdepth: 1
 
-    Game Graph Construction <examples/ex_game_graph_construction>
+    Game Graph Construction <examples/construct_game_graph>
+    Defining Logic Formulas <examples/define_logic_formula>
