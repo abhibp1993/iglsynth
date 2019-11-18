@@ -36,7 +36,7 @@ RUN apt-get update && \
 RUN pip3 install iglsynth --upgrade
 
 # Install coverage tools
-RUN pip3 install pytest-cov
+RUN pip3 install pytest-cov coverage codecov
 
 # Install additional packages, libraries
 RUN pip3 install matplotlib
