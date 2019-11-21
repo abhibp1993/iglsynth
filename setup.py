@@ -11,7 +11,7 @@ setup(
     author=author(),
     author_email='ankulkarni@wpi.edu',
     download_url=f'https://github.com/abhibp1993/iglsynth/releases/{get_publish_version()}.tar.gz',
-    url='www.akulkarni.me/iglsynth',
+    url='https://akulkarni.me/iglsynth/',
     install_requires=['pytest'],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
