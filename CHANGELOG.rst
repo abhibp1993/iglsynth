@@ -6,8 +6,7 @@ Release Notes
 
 * Bugs
 
-    * [TODO] TSys and Kripke classes set the default vtype and etype to ``self.Vertex`` and ``self.Edge``. This raises
-      Vertex/Edge type assertion error in Graph class constructor.
+
     * [Issue #20] Automaton.Edge now returns an `AP` or `PL` class object for AP, PL, LTL.translate().
     * [Issue #17] Unexpected AssertionError when calling `PL(st=..)` and `LTL(st=..)` is handled resolved.
     * [Issue #16] Bug in the printing PL, LTL objects was resolved.
@@ -15,9 +14,15 @@ Release Notes
 
 * Game module
 
-    * [TODO] Gridworld class accept ``p1_action`` and ``p2_action`` separately.
-    * [TODO] Gridworld class defined with basic 4, 5, 8, 9 connectivity.
+    * [Issue #6] Gridworld class accept ``p1_action`` and ``p2_action`` separately.
+    * [Issue #6] Gridworld class defined with basic 4, 5, 8, 9 connectivity.
     * [TODO] Implement ``game.define(tsys, spec)`` function.
+    * [Issue #4] Implement Kripke class.
+      Kripke class sets the default vtype and etype to ``self.Vertex`` and ``self.Edge``.
+      This raises Vertex/Edge type assertion error in Graph class constructor.
+    * [Issue #5] Implement TSys class.
+      TSys class sets the default vtype and etype to ``self.Vertex`` and ``self.Edge``.
+      This raises Vertex/Edge type assertion error in Graph class constructor.
 
 * Solver module
 
