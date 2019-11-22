@@ -38,4 +38,5 @@ def test_translate():
     assert aut.num_edges == 4
     assert aut.num_vertices == 3
     assert Automaton.Vertex(name="0") in aut.final
+    assert all(isinstance(e.formula, ILogic) for e in aut.edges)
 
