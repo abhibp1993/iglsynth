@@ -1,6 +1,40 @@
 Release Notes
 =============
 
+0.2.3 ()
+-----------------------
+
+* Bugs
+
+    * [TODO] TSys and Kripke classes set the default vtype and etype to ``self.Vertex`` and ``self.Edge``. This raises
+      Vertex/Edge type assertion error in Graph class constructor.
+    * [TODO] Automaton.Edge returns formula as a string. Instead it should return a PL class object.
+    * [TODO] Calls to ``PL.__call__`` and ``LTL.__call__`` invoke base class ``AP.__call__`` that raises
+      AssertionError; for ``eval_func`` should be defined. However, ``eval_func`` should be defined only for
+      ``AP`` and not for derived classes. The call should not raise an error.
+    * [TODO] ``AP.eval_func`` currently requires definition of ``args`` and``kwargs`` as input parameters by the user.
+      Relax this requirement allowing user to NOT provide ``args`` and ``kwargs``.
+    * [TODO] Printing PL, LTL objects is incorrect. It shows ``AP(...)`` instead of ``PL(..)`` or ``LTL(..)``.
+
+
+* Game module
+
+    * [TODO] Gridworld class accept ``p1_action`` and ``p2_action`` separately.
+    * [TODO] Gridworld class defined with basic 4, 5, 8, 9 connectivity.
+    * [TODO] Implement ``game.define(tsys, spec)`` function.
+
+* Solver module
+
+    * [TODO] Define ``Strategy`` class to represent deterministic strategy.
+    * [TODO] ``ZielonkaSolver`` class defined and implemented.
+
+
+* Utilities
+
+    * [TODO] Add function to get an edge by providing source and target vertex. This may be overridden in derived
+      classes to accept more information to uniquely identify the edge.
+
+
 0.2.2 (17 November 2019)
 ------------------------
 
