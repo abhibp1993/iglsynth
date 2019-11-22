@@ -14,7 +14,7 @@ Release Notes
       ``AP`` and not for derived classes. This bug was resolved.
     * [TODO] ``AP.eval_func`` currently requires definition of ``args`` and``kwargs`` as input parameters by the user.
       Relax this requirement allowing user to NOT provide ``args`` and ``kwargs``.
-    * [TODO] Printing PL, LTL objects is incorrect. It shows ``AP(...)`` instead of ``PL(..)`` or ``LTL(..)``.
+    * [Issue #16] Bug in the printing PL, LTL objects was resolved.
 
 
 * Game module

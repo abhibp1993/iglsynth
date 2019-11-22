@@ -70,3 +70,9 @@ def test_evaluate():
 
     with pytest.raises(ValueError):
         g(st=11)
+
+
+def test_repr():
+    f = LTL("F(a & b)")
+    assert f.__repr__() == "LTL(formula=F(a & b))"
+
