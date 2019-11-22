@@ -9,6 +9,7 @@ def test_translate():
     assert aut.num_edges == 1
     assert aut.num_vertices == 1
     assert Automaton.Vertex(name="0") in aut.final
+    assert all(isinstance(e.formula, ILogic) for e in aut.edges)
 
     # Define a AP; false
     false = LTL(formula="false")
@@ -16,6 +17,7 @@ def test_translate():
     assert aut.num_edges == 1
     assert aut.num_vertices == 1
     assert len(aut.final) == 0
+    assert all(isinstance(e.formula, ILogic) for e in aut.edges)
 
     # Define a general LTL formula
     # From spot.randaut:: Gp1 & !(p1 & X(p0 xor p1))
@@ -48,6 +50,7 @@ def test_translate():
     assert aut.num_vertices == 4
     print(aut.final)
     assert len(aut.final) == 1
+    assert all(isinstance(e.formula, ILogic) for e in aut.edges)
 
 
 def test_evaluate():
