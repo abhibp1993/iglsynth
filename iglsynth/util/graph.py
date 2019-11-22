@@ -111,6 +111,17 @@ class Graph(object):
         return f"{self.__class__.__name__}(|V|={self.num_vertices} of type={self.vtype}, " \
             f"|E|={self.num_edges} of type={self.etype})"
 
+    def __contains__(self, item):
+        if isinstance(item, self.vtype):
+            return self.has_vertex(item)
+
+        elif isinstance(item, self.etype):
+            return self.has_edge(item)
+
+        else:
+            raise TypeError(f"{self}.__contains__: Input must be of {type(self.vtype)} or {type(self.etype)}. "
+                            f"Received {type(item)}.")
+
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
     # ------------------------------------------------------------------------------------------------------------------
@@ -194,6 +205,9 @@ class Graph(object):
         for v in vbunch:
             self.rm_vertex(v)
 
+    def has_vertex(self, v: 'Graph.Vertex'):
+        return v in self._vertex_edge_map.keys()
+
     def add_edge(self, e: 'Graph.Edge'):
         """
         Adds an edge to the graph.
@@ -272,6 +286,14 @@ class Graph(object):
         """
         for e in ebunch:
             self.rm_edge(e)
+
+    def has_edge(self, e: 'Graph.Edge'):
+        return e in self._edges
+
+    def get_edges(self, u: 'Graph.Vertex', v: 'Graph.Vertex'):
+        assert u in self, f"{self}.get_edges:: Vertex u={u} is not in graph."
+        assert v in self, f"{self}.get_edges:: Vertex v={v} is not in graph."
+        return iter(set.intersection(self._vertex_edge_map[u][1], self._vertex_edge_map[v][0]))
 
     def in_edges(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
         """
