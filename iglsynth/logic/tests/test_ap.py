@@ -144,3 +144,6 @@ def test_translate():
     assert Automaton.Vertex(name="0") in aut.final
 
 
+def test_repr():
+    a = AP("a")
+    assert a.__repr__() == "AP(formula=a)"

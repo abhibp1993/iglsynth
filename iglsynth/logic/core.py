@@ -16,6 +16,7 @@ class ILogic(ABC):
 
     .. caution:: DO NOT INSTANTIATE THIS CLASS!
     """
+
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
@@ -34,6 +35,9 @@ class ILogic(ABC):
     __iand__ = __rand__ = __and__
     __ior__ = __ror__ = __or__
     __invert__ = __neg__
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(formula={self.formula})"
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
@@ -290,8 +294,8 @@ class AP(ILogic):
     def __hash__(self):
         return self.formula.__hash__()
 
-    def __repr__(self):
-        return f"AP(name={self.formula})"
+    # def __repr__(self):
+    #     return f"AP(name={self.formula})"
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES

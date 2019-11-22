@@ -18,4 +18,6 @@ def test_pl_evaluate():
     assert f(st=11) is False
 
 
-
+def test_repr():
+    f = PL("a & b")
+    assert f.__repr__() == "PL(formula=a & b)"
