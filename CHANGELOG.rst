@@ -8,10 +8,8 @@ Release Notes
 
     * [TODO] TSys and Kripke classes set the default vtype and etype to ``self.Vertex`` and ``self.Edge``. This raises
       Vertex/Edge type assertion error in Graph class constructor.
-    * [TODO] Automaton.Edge returns formula as a string. Instead it should return a PL class object.
-    * [Issue #17] Calls to ``PL.__call__`` and ``LTL.__call__`` invoke base class ``AP.__call__``. Previously, this raised
-      AssertionError; for ``eval_func`` must be defined. However, ``eval_func`` is defined only for
-      ``AP`` and not for derived classes. This bug was resolved.
+    * [Issue #20] Automaton.Edge now returns an `AP` or `PL` class object for AP, PL, LTL.translate().
+    * [Issue #17] Unexpected AssertionError when calling `PL(st=..)` and `LTL(st=..)` is handled resolved.
     * [Issue #16] Bug in the printing PL, LTL objects was resolved.
 
 
