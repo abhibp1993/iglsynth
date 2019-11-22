@@ -31,9 +31,8 @@ Release Notes
 
 * Utilities
 
-    * [TODO] Add function to get an edge by providing source and target vertex. This may be overridden in derived
-      classes to accept more information to uniquely identify the edge.
-
+    * Added `has_vertex`, `has_edge`, `get_edges` functionality to `Graph` class.
+    
 
 0.2.2 (17 November 2019)
 ------------------------
