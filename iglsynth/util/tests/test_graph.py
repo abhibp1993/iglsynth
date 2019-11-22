@@ -112,6 +112,61 @@ def test_rm_vertices():
         graph.rm_vertex([10, v0])
 
 
+def test_has_vertex():
+
+    # Default graph class
+    graph = Graph()
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+    v2 = Graph.Vertex()
+    graph.add_vertices([v0, v1])
+
+    assert graph.has_vertex(v0)
+    assert graph.has_vertex(v1)
+    assert not graph.has_vertex(v2)
+
+    assert v0 in graph
+    assert v1 in graph
+    assert v2 not in graph
+
+    # Graph class with custom vertex class
+    class UserVertex(Graph.Vertex):
+        def __init__(self, name):
+            self.name = name
+
+    graph = Graph(vtype=UserVertex)
+    v0 = UserVertex(name="v0")
+    v1 = UserVertex(name="v1")
+
+    graph.add_vertex(v0)
+
+    assert graph.has_vertex(v0)
+    assert not graph.has_vertex(v1)
+
+    assert v0 in graph
+    assert v1 not in graph
+
+    # Derived Graph class with custom vertex class
+    class NewGraph(Graph):
+        class Vertex(Graph.Vertex):
+            def __init__(self, name):
+                pass
+
+    graph = NewGraph()
+    v0 = graph.Vertex(name="v0")
+    v1 = graph.Vertex(name="v1")
+    v2 = graph.Vertex(name="v2")
+    graph.add_vertices([v0, v1])
+
+    assert graph.has_vertex(v0)
+    assert graph.has_vertex(v1)
+    assert not graph.has_vertex(v2)
+
+    assert v0 in graph
+    assert v1 in graph
+    assert v2 not in graph
+
+
 def test_add_edge():
     graph = Graph()
     v0 = Graph.Vertex()
@@ -250,6 +305,88 @@ def test_rm_edges():
     graph.rm_edges([e01, e11])
     assert graph.num_edges == 1
     assert e00 in list(graph.edges) and e01 not in list(graph.edges) and e11 not in list(graph.edges)
+
+
+def test_has_edge():
+
+    # Default graph class
+    graph = Graph()
+
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+    v2 = Graph.Vertex()
+
+    e01 = Graph.Edge(v0, v1)
+    e02 = Graph.Edge(v0, v2)
+
+    graph.add_vertices([v0, v1])
+    graph.add_edge(e01)
+
+    assert graph.has_edge(e01)
+    assert not graph.has_edge(e02)
+
+    assert e01 in graph
+    assert e02 not in graph
+
+    # Graph class with custom vertex class
+    class UserEdge(Graph.Edge):
+        def __init__(self, name, u, v):
+            self.name = name
+            super(UserEdge, self).__init__(u, v)
+
+    graph = Graph(etype=UserEdge)
+
+    v0 = graph.Vertex()
+    v1 = graph.Vertex()
+    v2 = graph.Vertex()
+
+    e01 = graph.etype(name="e01", u=v0, v=v1)
+    e02 = graph.etype(name="e01", u=v0, v=v2)
+
+    graph.add_vertices([v0, v1])
+    graph.add_edge(e01)
+
+    assert graph.has_edge(e01)
+    assert not graph.has_edge(e02)
+
+    assert e01 in graph
+    assert e02 not in graph
+
+    # Derived Graph class with custom vertex class
+    class NewGraph(Graph):
+        class Edge(Graph.Edge):
+            def __init__(self, name, u, v):
+                super(NewGraph.Edge, self).__init__(u, v)
+
+    graph = NewGraph()
+
+    v0 = graph.Vertex()
+    v1 = graph.Vertex()
+    v2 = graph.Vertex()
+
+    e01 = graph.Edge("e01", v0, v1)
+    e02 = graph.Edge("e01", v0, v2)
+
+    graph.add_vertices([v0, v1])
+    graph.add_edge(e01)
+
+    assert graph.has_edge(e01)
+    assert not graph.has_edge(e02)
+
+    assert e01 in graph
+    assert e02 not in graph
+
+    with pytest.raises(TypeError):
+        assert 10 in graph
+
+
+def test_get_edges():
+    # Empty edge retrieval
+    # Single edge retrieval
+    # Multi edge retrieval
+    # One or more vertices not in graph
+    # 
+    pass
 
 
 def test_graph_properties():
