@@ -381,12 +381,32 @@ def test_has_edge():
 
 
 def test_get_edges():
+
+    graph = Graph()
+
+    v0 = Graph.Vertex()
+    v1 = Graph.Vertex()
+    v2 = Graph.Vertex()
+    graph.add_vertices([v0, v1])
+
+    e00 = Graph.Edge(v0, v0)
+    e01 = Graph.Edge(v0, v1)
+    e11 = Graph.Edge(v1, v1)
+    e11_2 = Graph.Edge(v1, v1)
+    graph.add_edges([e00, e01, e11, e11_2])
+
     # Empty edge retrieval
+    assert len(list(graph.get_edges(v1, v0))) == 0
+
     # Single edge retrieval
+    assert len(list(graph.get_edges(v0, v1))) == 1
+
     # Multi edge retrieval
+    assert len(list(graph.get_edges(v1, v1))) == 2
+
     # One or more vertices not in graph
-    # 
-    pass
+    with pytest.raises(AssertionError):
+        assert len(list(graph.get_edges(v1, v2))) == 0
 
 
 def test_graph_properties():

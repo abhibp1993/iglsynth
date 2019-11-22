@@ -291,6 +291,8 @@ class Graph(object):
         return e in self._edges
 
     def get_edges(self, u: 'Graph.Vertex', v: 'Graph.Vertex'):
+        assert u in self, f"{self}.get_edges:: Vertex u={u} is not in graph."
+        assert v in self, f"{self}.get_edges:: Vertex v={v} is not in graph."
         return iter(set.intersection(self._vertex_edge_map[u][1], self._vertex_edge_map[v][0]))
 
     def in_edges(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
