@@ -1,3 +1,4 @@
+import pytest
 from iglsynth.logic.ltl import *
 
 
@@ -49,3 +50,23 @@ def test_translate():
     assert len(aut.final) == 1
 
 
+def test_evaluate():
+
+    p = AP("p", lambda st, *args, **kwargs: st <= 10)
+    q = AP("q", lambda st, *args, **kwargs: st >= 10)
+    f = LTL(formula="p & q", alphabet=Alphabet([p, q]))
+    g = LTL(formula="F(p & q)", alphabet=Alphabet([p, q]))
+
+    assert f.evaluate(st=10) is True
+    assert f.evaluate(st=9) is False
+    assert f.evaluate(st=11) is False
+
+    assert f(st=10) is True
+    assert f(st=9) is False
+    assert f(st=11) is False
+
+    with pytest.raises(ValueError):
+        g.evaluate(st=11)
+
+    with pytest.raises(ValueError):
+        g(st=11)

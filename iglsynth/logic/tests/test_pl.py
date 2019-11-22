@@ -13,5 +13,9 @@ def test_pl_evaluate():
     assert f.evaluate(st=9) is False
     assert f.evaluate(st=11) is False
 
+    assert f(st=10) is True
+    assert f(st=9) is False
+    assert f(st=11) is False
+
 
 
