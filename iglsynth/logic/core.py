@@ -427,14 +427,11 @@ class AP(ILogic):
             igl_aut.mark_final_st(v0)
 
             # Add edges
-            e00 = Automaton.Edge(u=v0, v=v0, f=AP("true"))
-            e22 = Automaton.Edge(u=v2, v=v2, f=AP("true"))
+            cls = self.__class__
+            e00 = Automaton.Edge(u=v0, v=v0, f=cls("true"))
+            e22 = Automaton.Edge(u=v2, v=v2, f=cls("true"))
             e10 = Automaton.Edge(u=v1, v=v0, f=self)
-            e12 = Automaton.Edge(u=v1, v=v2,
-                                 f=self.__class__(
-                                     formula="!"+self.formula,
-                                     eval_func=lambda st, *args, **kwargs: not self._eval_func(st, args, kwargs))
-                                 )
+            e12 = Automaton.Edge(u=v1, v=v2, f=self.__neg__())
 
             igl_aut.add_edges([e00, e10, e12, e22])
 
