@@ -105,12 +105,6 @@ class LTL(PL):
         if spot_formula.is_ff():
             self._eval_func = lambda st, *args, **kwargs: False
 
-    def substitute(self, subs_map: dict):
-        raise NotImplementedError("LTL.substitute is not yet implemented.")
-
-    def simplify(self):
-        raise NotImplementedError("LTL.simplify is not yet implemented.")
-
     def translate(self):
 
         # Translate LTL formula to spot automaton using spot
@@ -185,4 +179,9 @@ class LTL(PL):
 
         .. warning:: This function is not yet implemented.
         """
-        raise NotImplementedError("LTL.evaluate method is not yet implemented.")
+        if self.mp_class == 'B':        # LTL can only be evaluated when LTL formula is PL formula.
+            return super(LTL, self).evaluate(st, *args, **kwargs)
+
+        raise ValueError(f"LTL formula can be evaluated only if it is a AP/PL formula. {self} is not a AP/PL formula.")
+
+
