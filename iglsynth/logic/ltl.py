@@ -146,7 +146,8 @@ class LTL(PL):
                 target = Automaton.Vertex(name=str(e.dst))
                 igl_aut.add_vertex(target)
 
-                edge = Automaton.Edge(u=source, v=target, f=spot.bdd_format_formula(bdict, e.cond))
+                edge_formula = PL(formula=str(spot.bdd_format_formula(bdict, e.cond)), alphabet=self.alphabet)
+                edge = Automaton.Edge(u=source, v=target, f=edge_formula)
                 igl_aut.add_edge(edge)
 
                 # PATCH: e.acc returns a spot-specific mark_t object. I'm not sure how to iterate over these.
