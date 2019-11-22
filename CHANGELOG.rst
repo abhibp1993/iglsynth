@@ -12,8 +12,6 @@ Release Notes
     * [Issue #17] Calls to ``PL.__call__`` and ``LTL.__call__`` invoke base class ``AP.__call__``. Previously, this raised
       AssertionError; for ``eval_func`` must be defined. However, ``eval_func`` is defined only for
       ``AP`` and not for derived classes. This bug was resolved.
-    * [TODO] ``AP.eval_func`` currently requires definition of ``args`` and``kwargs`` as input parameters by the user.
-      Relax this requirement allowing user to NOT provide ``args`` and ``kwargs``.
     * [Issue #16] Bug in the printing PL, LTL objects was resolved.
 
 
