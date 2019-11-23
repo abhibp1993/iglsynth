@@ -133,24 +133,43 @@ class TSys(Kripke):
     # ------------------------------------------------------------------------------------------------------------------
     @property
     def p1_actions(self):
+        """ Returns the player 1's action set. """
         return self._p1_actions
 
     @property
     def p2_actions(self):
+        """ Returns the player 2's action set. """
         return self._p2_actions
 
     @property
     def actions(self):
+        """ Returns the union of player 1's and player 2's action sets. """
         return set.union(self._p1_actions, self._p2_actions)
 
     @property
     def kind(self):
+        """
+        Returns whether it is player 1's or player 2's turn to play for TURN_BASED game.
+        In case of a CONCURRENT game, returns ``None``.
+        """
         return self._kind
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def add_vertex(self, v: 'TSys.Vertex'):
+        """
+        Adds a new vertex to transition system graph.
+        An attempt to add existing vertex will be ignored, with a warning.
+
+        :param v: (:class:`TSys.Vertex`) Vertex to be added to graph.
+
+        .. note:: When :class:`TSys` is defined to as :data:`TURN_BASED`,
+            the input vertex must have turn property set to either 1 or 2.
+            When :class:`TSys` is defined to as :data:`CONCURRENT`,
+            the input vertex must have turn property set to ``None``.
+        """
+
         if self._kind == TURN_BASED:
             assert v.turn is not None
             assert v.turn in [1, 2]         # Presently we only support 2 player games. This might be relaxed later.
@@ -161,6 +180,18 @@ class TSys(Kripke):
         super(TSys, self).add_vertex(v)
 
     def add_edge(self, e: 'TSys.Edge'):
+        """
+        Adds an edge to the graph.
+        Both the vertices must be present in the graph.
+
+        :raises AttributeError: When at least one of the vertex is not in the graph.
+        :raises AssertionError: When argument `e` is not an :class:`Graph.Edge` object.
+
+        .. note:: When :class:`TSys` is defined to as :data:`TURN_BASED`,
+            the input edge must have action to be of :class:`Action` type.
+            When :class:`TSys` is defined to as :data:`CONCURRENT`,
+            the input edge must have action as a 2-tuple/list (:class:`Action`, :class:`Action`) type.
+        """
 
         if self._kind == TURN_BASED:
             assert isinstance(e.action, Action) or e.action is None
