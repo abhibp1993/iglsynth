@@ -45,7 +45,11 @@ class Kripke(Graph):
 
     @property
     def alphabet(self):
-        return self.alphabet
+        return self._alphabet
+
+    @property
+    def init_state(self):
+        return self._init_st
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
@@ -58,5 +62,11 @@ class Kripke(Graph):
 
         else:
             assert isinstance(init_st, Kripke.Vertex)
+            assert init_st in self.vertices
+
+            if self._init_st is not None:
+                raise AssertionError(f"{self.__class__.__name__} is already initialized. "
+                                     f"Reinitialization is not allowed.")
+
             self._init_st = init_st
 
