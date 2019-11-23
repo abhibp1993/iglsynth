@@ -18,8 +18,12 @@ class TSys(Kripke):
     :param graph: (:class:`Graph`) Copy constructor. Copies the input graph into new Kripke object.
     :param file: (str) Name of file (with absolute path) from which to load the Kripke graph.
 
-    .. note:: Kripke structure class is defined as a placeholder. It may be used to define structures like
-              :class:`TSys`.
+    .. note:: (Behavior of ``p1_actions, p2_actions``). In many cases, it is desirable to define a set of ``p1_actions``
+              and ``p2_actions``, while in others it is desirable to construct these sets while adding edges.
+              The :class:`TSys` implements both approaches. When ``p1_actions, p2_actions`` are provided during
+              instantiation, the action sets (which are provided) are locked and cannot be changed during runtime.
+              When the parameters are not provided during instantiation, the sets are constructed while adding edges.
+
     """
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -48,11 +52,11 @@ class TSys(Kripke):
             self._turn = turn
 
         def __hash__(self):
-            return self._name.__hash__()
+            return self._name.__hash__() if self.turn is None else (self._name, self._turn).__hash__()
 
         def __eq__(self, other):
             assert type(other) == self.__class__
-            return self._name == other.name
+            return self.__hash__() == other.__hash__()
 
         def __repr__(self):
             return f"{self.__class__.__name__}(name={self.name}, turn={self.turn})"
@@ -108,7 +112,8 @@ class TSys(Kripke):
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
-    def __init__(self, kind, alphabet=None, vtype=None, etype=None, graph=None, file=None):
+    def __init__(self, kind, alphabet=None, p1_actions=tuple(), p2_actions=tuple(),
+                 vtype=None, etype=None, graph=None, file=None):
 
         # Validate input arguments
         assert kind in [TURN_BASED, CONCURRENT], f"A TSys kind must be either {TURN_BASED} or {CONCURRENT}."
@@ -118,14 +123,16 @@ class TSys(Kripke):
 
         # Defining parameters
         self._kind = kind
-        self._p1_actions = set()
-        self._p2_actions = set()
+        self._p1_actions = set(p1_actions)             # Action set of P1. (type: set)
+        self._p2_actions = set(p2_actions)             # Action set of P2. (type: set)
+        self._p1_action_lock = True if len(p1_actions) > 0 else False
+        self._p2_action_lock = True if len(p2_actions) > 0 else False
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
     # ------------------------------------------------------------------------------------------------------------------
     @property
-    def p1_action(self):
+    def p1_actions(self):
         return self._p1_actions
 
     @property
@@ -146,6 +153,8 @@ class TSys(Kripke):
     def add_vertex(self, v: 'TSys.Vertex'):
         if self._kind == TURN_BASED:
             assert v.turn is not None
+            assert v.turn in [1, 2]         # Presently we only support 2 player games. This might be relaxed later.
+
         else:  # kind is CONCURRENT
             assert v.turn is None
 
@@ -155,11 +164,42 @@ class TSys(Kripke):
 
         if self._kind == TURN_BASED:
             assert isinstance(e.action, Action) or e.action is None
+
+            # Check whether p1 actions are locked. If yes, assert that e.action is within p1's action set.
+            if e.source.turn == 1:
+                if self._p1_action_lock is True:
+                    assert e.action in self.p1_actions
+                else:
+                    self._p1_actions.add(e.action)
+
+            # Check whether p2 actions are locked. If yes, assert that e.action is within p2's action set.
+            elif e.source.turn == 2:
+                if self._p2_action_lock is True:
+                    assert e.action in self.p2_actions
+                else:
+                    self._p2_actions.add(e.action)
+
         else:  # kind is CONCURRENT
             act = e.action
+            assert isinstance(act, (tuple, list))
             assert len(act) == 2
             assert isinstance(act[0], Action)
             assert isinstance(act[1], Action)
+
+            p1_action = act[0]
+            p2_action = act[1]
+
+            # Check whether p1 actions are locked. If yes, assert that e.action is within p1's action set.
+            if self._p1_action_lock is True:
+                assert p1_action in self.p1_actions
+            else:
+                self._p1_actions.add(p1_action)
+
+            # Check whether p2 actions are locked. If yes, assert that e.action is within p2's action set.
+            if self._p2_action_lock is True:
+                assert p2_action in self.p2_actions
+            else:
+                self._p2_actions.add(p2_action)
 
         super(TSys, self).add_edge(e)
 
