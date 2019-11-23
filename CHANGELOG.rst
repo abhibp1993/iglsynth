@@ -17,9 +17,8 @@ Release Notes
     * [Issue #6] Gridworld class accept ``p1_action`` and ``p2_action`` separately.
     * [Issue #6] Gridworld class defined with basic 4, 5, 8, 9 connectivity.
     * [TODO] Implement ``game.define(tsys, spec)`` function.
-    * [Issue #4] Implement Kripke class.
-      Kripke class sets the default vtype and etype to ``self.Vertex`` and ``self.Edge``.
-      This raises Vertex/Edge type assertion error in Graph class constructor.
+    * [Issue #4] Defined ``Kripke`` class to support ``TSys`` class. No special properties or functions are
+      associated with ``Kripke`` are defined or implemented.
     * [Issue #5] Implement TSys class.
       TSys class sets the default vtype and etype to ``self.Vertex`` and ``self.Edge``.
       This raises Vertex/Edge type assertion error in Graph class constructor.
