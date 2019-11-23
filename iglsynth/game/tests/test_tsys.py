@@ -656,7 +656,7 @@ def test_initialize_1():
 
     # Initialize with acceptable vertex
     tsys.initialize(v1)
-    assert tsys.init_state == v1
+    assert tsys.init_state == {v1}
 
     # Reinitialization not permitted
     with pytest.raises(AssertionError):
@@ -681,7 +681,7 @@ def test_initialize_2():
 
     # Initialize with acceptable vertex
     tsys.initialize(v1)
-    assert tsys.init_state == v1
+    assert tsys.init_state == {v1}
 
     # Reinitialization not permitted
     with pytest.raises(AssertionError):
