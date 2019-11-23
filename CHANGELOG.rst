@@ -19,9 +19,9 @@ Release Notes
     * [TODO] Implement ``game.define(tsys, spec)`` function.
     * [Issue #4] Defined ``Kripke`` class to support ``TSys`` class. No special properties or functions are
       associated with ``Kripke`` are defined or implemented.
-    * [Issue #5] Implement TSys class.
-      TSys class sets the default vtype and etype to ``self.Vertex`` and ``self.Edge``.
-      This raises Vertex/Edge type assertion error in Graph class constructor.
+    * [Issue #5] Updated ``TSys`` constructor signature to accept ``p1_action, p2_action`` instead of ``actions``.
+      ``TSys.Vertex`` now requires ``name, turn`` parameters. ``turn = None`` represents a concurrent game.
+      ``TSys.Edge`` is updated to represent both concurrent and turn-based edges.
 
 * Solver module
 
