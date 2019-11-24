@@ -155,6 +155,7 @@ class Game(Graph):
 
         # Initialize internal variables
         self._kind = kind
+        self._p1_spec = None
         super(Game, self).__init__(vtype, etype, graph, file)
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -167,6 +168,10 @@ class Game(Graph):
         :data:`CONCURRENT <iglsynth.game.core.CONCURRENT>`.
         """
         return self._kind
+
+    @property
+    def p1_spec(self):
+        return self._p1_spec
 
     # ------------------------------------------------------------------------------------------------------------------
     # PRIVATE METHODS
@@ -228,6 +233,9 @@ class Game(Graph):
                 f"Input argument tsys must be an TSys object. Received p1_spec={tsys}."
             assert tsys.kind == self.kind, \
                 f"Type of argument tsys={tsys} is {tsys.kind} does NOT match self.kind={self.kind}."
+
+            # Update internal variables
+            self._p1_spec = p1_spec
 
             # Translate the specification to an automaton
             aut = p1_spec.translate()
