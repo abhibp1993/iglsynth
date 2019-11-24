@@ -16,7 +16,7 @@ Release Notes
 
     * [Issue #6] Gridworld class accept ``p1_action`` and ``p2_action`` separately.
     * [Issue #6] Gridworld class defined with basic 4, 5, 8, 9 connectivity.
-    * [TODO] Implement ``game.define(tsys, spec)`` function.
+    * [Issue #23] Implement ``game.define(tsys, spec)`` function.
     * [Issue #4] Defined ``Kripke`` class to support ``TSys`` class. No special properties or functions are
       associated with ``Kripke`` are defined or implemented.
     * [Issue #5] Updated ``TSys`` constructor signature to accept ``p1_action, p2_action`` instead of ``actions``.
