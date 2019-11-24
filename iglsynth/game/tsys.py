@@ -52,11 +52,11 @@ class TSys(Kripke):
             self._turn = turn
 
         def __hash__(self):
-            return self._name.__hash__() if self.turn is None else (self._name, self._turn).__hash__()
+            return (self._name, self._turn).__hash__()
 
         def __eq__(self, other):
             assert type(other) == self.__class__
-            return self.__hash__() == other.__hash__()
+            return self.name == other.name and self.turn == other.turn
 
         def __repr__(self):
             return f"{self.__class__.__name__}(name={self.name}, turn={self.turn})"
