@@ -11,7 +11,7 @@ from iglsynth.logic.core import *
 
 class Game(Graph):
     """
-    Represents a two-player deterministic game.
+    Represents a two-player deterministic **zero-sum** game.
 
         * The game could be concurrent or turn-based.
         * Game instance can be constructed by adding vertices and edges (See :ref:`Example Game Graph Construction`).
@@ -171,7 +171,11 @@ class Game(Graph):
     # ------------------------------------------------------------------------------------------------------------------
     # PRIVATE METHODS
     # ------------------------------------------------------------------------------------------------------------------
-    def _define_by_tsys_aut(self, tsys, aut):
+    def _product_turn_based_tsys_aut(self, tsys, aut):
+        # TODO: Implement this one!
+        pass        # pragma: no cover
+
+    def _product_concurrent_tsys_aut(self, tsys, aut):
         # TODO: Implement this one!
         pass        # pragma: no cover
 
@@ -200,9 +204,40 @@ class Game(Graph):
         
         super(Game, self).add_edge(e)
 
-    def define(self, tsys=None, aut=None):      # pragma: no cover
-        if tsys is not None and aut is not None:
-            self._define_by_tsys_aut(tsys, aut)
+    def define(self, tsys=None, p1_spec=None):      # pragma: no cover
+        """
+        Defines and constructs the deterministic zero-sum game graph.
+
+        :param tsys: (:class:`TSys`) Transition system over which game is defined.
+        :param p1_spec: (:class:`ILogic`) Logical specification that P1 must satisfy over transition system.
+
+        .. note:: A game graph can be defined in three possible ways.
+
+            * Explicit construction of graph by adding vertices and edges.
+            * By providing transition system and a logical specification for P1.
+            * By providing an game field and two players. (Not presently supported).
+
+        """
+        # If transition system and specification are provided, then construct game using appropriate product operation
+        if tsys is not None and p1_spec is not None:
+
+            # Validate input arguments
+            assert isinstance(p1_spec, ILogic), \
+                f"Input argument p1_spec must be an ILogic formula. Received p1_spec={p1_spec}."
+            assert isinstance(tsys, TSys), \
+                f"Input argument tsys must be an TSys object. Received p1_spec={tsys}."
+            assert tsys.kind == self.kind, \
+                f"Type of argument tsys={tsys} is {tsys.kind} does NOT match self.kind={self.kind}."
+
+            # Translate the specification to an automaton
+            aut = p1_spec.translate()
+
+            # Invoke appropriate product operation
+            if self.kind == TURN_BASED:
+                self._product_turn_based_tsys_aut(tsys, aut)
+
+            else:
+                self._product_concurrent_tsys_aut(tsys, aut)
 
         else:
             AttributeError("Either provide a graph or (tsys and aut) parameter, but not both.")
