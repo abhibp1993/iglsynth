@@ -3,6 +3,9 @@ from iglsynth.game.core import *
 from iglsynth.game.tsys import *
 
 
+# ======================================================================================================================
+# PUBLIC CLASS
+# ======================================================================================================================
 class Gridworld(TSys):
     """
     A graph representing a 2D Gridworld Transition System (TS).
@@ -159,86 +162,324 @@ class Gridworld(TSys):
             # If gridworld is turn-based
             if self.kind == TURN_BASED:
                 for act in actions[u.turn - 1]:
-                    v = act(u, turn=u.turn)
+                    v = act(u, player=u.turn)
                     if v in self.vertices:
                         self.add_edge(self.etype(u, v, act))
 
             # Else, gridworld is concurrent
             else:
                 for act1, act2 in itertools.product(p1_actions, p2_actions):
-                    v = act1(u, turn=1)
-                    v = act2(v, turn=2)
+                    v = act1(u, player=1)
+                    v = act2(v, player=2)
                     if v in self.vertices:
                         e = self.etype(u=u, v=v, action=(act1, act2))
                         self.add_edge(e)
 
 
+# ======================================================================================================================
+# STANDARD ACTIONS
+# ======================================================================================================================
 @action
 def N(u, **kwargs):
-    turn = kwargs["turn"] if u.turn is None else u.turn
+
+    # Get the current coordinates of P1 and P2
     p1x, p1y, p2x, p2y = u.coordinate
 
-    if turn == 1:
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
         v = u.__class__(coordinate=(p1x, p1y + 1, p2x, p2y), turn=2)
 
-    if turn == 2:
+    elif move_of_player == 2:
         v = u.__class__(coordinate=(p1x, p1y, p2x, p2y + 1), turn=1)
 
+    else:
+        AssertionError(f"Action(N) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
     if u.turn is None:
         v._turn = None
 
+    # Return vertex
     return v
 
 
 @action
 def E(u, **kwargs):
-    turn = kwargs["turn"] if u.turn is None else u.turn
+
+    # Get the current coordinates of P1 and P2
     p1x, p1y, p2x, p2y = u.coordinate
 
-    if turn == 1:
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
         v = u.__class__(coordinate=(p1x + 1, p1y, p2x, p2y), turn=2)
 
-    if turn == 2:
+    elif move_of_player == 2:
         v = u.__class__(coordinate=(p1x, p1y, p2x + 1, p2y), turn=1)
 
+    else:
+        AssertionError(f"Action(E) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
     if u.turn is None:
         v._turn = None
 
+    # Return vertex
     return v
 
 
 @action
 def S(u, **kwargs):
-    turn = kwargs["turn"] if u.turn is None else u.turn
+
+    # Get the current coordinates of P1 and P2
     p1x, p1y, p2x, p2y = u.coordinate
 
-    if turn == 1:
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
         v = u.__class__(coordinate=(p1x, p1y - 1, p2x, p2y), turn=2)
 
-    if turn == 2:
+    elif move_of_player == 2:
         v = u.__class__(coordinate=(p1x, p1y, p2x, p2y - 1), turn=1)
 
+    else:
+        AssertionError(f"Action(S) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
     if u.turn is None:
         v._turn = None
 
+    # Return vertex
     return v
 
 
 @action
 def W(u, **kwargs):
-    turn = kwargs["turn"] if u.turn is None else u.turn
+
+    # Get the current coordinates of P1 and P2
     p1x, p1y, p2x, p2y = u.coordinate
 
-    if turn == 1:
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
         v = u.__class__(coordinate=(p1x - 1, p1y, p2x, p2y), turn=2)
 
-    if turn == 2:
+    elif move_of_player == 2:
         v = u.__class__(coordinate=(p1x, p1y, p2x - 1, p2y), turn=1)
 
+    else:
+        AssertionError(f"Action(W) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
     if u.turn is None:
         v._turn = None
 
+    # Return vertex
     return v
 
 
-CONN_FOUR = [N, E, S, W]
+@action
+def NE(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x + 1, p1y + 1, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x + 1, p2y + 1), turn=1)
+
+    else:
+        AssertionError(f"Action(NE) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+@action
+def NW(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x - 1, p1y + 1, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x - 1, p2y + 1), turn=1)
+
+    else:
+        AssertionError(f"Action(NW) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+@action
+def SE(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x + 1, p1y - 1, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x + 1, p2y - 1), turn=1)
+
+    else:
+        AssertionError(f"Action(SE) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+@action
+def SW(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x - 1, p1y - 1, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x - 1, p2y - 1), turn=1)
+
+    else:
+        AssertionError(f"Action(SW) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+@action
+def STAY(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x, p1y, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x, p2y), turn=1)
+
+    else:
+        AssertionError(f"Action(STAY) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+# ======================================================================================================================
+# PUBLIC VARIABLES
+# ======================================================================================================================
+CONN_4 = [N, E, S, W]
+CONN_5 = [N, E, S, W, STAY]
+CONN_8 = [N, E, S, W, NE, NW, SE, SW]
+CONN_9 = [N, E, S, W, NE, NW, SE, SW, STAY]

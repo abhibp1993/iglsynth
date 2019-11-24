@@ -19,7 +19,7 @@ def test_instantiation_1():
 
 # Instantiate with acceptable dimension, TURN-BASED, actions given.
 def test_instantiation_2():
-    gw = Gridworld(kind=TURN_BASED, dim=(1, 1), p1_actions=CONN_FOUR, p2_actions=CONN_FOUR)
+    gw = Gridworld(kind=TURN_BASED, dim=(1, 1), p1_actions=CONN_4, p2_actions=CONN_4)
 
     assert gw.kind == TURN_BASED
     assert gw.dim == (1, 1)
@@ -39,7 +39,7 @@ def test_instantiation_3():
 
 # Instantiate with acceptable dimension, CONCURRENT, actions given.
 def test_instantiation_4():
-    gw = Gridworld(kind=CONCURRENT, dim=(1, 1), p1_actions=CONN_FOUR, p2_actions=CONN_FOUR)
+    gw = Gridworld(kind=CONCURRENT, dim=(1, 1), p1_actions=CONN_4, p2_actions=CONN_4)
 
     assert gw.kind == CONCURRENT
     assert gw.dim == (1, 1)
@@ -107,7 +107,7 @@ def test_add_vertices_concurrent():
 
 # TURN-BASED: 1x1 grid test case
 def test_generate_turn_based_1x1():
-    gw = Gridworld(kind=TURN_BASED, dim=(1, 1), p1_actions=CONN_FOUR, p2_actions=CONN_FOUR)
+    gw = Gridworld(kind=TURN_BASED, dim=(1, 1), p1_actions=CONN_4, p2_actions=CONN_4)
     gw.generate_graph()
     assert gw.num_vertices == 2
     assert gw.num_edges == 0
@@ -115,7 +115,7 @@ def test_generate_turn_based_1x1():
 
 # TURN-BASED: 2x2 grid test case
 def test_generate_turn_based_2x2():
-    gw = Gridworld(kind=TURN_BASED, dim=(2, 2), p1_actions=CONN_FOUR, p2_actions=CONN_FOUR)
+    gw = Gridworld(kind=TURN_BASED, dim=(2, 2), p1_actions=CONN_4, p2_actions=CONN_4)
     gw.generate_graph()
     assert gw.num_vertices == 2 * 2 * 2 * 2 * 2
     assert gw.num_edges == gw.num_vertices * 2
@@ -123,7 +123,7 @@ def test_generate_turn_based_2x2():
 
 # TURN-BASED: 3x3 grid test case
 def test_generate_turn_based_3x3():
-    gw = Gridworld(kind=TURN_BASED, dim=(3, 3), p1_actions=CONN_FOUR, p2_actions=CONN_FOUR)
+    gw = Gridworld(kind=TURN_BASED, dim=(3, 3), p1_actions=CONN_4, p2_actions=CONN_4)
     gw.generate_graph()
     assert gw.num_vertices == 3 * 3 * 3 * 3 * 2
     assert gw.num_edges == (2 * 4 + 3 * 4 + 4) * 9 * 2
@@ -131,7 +131,7 @@ def test_generate_turn_based_3x3():
 
 # CONCURRENT: 1x1 grid test case
 def test_generate_concurrent_1x1():
-    gw = Gridworld(kind=CONCURRENT, dim=(1, 1), p1_actions=CONN_FOUR, p2_actions=CONN_FOUR)
+    gw = Gridworld(kind=CONCURRENT, dim=(1, 1), p1_actions=CONN_4, p2_actions=CONN_4)
     gw.generate_graph()
     assert gw.num_vertices == 1
     assert gw.num_edges == 0
@@ -139,7 +139,7 @@ def test_generate_concurrent_1x1():
 
 # CONCURRENT: 2x2 grid test case
 def test_generate_concurrent_2x2():
-    gw = Gridworld(kind=CONCURRENT, dim=(2, 2), p1_actions=CONN_FOUR, p2_actions=CONN_FOUR)
+    gw = Gridworld(kind=CONCURRENT, dim=(2, 2), p1_actions=CONN_4, p2_actions=CONN_4)
     gw.generate_graph()
     assert gw.num_vertices == 2 * 2 * 2 * 2
     assert gw.num_edges == gw.num_vertices * (2 * 2)
@@ -170,7 +170,7 @@ def test_generate_concurrent_3x3():
 
       Together this adds up to 576.
     """
-    gw = Gridworld(kind=CONCURRENT, dim=(3, 3), p1_actions=CONN_FOUR, p2_actions=CONN_FOUR)
+    gw = Gridworld(kind=CONCURRENT, dim=(3, 3), p1_actions=CONN_4, p2_actions=CONN_4)
     gw.generate_graph()
     assert gw.num_vertices == 3**4
     assert gw.num_edges == 576
