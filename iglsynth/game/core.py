@@ -34,7 +34,7 @@ class Action(object):
     """
     def __init__(self, name=None, func=None):
         assert isinstance(func, Callable), f"Input parameter func must be a function, got {type(func)}."
-        assert len(signature(func).parameters) == 1, f"Function 'func' must take exactly one parameter."
+        assert len(signature(func).parameters) in [1, 2, 3], f"Function 'func' must take exactly one parameter."
 
         self._name = name
         self._func = func
@@ -42,8 +42,8 @@ class Action(object):
     def __repr__(self):
         return f"Action(name={self._name})"
 
-    def __call__(self, v):
-        return self._func(v)
+    def __call__(self, v, *args, **kwargs):
+        return self._func(v, *args, **kwargs)
 
 
 def action(func):
