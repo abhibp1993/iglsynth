@@ -7,25 +7,22 @@ assignees: ''
 
 ---
 
-**Describe the bug**
+## Bug Description
 A clear and concise description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
 
-**Expected behavior**
+## Steps to Reproduce
+Provide a code snippet and explain how the bug can be observed.
+
+
+## Expected Output
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
 
-**Desktop (please complete the following information):**
+## System Configuration
+ - OS: [e.g. Ubuntu 19.04, Windows 10, etc.]
  - Docker Tag: [e.g. abhibp1993/iglsynth:latest, abhibp1993/iglsynth:dev]
  - Version [e.g. 0.1.0]
 
-**Additional context**
+## Remarks/Comments
 Add any other context about the problem here.
