@@ -23,6 +23,7 @@ Release Notes
       ``TSys.Vertex`` now requires ``name, turn`` parameters. ``turn = None`` represents a concurrent game.
       ``TSys.Edge`` is updated to represent both concurrent and turn-based edges.
 
+
 * Solver module
 
     * [TODO] Define ``Strategy`` class to represent deterministic strategy.

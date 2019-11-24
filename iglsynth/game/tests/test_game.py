@@ -1,4 +1,7 @@
 from iglsynth.game.game import *
+from iglsynth.game.gridworld import *
+from iglsynth.logic.ltl import *
+
 import pytest
 
 """
@@ -217,3 +220,42 @@ def test_edge_equality():
     assert e4 != e5
     assert e5 == e6
     assert e6 != e7
+
+
+def test_turn_based_tsys_aut_product():
+
+    # Define a transition system
+    tsys = Gridworld(kind=TURN_BASED, dim=(2, 1), p1_actions=CONN_4, p2_actions=CONN_4)
+    tsys.generate_graph()
+
+    print()
+    print("==========================================")
+    for u in tsys.vertices:
+        print(u)
+        for e in tsys.out_edges(u):
+            print("\t", e)
+
+    # Define a specification
+    a = AP("a", lambda st, *args, **kwargs: tuple(st.coordinate[0:2]) == (1, 0))
+    spec = LTL("Fa", alphabet=Alphabet([a]))
+    aut = spec.translate()
+
+    print()
+    print("==========================================")
+    for u in aut.vertices:
+        print(u)
+        for e in aut.out_edges(u):
+            print("\t", e)
+
+    # Construct a game
+    game = Game(kind=TURN_BASED)
+    game.define(tsys, spec)
+
+    print()
+    print("==========================================")
+    print(f"GAME: num_v={game.num_vertices}, num_e={game.num_edges}.")
+    print("==========================================")
+    for u in game.vertices:
+        print(u)
+        for e in game.out_edges(u):
+            print("\t", e)
