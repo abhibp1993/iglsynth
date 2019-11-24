@@ -74,7 +74,8 @@ class Game(Graph):
             return self.name.__hash__()
 
         def __eq__(self, other):
-            return self._name == other._name and self._turn == other._turn
+            assert type(other) == type(self)
+            return self.name == other.name and self.turn == other.turn
 
         # ------------------------------------------------------------------------------------------------------------------
         # PUBLIC PROPERTIES
@@ -177,8 +178,36 @@ class Game(Graph):
     # PRIVATE METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def _product_turn_based_tsys_aut(self, tsys, aut):
-        # TODO: Implement this one!
-        pass        # pragma: no cover
+        """
+        Computes the product of a turn-based transition system with a specification automaton.
+
+        :param tsys:
+        :param aut:
+        :return:
+        """
+        # Generate vertices of game
+        tsys_states = list(tsys.vertices)
+        aut_states = list(aut.vertices)
+
+        game_states = [self.Vertex(name=f"({s}, {q})", tsys_v=s, aut_v=q, turn=s.turn)
+                       for s in tsys_states for q in aut_states]
+        self.add_vertices(game_states)
+
+        # Add edges of game
+        for u in self.vertices:
+            s = u.tsys_vertex
+            q = u.aut_vertex
+
+            s_out_edges = tsys.out_edges(s)
+            q_out_edges = aut.out_edges(q)
+
+            for se in s_out_edges:
+                for qe in q_out_edges:
+                    # qe_formula = PL(formula=str(qe.formula), alphabet=self.p1_spec.alphabet)
+                    if qe.formula(se.target) is True:
+                        v = self.Vertex(name=f"({se.target}, {qe.target})", tsys_v=se.target,
+                                        aut_v=qe.target, turn=se.target.turn)
+                        self.add_edge(self.Edge(u=u, v=v, act=se.action))
 
     def _product_concurrent_tsys_aut(self, tsys, aut):
         # TODO: Implement this one!

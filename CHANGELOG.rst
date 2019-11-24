@@ -1,6 +1,40 @@
 Release Notes
 =============
 
+0.2.3 ()
+-----------------------
+
+* Bugs
+
+
+    * [Issue #20] Automaton.Edge now returns an `AP` or `PL` class object for AP, PL, LTL.translate().
+    * [Issue #17] Unexpected AssertionError when calling `PL(st=..)` and `LTL(st=..)` is handled resolved.
+    * [Issue #16] Bug in the printing PL, LTL objects was resolved.
+
+
+* Game module
+
+    * [Issue #6] Gridworld class accept ``p1_action`` and ``p2_action`` separately.
+    * [Issue #6] Gridworld class defined with basic 4, 5, 8, 9 connectivity.
+    * [Issue #23] Implement ``game.define(tsys, spec)`` function.
+    * [Issue #4] Defined ``Kripke`` class to support ``TSys`` class. No special properties or functions are
+      associated with ``Kripke`` are defined or implemented.
+    * [Issue #5] Updated ``TSys`` constructor signature to accept ``p1_action, p2_action`` instead of ``actions``.
+      ``TSys.Vertex`` now requires ``name, turn`` parameters. ``turn = None`` represents a concurrent game.
+      ``TSys.Edge`` is updated to represent both concurrent and turn-based edges.
+
+
+* Solver module
+
+    * [TODO] Define ``Strategy`` class to represent deterministic strategy.
+    * [TODO] ``ZielonkaSolver`` class defined and implemented.
+
+
+* Utilities
+
+    * [Issue #11] Added `has_vertex`, `has_edge`, `get_edges` functionality to `Graph` class.
+    
+
 0.2.2 (17 November 2019)
 ------------------------
 
