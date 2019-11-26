@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+0.2.4 (Proposed)
+-----------------------
+
+* Solver module
+
+    * [Issue #24] Define ``Strategy`` class to represent deterministic and stochastic strategies.
+
 0.2.3 ()
 -----------------------
 
@@ -26,8 +33,7 @@ Release Notes
 
 * Solver module
 
-    * [TODO] Define ``Strategy`` class to represent deterministic strategy.
-    * [TODO] ``ZielonkaSolver`` class defined and implemented.
+    * [Issue #24] ``ZielonkaSolver`` class defined and implemented. The solver computes winning regions only. 
 
 
 * Utilities
