@@ -93,10 +93,12 @@ class Game(Graph):
 
         @property
         def tsys_vertex(self):
+            """ Returns the transition system vertex associated with game vertex. """
             return self._tsys_v         # pragma: no cover
 
         @property
         def aut_vertex(self):
+            """ Returns the automaton vertex associated with game vertex. """
             return self._aut_v          # pragma: no cover
 
     class Edge(Graph.Edge):
@@ -145,6 +147,7 @@ class Game(Graph):
 
         @property
         def act(self):
+            """ Returns action associated with game edge. """
             return self._act
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -175,10 +178,12 @@ class Game(Graph):
 
     @property
     def p1_spec(self):
+        """ Returns the specification of P1 in the game. """
         return self._p1_spec
 
     @property
     def final(self):
+        """ Returns the set of final states of the game. """
         return self._final
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -292,5 +297,10 @@ class Game(Graph):
             AttributeError("Either provide a graph or (tsys and aut) parameter, but not both.")
 
     def mark_final(self, v):
+        """
+        Adds the given state to the set of final states in the game.
+
+        :param v: (:class:`Game.Vertex`) Vertex to be marked as final.
+        """
         if v in self.vertices:
             self._final.add(v)

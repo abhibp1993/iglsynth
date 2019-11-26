@@ -7,6 +7,16 @@ from iglsynth.solver.core import *
 
 
 class ZielonkaSolver(ISolver):
+    """
+    The Zielonka Solver for computing winning regions, strategies for P1
+    in a deterministic two-player zero-sum game.
+
+    :param game: (:class:`Game`) The game to be solved.
+
+    .. note:: In v0.2.3, no validation is run on the game object before running the solver.
+
+    .. note:: In v0.2.3, only winning region is computed, winning strategy is NOT computed.
+    """
     def __init__(self, game):
         super(ZielonkaSolver, self).__init__(game)
 
@@ -17,10 +27,12 @@ class ZielonkaSolver(ISolver):
 
     @property
     def p1_win(self):
+        """ Returns the P1's winning region. Returns None, if the solver has not solved the game. """
         return self._p1_win
 
     @property
     def p2_win(self):
+        """ Returns the P2's winning region. Returns None, if the solver has not solved the game. """
         return self._p2_win
 
     @property
@@ -81,7 +93,7 @@ class ZielonkaSolver(ISolver):
         pass
 
     def solve(self):
-
+        """ Runs the solver. """
         # Initialize/Reset Solution data structures
         final = set()
         for v in self._game.vertices:

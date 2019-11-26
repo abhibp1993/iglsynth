@@ -126,19 +126,13 @@ class Graph(object):
     # PROPERTIES
     # ------------------------------------------------------------------------------------------------------------------
     @property
-    def vertices(self) -> Iterator:
-        """ Returns an iterator over vertices in graph. """
-        return iter(self._vertex_edge_map.keys())
-
-    @property
     def edges(self) -> Iterator:
         """ Returns an iterator over edges in graph. """
         return iter(self._edges)
 
     @property
-    def num_vertices(self) -> int:
-        """ Returns the number of vertices in graph. """
-        return len(self._vertex_edge_map)
+    def is_multigraph(self):
+        raise NotImplementedError(f"{self.__class__.__name__}.is_multigraph property is not yet implemented.")
 
     @property
     def num_edges(self) -> int:
@@ -146,8 +140,14 @@ class Graph(object):
         return len(self._edges)
 
     @property
-    def is_multigraph(self):
-        raise NotImplementedError(f"{self.__class__.__name__}.is_multigraph property is not yet implemented.")
+    def num_vertices(self) -> int:
+        """ Returns the number of vertices in graph. """
+        return len(self._vertex_edge_map)
+
+    @property
+    def vertices(self) -> Iterator:
+        """ Returns an iterator over vertices in graph. """
+        return iter(self._vertex_edge_map.keys())
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
@@ -178,41 +178,12 @@ class Graph(object):
         for v in vbunch:
             self.add_vertex(v)
 
-    def rm_vertex(self, v: 'Graph.Vertex'):
-        """
-        Removes a vertex from the graph.
-        An attempt to remove a non-existing vertex will be ignored, with a warning.
-
-        :param v: (:class:`Graph.Vertex`) Vertex to be removed.
-        """
-        assert isinstance(v, self.vtype), \
-            f"Vertex {v} must be object of {self.vtype}. Given, v is {v.__class__.__name__}"
-
-        # Remove incoming and outgoing edges from v, and then remove v
-        if v in self._vertex_edge_map:
-            in_edges, out_edges = self._vertex_edge_map[v]
-            self.rm_edges(in_edges)
-            self.rm_edges(out_edges)
-            self._vertex_edge_map.pop(v)
-
-    def rm_vertices(self, vbunch: Iterable['Graph.Vertex']):
-        """
-        Removes a bunch of vertices from the graph.
-        An attempt to remove a non-existing vertex will be ignored, with a warning.
-
-        :param vbunch: (Iterable over :class:`Graph.Vertex`) Vertices to be removed.
-        """
-        for v in vbunch:
-            self.rm_vertex(v)
-
-    def has_vertex(self, v: 'Graph.Vertex'):
-        return v in self._vertex_edge_map.keys()
-
     def add_edge(self, e: 'Graph.Edge'):
         """
         Adds an edge to the graph.
         Both the vertices must be present in the graph.
 
+        :param e: (:class:`Graph.Edge`) An edge to be added to the graph.
         :raises AttributeError: When at least one of the vertex is not in the graph.
         :raises AssertionError: When argument `e` is not an :class:`Graph.Edge` object.
         """
@@ -252,6 +223,160 @@ class Graph(object):
         for e in ebunch:
             self.add_edge(e)
 
+    def get_edges(self, u: 'Graph.Vertex', v: 'Graph.Vertex'):
+        """
+        Returns all edges with source ``u`` and target ``v``.
+
+        :param u: (:class:`Graph.Vertex`) Vertex of the graph.
+        :param v: (:class:`Graph.Vertex`) Vertex of the graph.
+        :return: (iterator(:class:`Graph.Edge`)) Edges between u, v.
+        """
+        assert u in self, f"{self}.get_edges:: Vertex u={u} is not in graph."
+        assert v in self, f"{self}.get_edges:: Vertex v={v} is not in graph."
+        return iter(set.intersection(self._vertex_edge_map[u][1], self._vertex_edge_map[v][0]))
+
+    def has_edge(self, e: 'Graph.Edge'):
+        """
+        Checks whether the graph has the given edge or not.
+
+        :param e: (:class:`Graph.Edge`) An edge to be checked for containment in the graph.
+        :return:
+        """
+        return e in self._edges
+
+    def has_vertex(self, v: 'Graph.Vertex'):
+        """
+        Checks whether the graph has the given vertex or not.
+
+        :param v: (:class:`Graph.Vertex`) Vertex to be checked for containment.
+        :return: (bool) True if given vertex is in the graph, else False.
+        """
+        return v in self._vertex_edge_map.keys()
+
+    def in_edges(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
+        """
+        Returns an iterator over incoming edges to given vertex or vertices.
+        In case of vertices, the iterator is defined over the union of set of
+        incoming edges of individual vertices.
+
+        :param v: (:class:`Graph.Vertex`) Vertex of graph.
+
+        :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
+            nor an iterable of :class:`Graph.Vertex` objects.
+        """
+        if isinstance(v, self.vtype):
+            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
+            return iter(self._vertex_edge_map[v][0])
+
+        elif isinstance(v, Iterable):
+            assert all(isinstance(u, self.vtype) for u in v), \
+                f"All vertices in input: {v} must be of type={self.vtype}."
+
+            in_edges = (self._vertex_edge_map[u][0] for u in v)
+            return iter(reduce(set.union, in_edges))
+
+        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
+
+    def in_neighbors(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
+        """
+        Returns an iterator over sources of incoming edges to given vertex or vertices.
+        In case of vertices, the iterator is defined over the union of set of
+        incoming edges of individual vertices.
+
+        :param v: (:class:`Graph.Vertex`) Vertex of graph.
+
+        :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
+            nor an iterable of :class:`Graph.Vertex` objects.
+        """
+        if isinstance(v, self.vtype):
+            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
+            return iter(e.source for e in self._vertex_edge_map[v][0])
+
+        elif isinstance(v, Iterable):
+            assert all(isinstance(u, self.vtype) for u in v), \
+                f"All vertices in input: {v} must be of type={self.vtype}."
+
+            return iter(e.source for u in v for e in self._vertex_edge_map[u][0])
+
+        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
+
+    def prune(self, v: 'Graph.Vertex'):
+        raise NotImplementedError
+
+    def out_edges(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
+        """
+        Returns an iterator over outgoing edges to given vertex or vertices.
+        In case of vertices, the iterator is defined over the union of set of
+        incoming edges of individual vertices.
+
+        :param v: (:class:`Graph.Vertex`) Vertex of graph.
+
+        :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
+            nor an iterable of :class:`Graph.Vertex` objects.
+        """
+        if isinstance(v, self.vtype):
+            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
+            return iter(self._vertex_edge_map[v][1])
+
+        elif isinstance(v, Iterable):
+            assert all(isinstance(u, self.vtype) for u in v), \
+                f"All vertices in input: {v} must be of type={self.vtype}."
+
+            out_edges = (self._vertex_edge_map[u][1] for u in v)
+            return iter(reduce(set.union, out_edges))
+
+        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
+
+    def out_neighbors(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
+        """
+        Returns an iterator over targets of incoming edges to given vertex or vertices.
+        In case of vertices, the iterator is defined over the union of set of
+        incoming edges of individual vertices.
+
+        :param v: (:class:`Graph.Vertex`) Vertex of graph.
+
+        :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
+            nor an iterable of :class:`Graph.Vertex` objects.
+        """
+        if isinstance(v, self.vtype):
+            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
+            return iter(e.target for e in self._vertex_edge_map[v][1])
+
+        elif isinstance(v, Iterable):
+            assert all(isinstance(u, self.vtype) for u in v), \
+                f"All vertices in input: {v} must be of type={self.vtype}."
+
+            return iter(e.target for u in v for e in self._vertex_edge_map[u][1])
+
+        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
+
+    def rm_vertex(self, v: 'Graph.Vertex'):
+        """
+        Removes a vertex from the graph.
+        An attempt to remove a non-existing vertex will be ignored, with a warning.
+
+        :param v: (:class:`Graph.Vertex`) Vertex to be removed.
+        """
+        assert isinstance(v, self.vtype), \
+            f"Vertex {v} must be object of {self.vtype}. Given, v is {v.__class__.__name__}"
+
+        # Remove incoming and outgoing edges from v, and then remove v
+        if v in self._vertex_edge_map:
+            in_edges, out_edges = self._vertex_edge_map[v]
+            self.rm_edges(in_edges)
+            self.rm_edges(out_edges)
+            self._vertex_edge_map.pop(v)
+
+    def rm_vertices(self, vbunch: Iterable['Graph.Vertex']):
+        """
+        Removes a bunch of vertices from the graph.
+        An attempt to remove a non-existing vertex will be ignored, with a warning.
+
+        :param vbunch: (Iterable over :class:`Graph.Vertex`) Vertices to be removed.
+        """
+        for v in vbunch:
+            self.rm_vertex(v)
+
     def rm_edge(self, e: 'Graph.Edge'):
         """
         Removes an edge from the graph.
@@ -286,111 +411,6 @@ class Graph(object):
         """
         for e in ebunch:
             self.rm_edge(e)
-
-    def has_edge(self, e: 'Graph.Edge'):
-        return e in self._edges
-
-    def get_edges(self, u: 'Graph.Vertex', v: 'Graph.Vertex'):
-        assert u in self, f"{self}.get_edges:: Vertex u={u} is not in graph."
-        assert v in self, f"{self}.get_edges:: Vertex v={v} is not in graph."
-        return iter(set.intersection(self._vertex_edge_map[u][1], self._vertex_edge_map[v][0]))
-
-    def in_edges(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
-        """
-        Returns an iterator over incoming edges to given vertex or vertices.
-        In case of vertices, the iterator is defined over the union of set of
-        incoming edges of individual vertices.
-
-        :param v: (:class:`Graph.Vertex`) Vertex of graph.
-
-        :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
-            nor an iterable of :class:`Graph.Vertex` objects.
-        """
-        if isinstance(v, self.vtype):
-            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
-            return iter(self._vertex_edge_map[v][0])
-
-        elif isinstance(v, Iterable):
-            assert all(isinstance(u, self.vtype) for u in v), \
-                f"All vertices in input: {v} must be of type={self.vtype}."
-
-            in_edges = (self._vertex_edge_map[u][0] for u in v)
-            return iter(reduce(set.union, in_edges))
-
-        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
-
-    def out_edges(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
-        """
-        Returns an iterator over outgoing edges to given vertex or vertices.
-        In case of vertices, the iterator is defined over the union of set of
-        incoming edges of individual vertices.
-
-        :param v: (:class:`Graph.Vertex`) Vertex of graph.
-
-        :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
-            nor an iterable of :class:`Graph.Vertex` objects.
-        """
-        if isinstance(v, self.vtype):
-            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
-            return iter(self._vertex_edge_map[v][1])
-
-        elif isinstance(v, Iterable):
-            assert all(isinstance(u, self.vtype) for u in v), \
-                f"All vertices in input: {v} must be of type={self.vtype}."
-
-            out_edges = (self._vertex_edge_map[u][1] for u in v)
-            return iter(reduce(set.union, out_edges))
-
-        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
-
-    def in_neighbors(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
-        """
-        Returns an iterator over sources of incoming edges to given vertex or vertices.
-        In case of vertices, the iterator is defined over the union of set of
-        incoming edges of individual vertices.
-
-        :param v: (:class:`Graph.Vertex`) Vertex of graph.
-
-        :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
-            nor an iterable of :class:`Graph.Vertex` objects.
-        """
-        if isinstance(v, self.vtype):
-            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
-            return iter(e.source for e in self._vertex_edge_map[v][0])
-
-        elif isinstance(v, Iterable):
-            assert all(isinstance(u, self.vtype) for u in v), \
-                f"All vertices in input: {v} must be of type={self.vtype}."
-
-            return iter(e.source for u in v for e in self._vertex_edge_map[u][0])
-
-        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
-
-    def out_neighbors(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
-        """
-        Returns an iterator over targets of incoming edges to given vertex or vertices.
-        In case of vertices, the iterator is defined over the union of set of
-        incoming edges of individual vertices.
-
-        :param v: (:class:`Graph.Vertex`) Vertex of graph.
-
-        :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
-            nor an iterable of :class:`Graph.Vertex` objects.
-        """
-        if isinstance(v, self.vtype):
-            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
-            return iter(e.target for e in self._vertex_edge_map[v][1])
-
-        elif isinstance(v, Iterable):
-            assert all(isinstance(u, self.vtype) for u in v), \
-                f"All vertices in input: {v} must be of type={self.vtype}."
-
-            return iter(e.target for u in v for e in self._vertex_edge_map[u][1])
-
-        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
-
-    def prune(self, v: 'Graph.Vertex'):
-        raise NotImplementedError
 
     def save(self, filename: str = None, ext: str = 'xml'):
         raise NotImplementedError
