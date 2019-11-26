@@ -55,5 +55,5 @@ if __name__ == '__main__':
     solver.solve()
 
     # # Print results of running the solver
-    # print(solver.win1)
-    # print(solver.win2)
+    print(solver.p1_win)
+    print(solver.p2_win)
