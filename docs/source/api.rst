@@ -12,3 +12,4 @@ IGLSynth API
     game/index
     logic/index
     util/index
+    solver/index
