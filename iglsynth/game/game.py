@@ -74,7 +74,8 @@ class Game(Graph):
             return self.name.__hash__()
 
         def __eq__(self, other):
-            assert type(other) == type(self)
+            # print("MYPRINT", self, other)
+            assert type(other) == type(self), f"Expected other of type={type(self)}. Received other.type={type(other)}."
             return self.name == other.name and self.turn == other.turn
 
         # ------------------------------------------------------------------------------------------------------------------
@@ -157,6 +158,8 @@ class Game(Graph):
         # Initialize internal variables
         self._kind = kind
         self._p1_spec = None
+        self._final = set()
+
         super(Game, self).__init__(vtype, etype, graph, file)
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -173,6 +176,10 @@ class Game(Graph):
     @property
     def p1_spec(self):
         return self._p1_spec
+
+    @property
+    def final(self):
+        return self._final
 
     # ------------------------------------------------------------------------------------------------------------------
     # PRIVATE METHODS
@@ -192,6 +199,11 @@ class Game(Graph):
         game_states = [self.Vertex(name=f"({s}, {q})", tsys_v=s, aut_v=q, turn=s.turn)
                        for s in tsys_states for q in aut_states]
         self.add_vertices(game_states)
+
+        # Set final states
+        for v in self.vertices:
+            if v.aut_vertex in aut.final:
+                self.mark_final(v)
 
         # Add edges of game
         for u in self.vertices:
@@ -278,3 +290,7 @@ class Game(Graph):
 
         else:
             AttributeError("Either provide a graph or (tsys and aut) parameter, but not both.")
+
+    def mark_final(self, v):
+        if v in self.vertices:
+            self._final.add(v)
