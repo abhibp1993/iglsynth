@@ -240,7 +240,7 @@ class Graph(object):
         Checks whether the graph has the given edge or not.
 
         :param e: (:class:`Graph.Edge`) An edge to be checked for containment in the graph.
-        :return:
+        :return: (bool) True if the graph has the given edge, False otherwise.
         """
         return e in self._edges
 
