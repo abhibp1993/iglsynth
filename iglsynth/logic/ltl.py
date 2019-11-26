@@ -105,12 +105,6 @@ class LTL(PL):
         if spot_formula.is_ff():
             self._eval_func = lambda st, *args, **kwargs: False
 
-    def substitute(self, subs_map: dict):
-        raise NotImplementedError("LTL.substitute is not yet implemented.")
-
-    def simplify(self):
-        raise NotImplementedError("LTL.simplify is not yet implemented.")
-
     def translate(self):
 
         # Translate LTL formula to spot automaton using spot
@@ -152,7 +146,8 @@ class LTL(PL):
                 target = Automaton.Vertex(name=str(e.dst))
                 igl_aut.add_vertex(target)
 
-                edge = Automaton.Edge(u=source, v=target, f=spot.bdd_format_formula(bdict, e.cond))
+                edge_formula = PL(formula=str(spot.bdd_format_formula(bdict, e.cond)), alphabet=self.alphabet)
+                edge = Automaton.Edge(u=source, v=target, f=edge_formula)
                 igl_aut.add_edge(edge)
 
                 # PATCH: e.acc returns a spot-specific mark_t object. I'm not sure how to iterate over these.
@@ -185,4 +180,9 @@ class LTL(PL):
 
         .. warning:: This function is not yet implemented.
         """
-        raise NotImplementedError("LTL.evaluate method is not yet implemented.")
+        if self.mp_class == 'B':        # LTL can only be evaluated when LTL formula is PL formula.
+            return super(LTL, self).evaluate(st, *args, **kwargs)
+
+        raise ValueError(f"LTL formula can be evaluated only if it is a AP/PL formula. {self} is not a AP/PL formula.")
+
+

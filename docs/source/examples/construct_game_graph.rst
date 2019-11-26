@@ -22,10 +22,10 @@ Hence, first import the ``game.game`` module::
 
     from iglsynth.game.game import Game
 
-Note that ``Game`` class defines a deterministic two-player game on graph.
+Note that ``Game`` class defines a deterministic two-player zero-sum game on graph.
 
 A ``Game`` can be either ``TURN_BASED`` or ``CONCURRENT``.
-For this example, let us consider the game on graph shown in following image.
+For this example, let us consider a ``TURN_BASED`` game on graph shown in following image.
 
 .. image:: EPFL_Problem1.png
     :scale: 50%
@@ -44,16 +44,23 @@ When a vertex has ``turn = 2``, player 2 (box) will make a move.
 The vertex in a ``game`` (an instance of ``Game`` class) must be of type ``Game.Vertex`` or its derivative.
 Hence, it is recommended to instantiate a new game vertex as ``game.Vertex``::
 
-    # Add vertices to game
-    vertices = [game.Vertex(name=str(i)) for i in range(8)]
-
-    for i in [0, 4, 6]:
-        vertices[i].turn = 1
-
-    for i in [1, 2, 3, 5, 7]:
-        vertices[i].turn = 2
+    vertices = list()
+    for i in range(8):
+        if i in [0, 4, 6]:
+            vertices.append(game.Vertex(name=str(i), turn=1))
+        else:
+            vertices.append(game.Vertex(name=str(i), turn=2))
 
     game.add_vertices(vertices)
+
+and mark the vertices 3, 4 as final::
+
+    # Set the states as final
+    v3 = vertices[3]
+    v4 = vertices[4]
+    game.mark_final(v3)
+    game.mark_final(v4)
+
 
 Finally, add the edges to the game. Similar to vertices, we instantiate new edges as ``game.Edge`` objects::
 
@@ -67,3 +74,17 @@ Finally, add the edges to the game. Similar to vertices, we instantiate new edge
         game.add_edge(game.Edge(u=u, v=v))
 
 
+Now, given a game we invoke the ``ZielonkaSolver`` from ``iglsynth.solver.zielonka`` module
+to compute the winning regions for players 1 and 2::
+
+    from iglsynth.solver.zielonka import ZielonkaSolver
+    solver = ZielonkaSolver(game)
+    solver.solve()
+
+The ``solver.solve()`` runs the solver on the ``Game`` object ``game`` that encodes the game on graph.
+The solution of solver can be accessed using the properties::
+
+    print(solver.p1_win)
+    print(solver.p2_win)
+
+which returns the winning sets for P1 and P2. 

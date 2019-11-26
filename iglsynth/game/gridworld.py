@@ -1,151 +1,485 @@
+import itertools
+from iglsynth.game.core import *
 from iglsynth.game.tsys import *
-from itertools import product
 
 
+# ======================================================================================================================
+# PUBLIC CLASS
+# ======================================================================================================================
 class Gridworld(TSys):
-    CONN = {4, 5, 8, 9}
-    ACTIONS = {'N', 'E', 'S', 'W', 'NE', 'NW', 'SE', 'SW', 'STAY'}
+    """
+    A graph representing a 2D Gridworld Transition System (TS).
+    A Gridworld is a TS where all edges are labeled with actions.
+
+    :param kind: (:data:`TURN_BASED` or :data:`CONCURRENT`) Whether the transition system is turn-based or concurrent.
+    :param alphabet: (:class:`Alphabet`) A set of atomic propositions defined over the Kripke structure.
+    :param vtype: (class) Class representing vertex objects.
+    :param etype: (class) Class representing edge objects.
+    :param graph: (:class:`Graph`) Copy constructor. Copies the input graph into new Kripke object.
+    :param file: (str) Name of file (with absolute path) from which to load the Kripke graph.
+
+    .. note:: (Behavior of ``p1_actions, p2_actions``). In many cases, it is desirable to define a set of ``p1_actions``
+              and ``p2_actions``, while in others it is desirable to construct these sets while adding edges.
+              The :class:`TSys` implements both approaches. When ``p1_actions, p2_actions`` are provided during
+              instantiation, the action sets (which are provided) are locked and cannot be changed during runtime.
+              When the parameters are not provided during instantiation, the sets are constructed while adding edges.
+    """
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC CLASSES
     # ------------------------------------------------------------------------------------------------------------------
-    # class Vertex(TSys.Vertex):
-    #     """
-    #     Represents a vertex in grid world.
-    #
-    #     - Vertex is of type; (p1.coordinate, p2.coordinate).
-    #         User may represent it as a 4-tuple (p1.x, p1.y, p2.x, p2.y) or
-    #         a 2-tuple of 2-tuples ((p1.x, p1.y), (p2.x, p2.y)) as per their choice.
-    #     -
-    #     """
-    #     def __init__(self, coord, is_hard_obs=False, is_bouncy_obs=False):
-    #         assert isinstance(coord, tuple)
-    #         assert isinstance(is_hard_obs, bool) and isinstance(is_bouncy_obs, bool)
-    #
-    #         self._turn = None               # The variable is private, and should be set within Class Gridworld only.
-    #         self._coord = coord
-    #         self._is_hard_obs = is_hard_obs
-    #         self._is_bouncy_obs = is_bouncy_obs
-    #
-    #     def __repr__(self):
-    #         if self._turn is not None:
-    #             return f"Vertex(coord={self._coord}, turn={self._turn})"
-    #
-    #         return f"Vertex(coord={self._coord})"
-    #
-    #     def __hash__(self):
-    #         return self.coordinate.__hash__()
-    #
-    #     def __eq__(self, other):
-    #         return self.coordinate == other.coordinate
-    #
-    #     @property
-    #     def coordinate(self):
-    #         return self._coord
-    #
-    #     @property
-    #     def turn(self):
-    #         return self._turn
-    #
-    #     @turn.setter
-    #     def turn(self, val):
-    #         assert isinstance(val, int)
-    #         assert val > 0
-    #         self._turn = val
-    #
-    #     @property
-    #     def is_hard_obs(self):
-    #         return self._is_hard_obs
-    #
-    #     @is_hard_obs.setter
-    #     def is_hard_obs(self, val):
-    #         assert isinstance(val, bool)
-    #         self._is_hard_obs = val
-    #
-    #     @property
-    #     def is_bouncy_obs(self):
-    #         return self._is_bouncy_obs
-    #
-    #     @is_bouncy_obs.setter
-    #     def is_bouncy_obs(self, val):
-    #         assert isinstance(val, bool)
-    #         self._is_bouncy_obs = val
-    #
-    # class Edge(TSys.Edge):
-    #     """
-    #     Represents an action-labeled edge of grid world.
-    #
-    #     - :class:`Edge` represents a directed edge labeled with an action.
-    #     - Every edge has an action from set {N, E, S, W, NE, NW, SE, SW, STAY}
-    #     - Two edges are equal if they share equal source and target vertices
-    #         and have identical action labels.
-    #
-    #     :param u: (:class:`Vertex`) Source vertex of edge.
-    #     :param v: (:class:`Vertex`) Target vertex of edge.
-    #     :param act: (:py:attr:`Gridworld.ACTIONS`) An action label of edge.
-    #     """
-    #     __hash__ = TSys.Edge.__hash__
-    #
-    #     def __init__(self, u: 'Gridworld.Vertex', v: 'Gridworld.Vertex', act):
-    #         assert act in Gridworld.ACTIONS or all(a in Gridworld.ACTIONS for a in act)
-    #         super(Gridworld.Edge, self).__init__(u=u, v=v, act=act)
+    class Vertex(TSys.Vertex):
+        """
+        Represents a vertex in grid world. A vertex of gridworld is of type,
+        .. centered:: ``(name=(p1.x, p1.y, p2.x, p2.y), turn=1/2/None``
+
+        :param coordinate: (4-tuple) A 4-tuple of (p1.x, p1.y, p2.x, p2.y) representing coordinates of P1 and P2.
+        :param turn: (int or None) If representing a :data:`TURN_BASED` gridworld, then an integer representing
+            P1 (1) or P2 (2). If representing a :data:`CONCURRENT` gridworld, then None.
+        """
+
+        # --------------------------------------------------------------------------------------------------------------
+        # INTERNAL FUNCTIONS
+        # --------------------------------------------------------------------------------------------------------------
+        def __init__(self, coordinate, turn):
+            assert isinstance(coordinate, (tuple, list)), \
+                f"Parameter coordinate must be a 4-tuple of (p1.x, p1.y, p2.x, p2.y). Received {coordinate}."
+            assert len(coordinate) == 4
+
+            self._coordinate = coordinate
+            super(Gridworld.Vertex, self).__init__(name=str(coordinate), turn=turn)
+
+        def __hash__(self):
+            return (self._coordinate, self._turn).__hash__()
+
+        def __eq__(self, other):
+            assert type(other) == self.__class__
+            return self.coordinate == other.coordinate and self.turn == other.turn
+
+        # --------------------------------------------------------------------------------------------------------------
+        # PUBLIC PROPERTIES
+        # --------------------------------------------------------------------------------------------------------------
+        @property
+        def coordinate(self):
+            """ Returns joint-coordinates of P1 and P2 as 4-tuple. """
+            return self._coordinate
 
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
-    def __init__(self, kind, dim, conn,
-                 field=None, p1=None, p2=None,
-                 actions=None, alphabet=None, label_func=None,
+    def __init__(self, dim, kind, alphabet=None, p1_actions=tuple(), p2_actions=tuple(),
                  vtype=None, etype=None, graph=None, file=None):
 
-        super(Gridworld, self).__init__(kind=kind, field=field, p1=p1, p2=p2,
-                                        actions=actions, alphabet=alphabet, label_func=label_func,
-                                        vtype=vtype, etype=etype, graph=graph, file=file)
-
-        assert isinstance(dim, (list, tuple)), f"dim must be an Iterable. Received {dim.__class__.__name__} instead."
+        # Validate input parameters not validated in super-class constructor
+        assert isinstance(dim, (list, tuple)), \
+            f"Parameter dim must be an 2-tuple or 2-list. Received {dim.__class__.__name__} instead."
         assert isinstance(dim[0], int) and isinstance(dim[1], int) and len(dim) == 2
-        assert conn in Gridworld.CONN
+        assert dim[0] > 0 and dim[1] > 0, f"Parameter dim must be a 2-tuple of positive integers. Received dim={dim}."
 
+        # Define internal variables
         self._dim = dim
-        self._conn = conn
+
+        # Super class cosntructor
+        super(Gridworld, self).__init__(kind=kind, alphabet=alphabet, p1_actions=p1_actions, p2_actions=p2_actions,
+                                        vtype=vtype, etype=etype, graph=graph, file=file)
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
     # ------------------------------------------------------------------------------------------------------------------
     @property
     def dim(self):
+        """ Returns the dimension of gridworld. """
         return self._dim
 
     @property
     def nrows(self):
+        """ Returns the number of rows in gridworld. """
         return self._dim[0]
 
     @property
     def ncols(self):
+        """ Returns the number of columns in gridworld. """
         return self._dim[1]
-
-    @property
-    def conn(self):
-        return self._conn
-
-    @property
-    def hard_obs(self):
-        return iter(v for v in self.vertices if v.is_hard_obs)
-
-    @property
-    def bouncy_obs(self):
-        return iter(v for v in self.vertices if v.is_bouncy_obs)
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
     def initialize(self, init_st: 'Gridworld.Vertex'):
-        assert self.num_vertices > 0 and self.num_edges > 0, \
+        assert self.num_vertices > 0, \
             f"The grid world cannot be initialized before its graph is generated. Did you call gw.generate_graph()?"
         super(Gridworld, self).initialize(init_st)
 
-    def generate_graph(self):
-        raise NotImplementedError
+    def generate_graph(self, p1_actions=None, p2_actions=None):
+        """
+        Generates the graph of gridworld depending on whether transition system is turn-based or concurrent.
+        Time-Complexity of algorithm is  :math:`O( (|Act1| + |Act2}) |V| )`.
+
+        :param p1_actions: (set(:class:`Action`)) Action set of player 1.
+        :param p2_actions: (set(:class:`Action`)) Action set of player 2.
+
+        .. note:: ``p1_actions`` and ``p2_actions`` will be ignored if they were
+            provided during instantiation of gridworld.
+
+        """
+
+        # Select the right set of actions of P1 and P2.
+        if self._p1_action_lock is True:
+            if p1_actions is not None:
+                warnings.warn(f"P1 action set was provided at the instantiation of Gridworld will be used.")
+
+            p1_actions = self.p1_actions
+
+        if self._p2_action_lock is True:
+            if p2_actions is not None:
+                warnings.warn(f"P2 action set was provided at the instantiation of Gridworld will be used.")
+
+            p2_actions = self.p2_actions
+
+        # Define a placeholder for actions (This is useful while iterating over actions in turn-based edge construction)
+        actions = [p1_actions, p2_actions]
+
+        # Validate actions
+        assert all(type(act) == Action for act in p1_actions), f"All actions must be instance of Action class."
+        assert all(type(act) == Action for act in p2_actions), f"All actions must be instance of Action class."
+
+        # Construct state space of transition system
+        nrows = self.nrows
+        ncols = self.ncols
+        turn = [1, 2]
+
+        if self.kind == CONCURRENT:
+            coordinates = itertools.product(range(nrows), range(ncols), range(nrows), range(ncols))
+            vbunch = [self.Vertex(coordinate=point, turn=None) for point in coordinates]
+        else:
+            coordinates = itertools.product(range(nrows), range(ncols), range(nrows), range(ncols), turn)
+            vbunch = [self.Vertex(coordinate=point[0:4], turn=point[4]) for point in coordinates]
+
+        self.add_vertices(vbunch)
+
+        # Construct edges of transition system
+        for u in self.vertices:
+
+            # If gridworld is turn-based
+            if self.kind == TURN_BASED:
+                for act in actions[u.turn - 1]:
+                    v = act(u, player=u.turn)
+                    if v in self.vertices:
+                        self.add_edge(self.etype(u, v, act))
+
+            # Else, gridworld is concurrent
+            else:
+                for act1, act2 in itertools.product(p1_actions, p2_actions):
+                    v = act1(u, player=1)
+                    v = act2(v, player=2)
+                    if v in self.vertices:
+                        e = self.etype(u=u, v=v, action=(act1, act2))
+                        self.add_edge(e)
 
 
+# ======================================================================================================================
+# STANDARD ACTIONS
+# ======================================================================================================================
+@action
+def N(u, **kwargs):
 
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x, p1y + 1, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x, p2y + 1), turn=1)
+
+    else:
+        AssertionError(f"Action(N) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+@action
+def E(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x + 1, p1y, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x + 1, p2y), turn=1)
+
+    else:
+        AssertionError(f"Action(E) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+@action
+def S(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x, p1y - 1, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x, p2y - 1), turn=1)
+
+    else:
+        AssertionError(f"Action(S) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+@action
+def W(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x - 1, p1y, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x - 1, p2y), turn=1)
+
+    else:
+        AssertionError(f"Action(W) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+@action
+def NE(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x + 1, p1y + 1, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x + 1, p2y + 1), turn=1)
+
+    else:
+        AssertionError(f"Action(NE) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+@action
+def NW(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x - 1, p1y + 1, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x - 1, p2y + 1), turn=1)
+
+    else:
+        AssertionError(f"Action(NW) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+@action
+def SE(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x + 1, p1y - 1, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x + 1, p2y - 1), turn=1)
+
+    else:
+        AssertionError(f"Action(SE) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+@action
+def SW(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x - 1, p1y - 1, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x - 1, p2y - 1), turn=1)
+
+    else:
+        AssertionError(f"Action(SW) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+@action
+def STAY(u, **kwargs):
+
+    # Get the current coordinates of P1 and P2
+    p1x, p1y, p2x, p2y = u.coordinate
+
+    # If vertex represents turn-based vertex, then move position of player whose turn it is to play.
+    if u.turn is not None:
+        move_of_player = u.turn
+
+    # Else, vertex represents concurrent vertex. Move position of player given by the parameter.
+    else:
+        move_of_player = kwargs["player"]
+
+    # Get the next vertex
+    v = u
+    if move_of_player == 1:
+        v = u.__class__(coordinate=(p1x, p1y, p2x, p2y), turn=2)
+
+    elif move_of_player == 2:
+        v = u.__class__(coordinate=(p1x, p1y, p2x, p2y), turn=1)
+
+    else:
+        AssertionError(f"Action(STAY) is a 2-player action. Trying to move player number {move_of_player} not possible.")
+
+    # If input vertex is concurrent game vertex, then set turn to None before returning new vertex.
+    if u.turn is None:
+        v._turn = None
+
+    # Return vertex
+    return v
+
+
+# ======================================================================================================================
+# PUBLIC VARIABLES
+# ======================================================================================================================
+CONN_4 = [N, E, S, W]
+CONN_5 = [N, E, S, W, STAY]
+CONN_8 = [N, E, S, W, NE, NW, SE, SW]
+CONN_9 = [N, E, S, W, NE, NW, SE, SW, STAY]

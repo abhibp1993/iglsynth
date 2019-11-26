@@ -7,17 +7,17 @@ assignees: ''
 
 ---
 
-**Describe the new feature.** 
-Describe what feature should be added. 
+## Feature/Enhancement Description
+Concise description of new feature or enhancement. In case of enhancement, provide context of existing functionality.
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+## Why this Feature/Enhancement?
+Describe the use-case of new feature or enhancement. 
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+## Expected Result after introducing Feature/Enhancement
+What should happen after introducing the new feature or enhancement? Provide code snippet, if possible.
+
+
+## Remarks/Comments
+Any additional remarks or comments.

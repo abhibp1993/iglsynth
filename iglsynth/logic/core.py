@@ -1,3 +1,4 @@
+import inspect
 from abc import ABC
 from typing import Callable
 from iglsynth.util.graph import *
@@ -15,6 +16,7 @@ class ILogic(ABC):
 
     .. caution:: DO NOT INSTANTIATE THIS CLASS!
     """
+
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
@@ -33,6 +35,9 @@ class ILogic(ABC):
     __iand__ = __rand__ = __and__
     __ior__ = __ror__ = __or__
     __invert__ = __neg__
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(formula={self.formula})"
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
@@ -243,6 +248,7 @@ class AP(ILogic):
         where ``res`` must be a boolean.
 
     """
+
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
@@ -264,7 +270,7 @@ class AP(ILogic):
         # the ``eval_func`` or not.
 
         # Handle the case when user has not provided evaluation function.
-        if self._eval_func is None:
+        if type(self) == AP and self._eval_func is None:
             raise NotImplementedError(f"{self}.eval_func is None. Did you provide the evaluation function for this AP?")
 
         # Try evaluating the AP over given state.
@@ -275,8 +281,9 @@ class AP(ILogic):
             return self.evaluate(st, *args, **kwargs)
 
         except TypeError:
-            raise ValueError(f"Given evaluation function does not conform to required signature."
-                             f"An evaluation must be:: func(st, *args, **kwargs)")
+            raise ValueError(f"Given evaluation function does not conform to required signature. "
+                             f"{self}.eval_func has signature {inspect.signature(self._eval_func)}. "
+                             f"Received inputs st={st}, args={args}, kwargs={kwargs}.")
 
     def __eq__(self, other):
         assert isinstance(other, ILogic), f"An AP can only be compared with another ILogic formula. " \
@@ -287,8 +294,8 @@ class AP(ILogic):
     def __hash__(self):
         return self.formula.__hash__()
 
-    def __repr__(self):
-        return f"AP(name={self.formula})"
+    # def __repr__(self):
+    #     return f"AP(name={self.formula})"
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
@@ -420,14 +427,11 @@ class AP(ILogic):
             igl_aut.mark_final_st(v0)
 
             # Add edges
-            e00 = Automaton.Edge(u=v0, v=v0, f=AP("true"))
-            e22 = Automaton.Edge(u=v2, v=v2, f=AP("true"))
+            cls = self.__class__
+            e00 = Automaton.Edge(u=v0, v=v0, f=cls("true"))
+            e22 = Automaton.Edge(u=v2, v=v2, f=cls("true"))
             e10 = Automaton.Edge(u=v1, v=v0, f=self)
-            e12 = Automaton.Edge(u=v1, v=v2,
-                                 f=self.__class__(
-                                     formula="!"+self.formula,
-                                     eval_func=lambda st, *args, **kwargs: not self._eval_func(st, args, kwargs))
-                                 )
+            e12 = Automaton.Edge(u=v1, v=v2, f=self.__neg__())
 
             igl_aut.add_edges([e00, e10, e12, e22])
 
@@ -592,15 +596,6 @@ class PL(AP):
 
     def simplify(self):
         raise NotImplementedError("PL.simplify is not yet implemented.")
-
-    # def is_equivalent(self, other):
-    #     assert isinstance(other, ILogic)
-    #     return spot.formula(self.formula) == spot.formula(other.formula)
-
-    # def is_contained_in(self, other):
-    #     assert isinstance(other, ILogic)
-    #     checker = spot.language_containment_checker()
-    #     return checker.contained(spot.formula(self.formula), spot.formula(other.formula))
 
     def evaluate(self, st, *args, **kwargs):
         """

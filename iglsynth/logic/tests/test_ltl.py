@@ -1,3 +1,4 @@
+import pytest
 from iglsynth.logic.ltl import *
 
 
@@ -8,6 +9,7 @@ def test_translate():
     assert aut.num_edges == 1
     assert aut.num_vertices == 1
     assert Automaton.Vertex(name="0") in aut.final
+    assert all(isinstance(e.formula, ILogic) for e in aut.edges)
 
     # Define a AP; false
     false = LTL(formula="false")
@@ -15,6 +17,7 @@ def test_translate():
     assert aut.num_edges == 1
     assert aut.num_vertices == 1
     assert len(aut.final) == 0
+    assert all(isinstance(e.formula, ILogic) for e in aut.edges)
 
     # Define a general LTL formula
     # From spot.randaut:: Gp1 & !(p1 & X(p0 xor p1))
@@ -47,5 +50,32 @@ def test_translate():
     assert aut.num_vertices == 4
     print(aut.final)
     assert len(aut.final) == 1
+    assert all(isinstance(e.formula, ILogic) for e in aut.edges)
 
+
+def test_evaluate():
+
+    p = AP("p", lambda st, *args, **kwargs: st <= 10)
+    q = AP("q", lambda st, *args, **kwargs: st >= 10)
+    f = LTL(formula="p & q", alphabet=Alphabet([p, q]))
+    g = LTL(formula="F(p & q)", alphabet=Alphabet([p, q]))
+
+    assert f.evaluate(st=10) is True
+    assert f.evaluate(st=9) is False
+    assert f.evaluate(st=11) is False
+
+    assert f(st=10) is True
+    assert f(st=9) is False
+    assert f(st=11) is False
+
+    with pytest.raises(ValueError):
+        g.evaluate(st=11)
+
+    with pytest.raises(ValueError):
+        g(st=11)
+
+
+def test_repr():
+    f = LTL("F(a & b)")
+    assert f.__repr__() == "LTL(formula=F(a & b))"
 
