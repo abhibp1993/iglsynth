@@ -1,15 +1,8 @@
 Release Notes
 =============
 
-0.2.4 (Proposed)
------------------------
-
-* Solver module
-
-    * [Issue #24] Define ``Strategy`` class to represent deterministic and stochastic strategies.
-
-0.2.3 ()
------------------------
+0.2.3 (26 November 2019)
+------------------------
 
 * Bugs
 
