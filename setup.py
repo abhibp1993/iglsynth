@@ -11,6 +11,11 @@ setup(
     author=author(),
     author_email='ankulkarni@wpi.edu',
     download_url=f'https://github.com/abhibp1993/iglsynth/releases/{get_publish_version()}.tar.gz',
+    long_description="""
+        IGLSynth is a package for synthesizing winning strategies in two-player 
+        games and hypergames, where player's objectives are given using 
+        logical specifications.  
+        """,
     url='https://akulkarni.me/iglsynth/',
     install_requires=['pytest'],
     classifiers=[
