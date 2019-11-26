@@ -1,73 +1,80 @@
-from typing import Callable
-from iglsynth.util.graph import *
-from iglsynth.logic.core import AP
+"""
+iglsynth: kripke.py
+
+License goes here...
+"""
+
+from iglsynth.logic.core import *
 
 
 class Kripke(Graph):
     """
     A graph representing a Kripke structure.
+
+    :param alphabet: (:class:`Alphabet`) A set of atomic propositions defined over the Kripke structure.
+    :param vtype: (class) Class representing vertex objects.
+    :param etype: (class) Class representing edge objects.
+    :param graph: (:class:`Graph`) Copy constructor. Copies the input graph into new Kripke object.
+    :param file: (str) Name of file (with absolute path) from which to load the Kripke graph.
+
+    .. note:: Kripke structure class is defined as a placeholder. It may be used to define structures similar to
+              :class:`TSys`. However, presently not much thought has been given to it.
     """
 
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
-
-    def __init__(self, alphabet=None, label_func=None, vtype=None, etype=None, graph=None, file=None):
+    def __init__(self, alphabet=None, vtype=None, etype=None, graph=None, file=None):
 
         # Validate input data-types
-        if vtype is None:
-            vtype = Kripke.Vertex
-        else:
-            assert issubclass(vtype, Kripke.Vertex), "vtype must be a sub-class of Kripke.Vertex."
-
-        if etype is None:
-            etype = Kripke.Edge
-        else:
-            assert issubclass(etype, Kripke.Edge), "etype must be a sub-class of Kripke.Edge."
-
-        assert all([isinstance(p, AP) for p in alphabet]) or alphabet is None
-        assert isinstance(label_func, Callable) or label_func is None   # TODO: Change this to signature validation.
+        assert isinstance(alphabet, Alphabet) or alphabet is None, \
+            f"Parameter alphabet must be an Alphabet object. Received type(alphabet)={type(alphabet)}."
 
         # Base class constructor
         super(Kripke, self).__init__(vtype=vtype, etype=etype, graph=graph, file=file)
 
         # Defining parameters
-        # FIXME: Do we need labeling function? It's simply formula.evaluate()!!!
-        self._props = alphabet                                               # Set of atomic propositions
-        self._label_fcn = label_func                                         # Labeling function
+        self._alphabet = alphabet                                            # Set of atomic propositions
         self._init_st = None                                                 # Set of initial states
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
     # ------------------------------------------------------------------------------------------------------------------
-
     @property
     def is_left_total(self):
-        raise NotImplementedError
+        raise NotImplementedError(f"{self}.is_left_total property is not yet implemented.")       # pragma: no cover
 
     @property
-    def props(self):
-        return self.props
+    def alphabet(self):
+        """ Returns the alphabet associated with the Kripke structure. """
+        return self._alphabet
+
+    @property
+    def init_state(self):
+        """ Returns the initial state of the initial state(s) of the Kripke structure as a ``set``. """
+        return self._init_st
 
     # ------------------------------------------------------------------------------------------------------------------
     # PUBLIC METHODS
     # ------------------------------------------------------------------------------------------------------------------
-
     def initialize(self, init_st):
+        """
+        Defines the initial states of the Kripke structure.
+
+        :param init_st: (:class:`Kripke.Vertex` or set of :class:`Kripke.Vertex` objects) Initial state(s) of the
+            Kripke structure.
+        """
         if isinstance(init_st, Iterable):
             assert all(isinstance(st, Kripke.Vertex) for st in init_st)
             self._init_st = set(init_st)
 
         else:
             assert isinstance(init_st, Kripke.Vertex)
-            self._init_st = init_st
+            assert init_st in self.vertices
 
-    def label(self, v):
-        if isinstance(v, self.vtype):
-            return self._label_fcn(v)
+            if self._init_st is not None:
+                raise AssertionError(f"{self.__class__.__name__} is already initialized. "
+                                     f"Reinitialization is not allowed.")
 
-        elif all(isinstance(u, self.vtype) for u in v):
-            return [self._label_fcn(u) for u in v]
+            self._init_st = {init_st}
 
-        else:
-            raise AssertionError(f"Input {v} must be a {self.vtype} object or a bunch of {self.vtype} objects.")

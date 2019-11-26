@@ -11,7 +11,7 @@ from iglsynth.logic.core import *
 
 class Game(Graph):
     """
-    Represents a two-player deterministic game.
+    Represents a two-player deterministic **zero-sum** game.
 
         * The game could be concurrent or turn-based.
         * Game instance can be constructed by adding vertices and edges (See :ref:`Example Game Graph Construction`).
@@ -74,7 +74,9 @@ class Game(Graph):
             return self.name.__hash__()
 
         def __eq__(self, other):
-            return self._name == other._name and self._turn == other._turn
+            # print("MYPRINT", self, other)
+            assert type(other) == type(self), f"Expected other of type={type(self)}. Received other.type={type(other)}."
+            return self.name == other.name and self.turn == other.turn
 
         # ------------------------------------------------------------------------------------------------------------------
         # PUBLIC PROPERTIES
@@ -91,10 +93,12 @@ class Game(Graph):
 
         @property
         def tsys_vertex(self):
+            """ Returns the transition system vertex associated with game vertex. """
             return self._tsys_v         # pragma: no cover
 
         @property
         def aut_vertex(self):
+            """ Returns the automaton vertex associated with game vertex. """
             return self._aut_v          # pragma: no cover
 
     class Edge(Graph.Edge):
@@ -143,6 +147,7 @@ class Game(Graph):
 
         @property
         def act(self):
+            """ Returns action associated with game edge. """
             return self._act
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -155,6 +160,9 @@ class Game(Graph):
 
         # Initialize internal variables
         self._kind = kind
+        self._p1_spec = None
+        self._final = set()
+
         super(Game, self).__init__(vtype, etype, graph, file)
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -168,10 +176,57 @@ class Game(Graph):
         """
         return self._kind
 
+    @property
+    def p1_spec(self):
+        """ Returns the specification of P1 in the game. """
+        return self._p1_spec
+
+    @property
+    def final(self):
+        """ Returns the set of final states of the game. """
+        return self._final
+
     # ------------------------------------------------------------------------------------------------------------------
     # PRIVATE METHODS
     # ------------------------------------------------------------------------------------------------------------------
-    def _define_by_tsys_aut(self, tsys, aut):
+    def _product_turn_based_tsys_aut(self, tsys, aut):
+        """
+        Computes the product of a turn-based transition system with a specification automaton.
+
+        :param tsys:
+        :param aut:
+        :return:
+        """
+        # Generate vertices of game
+        tsys_states = list(tsys.vertices)
+        aut_states = list(aut.vertices)
+
+        game_states = [self.Vertex(name=f"({s}, {q})", tsys_v=s, aut_v=q, turn=s.turn)
+                       for s in tsys_states for q in aut_states]
+        self.add_vertices(game_states)
+
+        # Set final states
+        for v in self.vertices:
+            if v.aut_vertex in aut.final:
+                self.mark_final(v)
+
+        # Add edges of game
+        for u in self.vertices:
+            s = u.tsys_vertex
+            q = u.aut_vertex
+
+            s_out_edges = tsys.out_edges(s)
+            q_out_edges = aut.out_edges(q)
+
+            for se in s_out_edges:
+                for qe in q_out_edges:
+                    # qe_formula = PL(formula=str(qe.formula), alphabet=self.p1_spec.alphabet)
+                    if qe.formula(se.target) is True:
+                        v = self.Vertex(name=f"({se.target}, {qe.target})", tsys_v=se.target,
+                                        aut_v=qe.target, turn=se.target.turn)
+                        self.add_edge(self.Edge(u=u, v=v, act=se.action))
+
+    def _product_concurrent_tsys_aut(self, tsys, aut):
         # TODO: Implement this one!
         pass        # pragma: no cover
 
@@ -200,9 +255,52 @@ class Game(Graph):
         
         super(Game, self).add_edge(e)
 
-    def define(self, tsys=None, aut=None):      # pragma: no cover
-        if tsys is not None and aut is not None:
-            self._define_by_tsys_aut(tsys, aut)
+    def define(self, tsys=None, p1_spec=None):      # pragma: no cover
+        """
+        Defines and constructs the deterministic zero-sum game graph.
+
+        :param tsys: (:class:`TSys`) Transition system over which game is defined.
+        :param p1_spec: (:class:`ILogic`) Logical specification that P1 must satisfy over transition system.
+
+        .. note:: A game graph can be defined in three possible ways.
+
+            * Explicit construction of graph by adding vertices and edges.
+            * By providing transition system and a logical specification for P1.
+            * By providing an game field and two players. (Not presently supported).
+
+        """
+        # If transition system and specification are provided, then construct game using appropriate product operation
+        if tsys is not None and p1_spec is not None:
+
+            # Validate input arguments
+            assert isinstance(p1_spec, ILogic), \
+                f"Input argument p1_spec must be an ILogic formula. Received p1_spec={p1_spec}."
+            assert isinstance(tsys, TSys), \
+                f"Input argument tsys must be an TSys object. Received p1_spec={tsys}."
+            assert tsys.kind == self.kind, \
+                f"Type of argument tsys={tsys} is {tsys.kind} does NOT match self.kind={self.kind}."
+
+            # Update internal variables
+            self._p1_spec = p1_spec
+
+            # Translate the specification to an automaton
+            aut = p1_spec.translate()
+
+            # Invoke appropriate product operation
+            if self.kind == TURN_BASED:
+                self._product_turn_based_tsys_aut(tsys, aut)
+
+            else:
+                self._product_concurrent_tsys_aut(tsys, aut)
 
         else:
             AttributeError("Either provide a graph or (tsys and aut) parameter, but not both.")
+
+    def mark_final(self, v):
+        """
+        Adds the given state to the set of final states in the game.
+
+        :param v: (:class:`Game.Vertex`) Vertex to be marked as final.
+        """
+        if v in self.vertices:
+            self._final.add(v)

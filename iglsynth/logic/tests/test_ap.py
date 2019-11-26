@@ -128,6 +128,7 @@ def test_translate():
     assert aut.num_edges == 4
     assert aut.num_vertices == 3
     assert Automaton.Vertex(name="0") in aut.final
+    assert all(isinstance(e.formula, ILogic) for e in aut.edges)
 
     # Define a AP; true
     true = TRUE
@@ -135,6 +136,7 @@ def test_translate():
     assert aut.num_edges == 1
     assert aut.num_vertices == 1
     assert Automaton.Vertex(name="0") in aut.final
+    assert all(isinstance(e.formula, ILogic) for e in aut.edges)
 
     # Define a AP; false
     false = AP.FALSE
@@ -142,5 +144,9 @@ def test_translate():
     assert aut.num_edges == 1
     assert aut.num_vertices == 1
     assert Automaton.Vertex(name="0") in aut.final
+    assert all(isinstance(e.formula, ILogic) for e in aut.edges)
 
 
+def test_repr():
+    a = AP("a")
+    assert a.__repr__() == "AP(formula=a)"
