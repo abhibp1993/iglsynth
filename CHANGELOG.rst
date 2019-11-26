@@ -33,7 +33,7 @@ Release Notes
 
 * Solver module
 
-    * [Issue #24] ``ZielonkaSolver`` class defined and implemented. The solver computes winning regions only. 
+    * [Issue #24] ``ZielonkaSolver`` class defined and implemented. The solver computes winning regions only.
 
 
 * Utilities
