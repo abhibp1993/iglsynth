@@ -15,3 +15,7 @@ class ISolver(object):
     def solve(self):
         pass
 
+
+class Strategy(SubGraph):
+    # TODO: Update this after defining SubGraph class
+    pass

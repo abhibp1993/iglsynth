@@ -12,8 +12,8 @@ class ZielonkaSolver(ISolver):
 
         self._p1_win = set()
         self._p2_win = set()
-        self._p1_strategy = Graph(vtype=game.vtype, etype=game.etype)
-        self._p2_strategy = Graph(vtype=game.vtype, etype=game.etype)
+        self._p1_strategy = Graph(vtype=game.vtype, etype=game.etype)       # TODO: Update this after defining Strategy
+        self._p2_strategy = Graph(vtype=game.vtype, etype=game.etype)       # TODO: Update this after defining Strategy
 
     @property
     def p1_win(self):
