@@ -526,9 +526,20 @@ def test_prune():
     pass
 
 
-@pytest.mark.skip("Not Implemented")
 def test_save():
-    pass
+    graph = Graph()
+    v1 = graph.Vertex()
+    v2 = graph.Vertex()
+    v3 = graph.Vertex()
+    e = graph.Edge(v1, v2)
+
+    graph.add_vertex(v1)
+    graph.add_vertex(v2)
+    graph.add_vertex(v3)
+    graph.add_edge(e)
+
+    fname = 'test_1'
+    graph.save(fname)
 
 
 def test_derived_class_instantiation_1():

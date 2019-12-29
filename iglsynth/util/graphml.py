@@ -122,7 +122,9 @@ class GraphMLParser:
         # xml = Element("graphml", self.XML_HEADER)
 
         # In IGLSynth we deal with only directed graphs
-        xml_graph = Element("graph", edgedefault='directed')
+        xml_graph = Element("graph", {'edgedefault': 'directed',
+                                      'parse.nodes': str(self._graph.num_vertices),
+                                      'parse.edges': str(self._graph.num_edges)})
         self.xml.append(xml_graph)
 
         # Add graph class properties/attributes

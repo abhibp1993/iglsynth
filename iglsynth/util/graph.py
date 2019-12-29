@@ -6,6 +6,7 @@ License goes here...
 
 from typing import Iterable, Iterator, List, Union
 from functools import reduce
+from iglsynth.util.graphml import *
 import uuid
 import warnings
 
@@ -174,7 +175,7 @@ class Graph(object):
                             f"Received {type(item)}.")
 
     __hash__ = object.__hash__
-    
+
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
     # ------------------------------------------------------------------------------------------------------------------
@@ -465,8 +466,10 @@ class Graph(object):
         for e in ebunch:
             self.rm_edge(e)
 
-    def save(self, filename: str = None, ext: str = 'xml'):
-        raise NotImplementedError
+    def save(self, fname: str = None, ext: str = 'graphml'):
+        assert "." not in fname, "fname (file name) cannot contain a dot '.'"
+        parser = GraphMLParser(graph=self)
+        parser.write(".".join([fname, ext]))
 
     # ------------------------------------------------------------------------------------------------------------------
     # PRIVATE METHODS
