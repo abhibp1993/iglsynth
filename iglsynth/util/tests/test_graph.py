@@ -9,12 +9,12 @@ def test_graph_instantiation():
     # 2. Constructor with UserVertex, UserEdge types
     class UserVertex(Graph.Vertex):
         def __init__(self, name):
-            self.name = name
+            self.id = name
 
     class UserEdge(Graph.Edge):
         def __init__(self, name, u, v):
             super(UserEdge, self).__init__(u, v)
-            self.name = name
+            self.id = name
 
     _ = Graph(vtype=UserVertex, etype=UserEdge)
 
@@ -131,12 +131,13 @@ def test_has_vertex():
 
     # Graph class with custom vertex class
     class UserVertex(Graph.Vertex):
-        def __init__(self, name):
-            self.name = name
+        def __init__(self, id):
+            super(UserVertex, self).__init__()
+            self.id = id
 
     graph = Graph(vtype=UserVertex)
-    v0 = UserVertex(name="v0")
-    v1 = UserVertex(name="v1")
+    v0 = UserVertex(id="v0")
+    v1 = UserVertex(id="v1")
 
     graph.add_vertex(v0)
 
@@ -150,7 +151,7 @@ def test_has_vertex():
     class NewGraph(Graph):
         class Vertex(Graph.Vertex):
             def __init__(self, name):
-                pass
+                super(NewGraph.Vertex, self).__init__(name)
 
     graph = NewGraph()
     v0 = graph.Vertex(name="v0")
@@ -182,16 +183,17 @@ def test_add_edge():
     graph.add_edge(e)
     assert graph.num_edges == 1
 
-    # Add a new edge between same vertices
-    e0 = Graph.Edge(v0, v1)
-    graph.add_edge(e0)
-    assert graph.num_edges == 2
+    # Note: The following case is now resolved. Two edges are equal, if their names are equal.
+    # # Add a new edge between same vertices
+    # e0 = Graph.Edge(v0, v1)
+    # graph.add_edge(e0)
+    # assert graph.num_edges == 2
 
     # Add edge using UserDefined Edge type
     class UserEdge(Graph.Edge):
         def __init__(self, name, u, v):
             super(UserEdge, self).__init__(u, v)
-            self.name = name
+            self.id = name
 
     graph = Graph(etype=UserEdge)
     v0 = Graph.Vertex()
@@ -331,7 +333,7 @@ def test_has_edge():
     # Graph class with custom vertex class
     class UserEdge(Graph.Edge):
         def __init__(self, name, u, v):
-            self.name = name
+            self.id = name
             super(UserEdge, self).__init__(u, v)
 
     graph = Graph(etype=UserEdge)
@@ -402,7 +404,7 @@ def test_get_edges():
     assert len(list(graph.get_edges(v0, v1))) == 1
 
     # Multi edge retrieval
-    assert len(list(graph.get_edges(v1, v1))) == 2
+    assert len(list(graph.get_edges(v1, v1))) == 1
 
     # One or more vertices not in graph
     with pytest.raises(AssertionError):
@@ -413,14 +415,14 @@ def test_graph_properties():
     # Create a graph instance
     class UserVertex(Graph.Vertex):
         def __init__(self, name):
-            self.name = name
+            super(UserVertex, self).__init__(name)
 
         def __repr__(self):
             return self.name
 
     class UserEdge(Graph.Edge):
         def __init__(self, u, v):
-            self.name = f"({u}, {v})"
+            self.id = f"({u}, {v})"
             super(UserEdge, self).__init__(u, v)
 
         def __repr__(self):
