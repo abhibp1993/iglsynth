@@ -154,9 +154,13 @@ class Graph(object):
         elif file is not None and graph is not None:
             raise ValueError("Input parameters 'file' and 'graph' should not be provided simultaneously.")
 
+    def __eq__(self, other):
+        assert type(self) == type(other), f"Type mismatch: type(self)={type(self)} and type(other)={type(other)}."
+        return set(self.vertices) == set(other.vertices) and set(self.edges) == set(other.edges)
+
     def __repr__(self):
-        return f"{self.__class__.__name__}(|V|={self.num_vertices} of type={self.vtype}, " \
-            f"|E|={self.num_edges} of type={self.etype})"
+        return f"{self.__class__.__qualname__}(|V|={self.num_vertices} of type={self.vtype.__qualname__}, " \
+            f"|E|={self.num_edges} of type={self.etype.__qualname__})"
 
     def __contains__(self, item):
         if isinstance(item, self.vtype):
@@ -169,6 +173,8 @@ class Graph(object):
             raise TypeError(f"{self}.__contains__: Input must be of {type(self.vtype)} or {type(self.etype)}. "
                             f"Received {type(item)}.")
 
+    __hash__ = object.__hash__
+    
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
     # ------------------------------------------------------------------------------------------------------------------
