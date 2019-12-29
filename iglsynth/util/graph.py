@@ -6,6 +6,7 @@ License goes here...
 
 from typing import Iterable, Iterator, List, Union
 from functools import reduce
+import uuid
 import warnings
 
 
@@ -35,10 +36,37 @@ class Graph(object):
         """
         Base class for representing a vertex of graph.
 
-        - :class:`Graph.Vertex` constructor takes no arguments.
-        - Two vertices are equal, if the two :class:`Graph.Vertex` objects are same.
+        :param name: (object) A unique identifier for the vertex.
+
+        - Two vertices are equal, if they have the same names.
+        - If name is not supplied by the user, a name is automatically generated using "uuid" library.
         """
-        __hash__ = object.__hash__
+
+        def __init__(self, name=None):
+            self._name = name if name is not None else uuid.uuid4()
+
+        def __hash__(self):
+            return self.name.__hash__()
+
+        def __eq__(self, other):
+            assert type(other) == type(self), f"Type mismatch: type(self)={type(self)}, type(other)={type(other)}."
+            return self.name == other.name
+
+        def __str__(self):
+            return f"{self.__class__.__qualname__}(name={self.name})"
+
+        def __repr__(self):
+            obj_dict = dict()
+            for key in self.__dict__.keys():
+                value = self.__dict__[key]
+                if not key.startswith('__') and not callable(value):
+                    obj_dict[key] = value
+
+            return obj_dict.__repr__()
+
+        @property
+        def name(self):
+            return self._name
 
     class Edge(object):
         """
