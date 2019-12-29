@@ -79,14 +79,29 @@ class Graph(object):
         :param v: (:class:`Graph.Vertex` or its sub-class) Target vertex of edge.
         """
 
-        __hash__ = object.__hash__
-
         def __init__(self, u: 'Graph.Vertex', v: 'Graph.Vertex'):
             self._source = u
             self._target = v
+            self._name = (u, v)
+
+        def __hash__(self):
+            return self._name.__hash__()
+
+        def __eq__(self, other):
+            assert type(other) == type(self), f"Type mismatch: type(self)={type(self)}, type(other)={type(other)}."
+            return self.name == other.name
+
+        def __str__(self):
+            return f"{self.__class__.__qualname__}(u={self.source}, v={self.target})"
 
         def __repr__(self):
-            return f"{self.__class__.__name__}.Edge(source={self.source}, target={self.target})"
+            obj_dict = dict()
+            for key in self.__dict__.keys():
+                value = self.__dict__[key]
+                if not key.startswith('__') and not callable(value):
+                    obj_dict[key] = value
+
+            return obj_dict.__repr__()
 
         @property
         def source(self):
@@ -97,6 +112,10 @@ class Graph(object):
         def target(self):
             """ Returns the target vertex of edge. """
             return self._target
+
+        @property
+        def name(self):
+            return self._name
 
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
