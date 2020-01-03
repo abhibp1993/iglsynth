@@ -14,7 +14,7 @@ def test_write_1():
     graph.add_edge(e)
 
     fname = 'test_1.graphml'
-    parser = GraphMLParser(graph=graph)
+    parser = GraphMLWriter(graph=graph)
     parser.write(fname=fname)
 
 
@@ -31,5 +31,7 @@ def test_write_2():
     graph.mark_final(v1)
 
     fname = 'test_2.graphml'
-    parser = GraphMLParser(graph=graph)
+    parser = GraphMLWriter(graph=graph)
     parser.write(fname=fname)
+
+

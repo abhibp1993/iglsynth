@@ -568,18 +568,187 @@ class GraphMLWriter(object):
         document.write(fname, encoding='utf-8', xml_declaration=True)
 
 
+class GraphMLReader(object):
+    """
+    Writes given graph object as a graphml file.
+
+    Format:
+        <graphml ... >
+            <!-- IGLSYNTH AUTO-GENERATED COMMENT -->
+
+            <key id="varname" for="node/edge" attr.name="varname" attr.type="iglsynth-graphml-types">
+                <default> PICKLE_SERIALIZED_VALUE </default>
+            </key>
+            ..
+
+            <data key=".."> PICKLE_SERIALIZED_VALUE </data>
+            ..
+
+            <graph>
+                <node id="..">
+                    <data key=".."> PICKLE_SERIALIZED_VALUE </data>
+                    ..
+                </node>
+
+                <edge id="..">
+                    <data key=".."> PICKLE_SERIALIZED_VALUE </data>
+                    ..
+                </edge>
+            </graph>
+        <graphml>
+
+    iglsynth-graphml-types include special string: "--iglsynth.pickled--" which
+    indicates that the value is a pickled value.
+
+    :param graph: (:class:`Graph`) Graph to be saved in graphml format.
+    """
+    def __init__(self, graph, fname):
+
+        # Internal variables
+        self._fname = fname
+        self._graph = graph
+        self._tree = parse(fname)
+        self._graphml = self._tree.getroot()
+        self._xml = Element("graphml", XML_HEADER)
+
+    def _read_graph_class_name(self):
+        for data in self._graphml.findall("{%s}data" % NS_GRAPHML):
+            key = data.attrib['key']
+            value = data.text
+
+            if key == 'graph_class_name':
+                return value
+
+    def _read_vertex_class_name(self):
+        for data in self._graphml.findall("{%s}data" % NS_GRAPHML):
+            key = data.attrib['key']
+            value = data.text
+
+            if key == 'vertex_class_name':
+                return value
+
+    def _read_edge_class_name(self):
+        for data in self._graphml.findall("{%s}data" % NS_GRAPHML):
+            key = data.attrib['key']
+            value = data.text
+
+            if key == 'edge_class_name':
+                return value
+
+    def _read_graph_properties(self):
+
+        # Iterate over data elements from graphml file excluding reserved properties (graph/vertex/edge_class_name)
+        for data in self._graphml.findall("{%s}data" % NS_GRAPHML):
+            key = data.attrib['key']
+            value = data.text
+
+            if key in ('graph_class_name', 'vertex_class_name', 'edge_class_name'):
+                continue
+
+            try:
+                value = pickle.loads(value)
+
+                if hasattr(self._graph, key):
+                    setattr(self._graph, key, value)
+                else:
+                    warnings.warn(f"Command: setattr({self._graph}, {key}, {value}) failed. ")
+
+            except Exception as e:
+                print(e)
+
+    def _read_vertex_properties(self):
+
+        vprops = list()
+
+        # Iterate over data elements from graphml file excluding reserved properties (graph/vertex/edge_class_name)
+        # <key attr.name="_target" attr.type="Graph.Vertex" for="edge" id="_target" />
+        for key in self._graphml.findall("{%s}key" % NS_GRAPHML):
+            p_name = key.attrib['id']
+            p_for = key.attrib['for']
+            p_type = key.attrib['attr.type']
+
+            if p_for != "node":
+                continue
+
+            vprops.append((p_name, p_type))
+
+        return vprops
+
+    def _read_edge_properties(self):
+
+        eprops = list()
+
+        # Iterate over data elements from graphml file excluding reserved properties (graph/vertex/edge_class_name)
+        # <key attr.name="_target" attr.type="Graph.Vertex" for="edge" id="_target" />
+        for key in self._graphml.findall("{%s}key" % NS_GRAPHML):
+            p_name = key.attrib['id']
+            p_for = key.attrib['for']
+            p_type = key.attrib['attr.type']
+
+            if p_for != "edge":
+                continue
+
+            eprops.append((p_name, p_type))
+
+        return eprops
+
+    def _read_vertices(self):
+
+        vertices = list()
+        for elem_graph in self._graphml.findall("{%s}graph" % NS_GRAPHML):
+            for elem_node in elem_graph.findall("{%s}node" % NS_GRAPHML):
+                name = elem_node.attrib['id']
+
+    def read(self):
+        # Validate graph class name
+        graph_class_name = self._read_graph_class_name()
+        assert graph_class_name == self._graph.__class__.__qualname__, \
+            f"File {self._fname} represents graph of class '{graph_class_name}', " \
+            f"given graph class is '{self._graph.__class__.__qualname__}'. Cannot load graph."
+
+        # Validate vertex class name
+        vertex_class_name = self._read_vertex_class_name()
+        assert vertex_class_name == self._graph.vtype.__qualname__, \
+            f"File {self._fname} represents graph with Vertex class '{vertex_class_name}', " \
+            f"given graph class has Vertex type '{self._graph.vtype.__qualname__}'. Cannot load graph."
+
+        # Validate edge class name
+        edge_class_name = self._read_edge_class_name()
+        assert edge_class_name == self._graph.etype.__qualname__, \
+            f"File {self._fname} represents graph with Vertex class '{edge_class_name}', " \
+            f"given graph class has Vertex type '{self._graph.etype.__qualname__}'. Cannot load graph."
+
+        # Validate vertex properties and their types
+        vprops = self._read_vertex_properties()
+
+        # Validate edge properties and their types
+        eprops = self._read_edge_properties()
+
+        # Read graph, vertex and edge property information
+        self._read_graph_properties()
+
+        # Read vertices
+        self._read_vertices()
+
+        # Read edges
+
+
 if __name__ == '__main__':
     from iglsynth.util.graph import *
 
     g = Graph()
 
-    v0 = g.Vertex()
-    v1 = g.Vertex()
-    g.add_vertices([v0, v1])
+    # v0 = g.Vertex()
+    # v1 = g.Vertex()
+    # g.add_vertices([v0, v1])
+    #
+    # e0 = g.Edge(v0, v1)
+    # e1 = g.Edge(v0, v0)
+    # g.add_edges([e0, e1])
+    #
+    # writer = GraphMLWriter(graph=g)
+    # writer.write(fname="graph1.graphml")
 
-    e0 = g.Edge(v0, v1)
-    e1 = g.Edge(v0, v0)
-    g.add_edges([e0, e1])
-
-    writer = GraphMLWriter(graph=g)
-    writer.write(fname="graph1.graphml")
+    reader = GraphMLReader(graph=g, fname="graph1.graphml")
+    reader.read()
+    print(g.__dict__)
