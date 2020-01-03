@@ -121,7 +121,7 @@ class Graph(object):
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
-    def __init__(self, vtype=None, etype=None, graph=None, file=None):
+    def __init__(self, vtype=None, etype=None, **kwargs):
 
         # Validate vertex type. If okay, update the Vertex type of this instance
         if vtype is not None:
@@ -139,45 +139,20 @@ class Graph(object):
 
             self.Edge = etype
 
-        # # Validate input data-types
-        # _class = self.__class__
-        #
-        # if Vertex is None:
-        #     Vertex = _class.Vertex
-        # else:
-        #     assert issubclass(Vertex, self.Vertex), \
-        #         f"Vertex must be a sub-class of {_class}.Vertex class. Received {Vertex}."
-        #
-        # if etype is None:
-        #     etype = _class.Edge
-        # else:
-        #     assert issubclass(etype, self.Edge), \
-        #         f"etype must be a sub-class of {_class}.Edge class. Received {etype}."
-
-        # Define internal data structure
-        self.vtype = self.Vertex                                    # Vertex class used in graph
-        self.etype = self.Edge                                      # Edge class used in graph
+        # Define internal data structure of graph
         self._vertex_edge_map = dict()                              # Dict: {vertex: (set(<in-edge>), set(<out-edge>))}
         self._edges = set()                                         # Set of all edges of graph
-
-        # TODO: Initialize graph by provided (optional) inputs
-        if graph is not None and file is None:                      # pragma: no cover
-            self._instantiate_by_graph(graph)
-
-        # TODO: If file argument is given, then load graph from the file.
-        elif file is not None and graph is None:                    # pragma: no cover
-            self._load(filename=file)
-
-        elif file is not None and graph is not None:
-            raise ValueError("Input parameters 'file' and 'graph' should not be provided simultaneously.")
 
     def __eq__(self, other):
         assert type(self) == type(other), f"Type mismatch: type(self)={type(self)} and type(other)={type(other)}."
         return set(self.vertices) == set(other.vertices) and set(self.edges) == set(other.edges)
 
-    def __repr__(self):
+    def __str__(self):
         return f"{self.__class__.__qualname__}(|V|={self.num_vertices} of type={self.Vertex.__qualname__}, " \
             f"|E|={self.num_edges} of type={self.Edge.__qualname__})"
+
+    def __repr__(self):
+        return self._serialize()
 
     def __contains__(self, item):
         if isinstance(item, self.Vertex):
@@ -490,6 +465,10 @@ class Graph(object):
     # ------------------------------------------------------------------------------------------------------------------
     # PRIVATE METHODS
     # ------------------------------------------------------------------------------------------------------------------
+
+    def _serialize(self):
+        return f"{self.__class__.__qualname__}(_edges={self._edges})"
+
     def _load(self, filename: str):
         raise NotImplementedError
 

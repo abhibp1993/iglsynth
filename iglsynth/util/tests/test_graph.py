@@ -656,8 +656,26 @@ def test_derived_class_instantiation_5():
         _ = ChildGraph(etype=UserEdge)
 
 
-@pytest.mark.skip("Not Implemented")
+def test_str():
+    graph = Graph()
+    assert graph.__str__() == f"Graph(|V|=0 of type=Graph.Vertex, |E|=0 of type=Graph.Edge)"
+
+
 def test_repr():
     graph = Graph()
-    assert graph.__str__() == f"Graph(|V|=0 of type=<class 'iglsynth.util.graph.Graph.Vertex'>, " \
-        f"|E|=0 of type=<class 'iglsynth.util.graph.Graph.Edge'>)"
+
+    v1 = graph.Vertex()
+    v2 = graph.Vertex()
+    v3 = graph.Vertex()
+    e = graph.Edge(v1, v2)
+
+    graph.add_vertex(v1)
+    graph.add_vertex(v2)
+    graph.add_vertex(v3)
+    graph.add_edge(e)
+
+    print()
+    print("++++++++++++++++++++++++++++++++")
+    print(graph.__repr__())
+    print("++++++++++++++++++++++++++++++++")
+    print()
