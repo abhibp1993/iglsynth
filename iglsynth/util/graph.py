@@ -123,24 +123,40 @@ class Graph(object):
     # ------------------------------------------------------------------------------------------------------------------
     def __init__(self, vtype=None, etype=None, graph=None, file=None):
 
-        # Validate input data-types
-        _class = self.__class__
+        # Validate vertex type. If okay, update the Vertex type of this instance
+        if vtype is not None:
+            assert issubclass(vtype, self.Vertex),  \
+                f"Vertex type (Vertex) must be a sub-class of {self.__class__.__qualname__}." \
+                f"Vertex class. Received {vtype.__qualname__}."
 
-        if vtype is None:
-            vtype = _class.Vertex
-        else:
-            assert issubclass(vtype, self.Vertex), \
-                f"vtype must be a sub-class of {_class}.Vertex class. Received {vtype}."
+            self.Vertex = vtype
 
-        if etype is None:
-            etype = _class.Edge
-        else:
-            assert issubclass(etype, self.Edge), \
-                f"etype must be a sub-class of {_class}.Edge class. Received {etype}."
+        # Validate edge type. If okay, update the Edge type of this instance
+        if etype is not None:
+            assert issubclass(etype, self.Edge),  \
+                f"Edge type (etype) must be a sub-class of {self.__class__.__qualname__}.Edge " \
+                f"class. Received {etype.__qualname__}."
+
+            self.Edge = etype
+
+        # # Validate input data-types
+        # _class = self.__class__
+        #
+        # if Vertex is None:
+        #     Vertex = _class.Vertex
+        # else:
+        #     assert issubclass(Vertex, self.Vertex), \
+        #         f"Vertex must be a sub-class of {_class}.Vertex class. Received {Vertex}."
+        #
+        # if etype is None:
+        #     etype = _class.Edge
+        # else:
+        #     assert issubclass(etype, self.Edge), \
+        #         f"etype must be a sub-class of {_class}.Edge class. Received {etype}."
 
         # Define internal data structure
-        self.vtype = vtype                                          # Vertex class used in graph
-        self.etype = etype                                          # Edge class used in graph
+        self.vtype = self.Vertex                                    # Vertex class used in graph
+        self.etype = self.Edge                                      # Edge class used in graph
         self._vertex_edge_map = dict()                              # Dict: {vertex: (set(<in-edge>), set(<out-edge>))}
         self._edges = set()                                         # Set of all edges of graph
 
@@ -160,18 +176,18 @@ class Graph(object):
         return set(self.vertices) == set(other.vertices) and set(self.edges) == set(other.edges)
 
     def __repr__(self):
-        return f"{self.__class__.__qualname__}(|V|={self.num_vertices} of type={self.vtype.__qualname__}, " \
-            f"|E|={self.num_edges} of type={self.etype.__qualname__})"
+        return f"{self.__class__.__qualname__}(|V|={self.num_vertices} of type={self.Vertex.__qualname__}, " \
+            f"|E|={self.num_edges} of type={self.Edge.__qualname__})"
 
     def __contains__(self, item):
-        if isinstance(item, self.vtype):
+        if isinstance(item, self.Vertex):
             return self.has_vertex(item)
 
-        elif isinstance(item, self.etype):
+        elif isinstance(item, self.Edge):
             return self.has_edge(item)
 
         else:
-            raise TypeError(f"{self}.__contains__: Input must be of {type(self.vtype)} or {type(self.etype)}. "
+            raise TypeError(f"{self}.__contains__: Input must be of {type(self.Vertex)} or {type(self.Edge)}. "
                             f"Received {type(item)}.")
 
     __hash__ = object.__hash__
@@ -213,8 +229,8 @@ class Graph(object):
 
         :param v: (:class:`Graph.Vertex`) Vertex to be added to graph.
         """
-        assert isinstance(v, self.vtype), \
-            f"Vertex {v} must be object of {self.vtype}. Given, v is {v.__class__.__name__}"
+        assert isinstance(v, self.Vertex), \
+            f"Vertex {v} must be object of {self.Vertex}. Given, v is {v.__class__.__name__}"
 
         # If vertex is not already added, then add it.
         if v not in self._vertex_edge_map:
@@ -241,8 +257,8 @@ class Graph(object):
         :raises AttributeError: When at least one of the vertex is not in the graph.
         :raises AssertionError: When argument `e` is not an :class:`Graph.Edge` object.
         """
-        assert isinstance(e, self.etype), \
-            f"Edge {e} must be an object of {self.etype} class. Got {e.__class__.__name__}"
+        assert isinstance(e, self.Edge), \
+            f"Edge {e} must be an object of {self.Edge} class. Got {e.__class__.__name__}"
 
         if e in self._edges:
             warnings.warn(f"Edge {e} is already present in graph. Ignoring request to add.")
@@ -318,18 +334,18 @@ class Graph(object):
         :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
             nor an iterable of :class:`Graph.Vertex` objects.
         """
-        if isinstance(v, self.vtype):
-            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
+        if isinstance(v, self.Vertex):
+            assert isinstance(v, self.Vertex), f"All vertices in input: {v} must be of type={self.Vertex}."
             return iter(self._vertex_edge_map[v][0])
 
         elif isinstance(v, Iterable):
-            assert all(isinstance(u, self.vtype) for u in v), \
-                f"All vertices in input: {v} must be of type={self.vtype}."
+            assert all(isinstance(u, self.Vertex) for u in v), \
+                f"All vertices in input: {v} must be of type={self.Vertex}."
 
             in_edges = (self._vertex_edge_map[u][0] for u in v)
             return iter(reduce(set.union, in_edges))
 
-        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
+        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.Vertex} objects.")
 
     def in_neighbors(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
         """
@@ -342,17 +358,17 @@ class Graph(object):
         :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
             nor an iterable of :class:`Graph.Vertex` objects.
         """
-        if isinstance(v, self.vtype):
-            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
+        if isinstance(v, self.Vertex):
+            assert isinstance(v, self.Vertex), f"All vertices in input: {v} must be of type={self.Vertex}."
             return iter(e.source for e in self._vertex_edge_map[v][0])
 
         elif isinstance(v, Iterable):
-            assert all(isinstance(u, self.vtype) for u in v), \
-                f"All vertices in input: {v} must be of type={self.vtype}."
+            assert all(isinstance(u, self.Vertex) for u in v), \
+                f"All vertices in input: {v} must be of type={self.Vertex}."
 
             return iter(e.source for u in v for e in self._vertex_edge_map[u][0])
 
-        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
+        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.Vertex} objects.")
 
     def prune(self, v: 'Graph.Vertex'):
         raise NotImplementedError
@@ -368,18 +384,18 @@ class Graph(object):
         :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
             nor an iterable of :class:`Graph.Vertex` objects.
         """
-        if isinstance(v, self.vtype):
-            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
+        if isinstance(v, self.Vertex):
+            assert isinstance(v, self.Vertex), f"All vertices in input: {v} must be of type={self.Vertex}."
             return iter(self._vertex_edge_map[v][1])
 
         elif isinstance(v, Iterable):
-            assert all(isinstance(u, self.vtype) for u in v), \
-                f"All vertices in input: {v} must be of type={self.vtype}."
+            assert all(isinstance(u, self.Vertex) for u in v), \
+                f"All vertices in input: {v} must be of type={self.Vertex}."
 
             out_edges = (self._vertex_edge_map[u][1] for u in v)
             return iter(reduce(set.union, out_edges))
 
-        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
+        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.Vertex} objects.")
 
     def out_neighbors(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
         """
@@ -392,17 +408,17 @@ class Graph(object):
         :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
             nor an iterable of :class:`Graph.Vertex` objects.
         """
-        if isinstance(v, self.vtype):
-            assert isinstance(v, self.vtype), f"All vertices in input: {v} must be of type={self.vtype}."
+        if isinstance(v, self.Vertex):
+            assert isinstance(v, self.Vertex), f"All vertices in input: {v} must be of type={self.Vertex}."
             return iter(e.target for e in self._vertex_edge_map[v][1])
 
         elif isinstance(v, Iterable):
-            assert all(isinstance(u, self.vtype) for u in v), \
-                f"All vertices in input: {v} must be of type={self.vtype}."
+            assert all(isinstance(u, self.Vertex) for u in v), \
+                f"All vertices in input: {v} must be of type={self.Vertex}."
 
             return iter(e.target for u in v for e in self._vertex_edge_map[u][1])
 
-        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.vtype} objects.")
+        raise AssertionError(f"Vertex {v} must be a single or an iterable of {self.Vertex} objects.")
 
     def rm_vertex(self, v: 'Graph.Vertex'):
         """
@@ -411,8 +427,8 @@ class Graph(object):
 
         :param v: (:class:`Graph.Vertex`) Vertex to be removed.
         """
-        assert isinstance(v, self.vtype), \
-            f"Vertex {v} must be object of {self.vtype}. Given, v is {v.__class__.__name__}"
+        assert isinstance(v, self.Vertex), \
+            f"Vertex {v} must be object of {self.Vertex}. Given, v is {v.__class__.__name__}"
 
         # Remove incoming and outgoing edges from v, and then remove v
         if v in self._vertex_edge_map:

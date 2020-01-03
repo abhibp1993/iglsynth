@@ -1,8 +1,10 @@
+import pytest
 from iglsynth.util.graphml import *
 from iglsynth.util.graph import *
 from iglsynth.game.game import *
 
 
+@pytest.mark.skip("GraphML Parsing will be Implemented Later... ")
 def test_write_1():
     graph = Graph()
     v1 = graph.Vertex()
@@ -18,6 +20,7 @@ def test_write_1():
     parser.write(fname=fname)
 
 
+@pytest.mark.skip("GraphML Parsing will be Implemented Later... ")
 def test_write_2():
     graph = Game(kind=CONCURRENT)
     v1 = graph.Vertex(name=(1, 0))

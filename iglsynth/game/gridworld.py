@@ -164,7 +164,7 @@ class Gridworld(TSys):
                 for act in actions[u.turn - 1]:
                     v = act(u, player=u.turn)
                     if v in self.vertices:
-                        self.add_edge(self.etype(u, v, act))
+                        self.add_edge(self.Edge(u, v, act))
 
             # Else, gridworld is concurrent
             else:
@@ -172,7 +172,7 @@ class Gridworld(TSys):
                     v = act1(u, player=1)
                     v = act2(v, player=2)
                     if v in self.vertices:
-                        e = self.etype(u=u, v=v, action=(act1, act2))
+                        e = self.Edge(u=u, v=v, action=(act1, act2))
                         self.add_edge(e)
 
 
