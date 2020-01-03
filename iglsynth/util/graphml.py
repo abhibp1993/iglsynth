@@ -221,10 +221,45 @@ class GraphMLWriter(object):
         self._xml.append(self._xml_graph)
 
     def _add_vprop_keys(self, props):
-        pass
+
+        # List of elements to store XML elements
+        elem_buffer = []
+
+        for p_name, p_type in props:
+            try:
+                # Create a new element
+                new_key = Element("key", {"id": f"{p_name}", "for": "node",
+                                          "attr.name": f"{p_name}", "attr.type": p_type})
+
+                # Remark: We do not support default assignment while writing the graph.
+                # Append element to list of new elements to add to GraphML file
+                elem_buffer.append(new_key)
+
+            except (NotImplementedError, ):
+                continue
+
+        for elem in elem_buffer:
+            self._xml_graph.append(elem)
 
     def _add_eprop_keys(self, props):
-        pass
+        # List of elements to store XML elements
+        elem_buffer = []
+
+        for p_name, p_type in props:
+            try:
+                # Create a new element
+                new_key = Element("key", {"id": f"{p_name}", "for": "edge",
+                                          "attr.name": f"{p_name}", "attr.type": p_type})
+
+                # Remark: We do not support default assignment while writing the graph.
+                # Append element to list of new elements to add to GraphML file
+                elem_buffer.append(new_key)
+
+            except (NotImplementedError,):
+                continue
+
+        for elem in elem_buffer:
+            self._xml_graph.append(elem)
 
     def _add_gprop_keys(self, props):
 
@@ -267,6 +302,9 @@ class GraphMLWriter(object):
         for elem in elem_buffer:
             self._xml_graph.append(elem)
 
+    def _add_vertices(self, props):
+        pass
+
     def _get_graph_class_name(self):
         return self._graph.__class__.__qualname__
 
@@ -277,10 +315,108 @@ class GraphMLWriter(object):
         return self._graph.etype.__qualname__
 
     def _get_vertex_properties(self):
-        pass
+
+        # List of vertex properties
+        vprops = list()
+
+        # Get class object
+        vertex = next(self._graph.vertices) if self._graph.num_vertices > 0 else None
+
+        # If vertex is None, return empty list of vertex properties
+        if vertex is None:
+            return vprops
+
+        # Inspect object properties
+        vertex_class = vertex.__class__
+        local_variables = {"vertex": vertex, "inspect": inspect}
+        for m in dir(vertex):
+            try:
+                # Remove if member is in-built python variable
+                if m.startswith("__"):
+                    continue
+
+                # Remove if member is n abstract object, a class, a method, or a function
+                if eval(f"inspect.isabstract(vertex.{m})", local_variables):
+                    continue
+
+                if eval(f"inspect.ismethod(vertex.{m})", local_variables):
+                    continue
+
+                if eval(f"inspect.isfunction(vertex.{m})", local_variables):
+                    continue
+
+                if eval(f"inspect.isclass(vertex.{m})", local_variables):
+                    continue
+
+                # Remove if member is a property
+                #   Note: Properties are associated with class, not the object.
+                if m in dir(vertex_class) and eval(f"isinstance(vertex.__class__.{m}, property)", local_variables):
+                    continue
+
+                p_type = eval(f"type(vertex.{m})")
+                if p_type not in GRAPHML_TYPES.keys():
+                    p_type = p_type.__qualname__
+                else:
+                    p_type = GRAPHML_TYPES[p_type]
+
+                vprops.append((m, p_type))
+
+            except (AttributeError, NotImplementedError):
+                continue
+
+        return vprops
 
     def _get_edge_properties(self):
-        pass
+
+        # List of vertex properties
+        eprops = list()
+
+        # Get class object
+        edge = next(self._graph.edges) if self._graph.num_edges > 0 else None
+
+        # If vertex is None, return empty list of vertex properties
+        if edge is None:
+            return eprops
+
+        # Inspect object properties
+        edge_class = edge.__class__
+        local_variables = {"edge": edge, "inspect": inspect}
+        for m in dir(edge):
+            try:
+                # Remove if member is in-built python variable
+                if m.startswith("__"):
+                    continue
+
+                # Remove if member is n abstract object, a class, a method, or a function
+                if eval(f"inspect.isabstract(edge.{m})", local_variables):
+                    continue
+
+                if eval(f"inspect.ismethod(edge.{m})", local_variables):
+                    continue
+
+                if eval(f"inspect.isfunction(edge.{m})", local_variables):
+                    continue
+
+                if eval(f"inspect.isclass(edge.{m})", local_variables):
+                    continue
+
+                # Remove if member is a property
+                #   Note: Properties are associated with class, not the object.
+                if m in dir(edge_class) and eval(f"isinstance(edge.__class__.{m}, property)", local_variables):
+                    continue
+
+                p_type = eval(f"type(edge.{m})")
+                if p_type not in GRAPHML_TYPES.keys():
+                    p_type = p_type.__qualname__
+                else:
+                    p_type = GRAPHML_TYPES[p_type]
+
+                eprops.append((m, p_type))
+
+            except (AttributeError, NotImplementedError):
+                continue
+
+        return eprops
 
     def _get_graph_properties(self):
         # Get all members of the graph
@@ -359,6 +495,9 @@ class GraphMLWriter(object):
         self._add_eprop_keys(eprops)
         self._add_gprop_keys(gprops)
 
+        # Add vertices
+        self._add_vertices(vprops)
+
         # Add comment that this file is generated by IGLSynth
         comment = Comment(XML_IGLSYNTH)
         self._xml.append(comment)
@@ -377,6 +516,10 @@ if __name__ == '__main__':
     v0 = g.Vertex()
     v1 = g.Vertex()
     g.add_vertices([v0, v1])
+
+    e0 = g.Edge(v0, v1)
+    e1 = g.Edge(v0, v0)
+    g.add_edges([e0, e1])
 
     writer = GraphMLWriter(graph=g)
     writer.write(fname="graph1.graphml")

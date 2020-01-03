@@ -44,7 +44,7 @@ class Graph(object):
         """
 
         def __init__(self, name=None):
-            self._name = name if name is not None else uuid.uuid4()
+            self._name = name if name is not None else str(uuid.uuid4())
 
         def __hash__(self):
             return self.name.__hash__()
