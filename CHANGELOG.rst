@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+0.2.4 ()
+--------
+
+* New features:
+
+    * Draw two-player graphs. If turn-based, then denote vertices separately.
+    * Save-load for graphs.
+    * Compare two graphs.
+    * Sub-graph definition.
+    * ...
+
 0.2.3 (26 November 2019)
 ------------------------
 
