@@ -2,7 +2,7 @@
 
 cmake_minimum_required (VERSION 3.9)
 
-project (AIToolbox  LANGUAGES CXX
+project (iglsynth   LANGUAGES CXX
                     HOMEPAGE_URL https://akulkarni.me/iglsynth
                     VERSION 1.0.0
         )
@@ -115,8 +115,9 @@ if (MAKE_PYTHON)
     # Try to find out which version of Python we should be targeting depending
     # on which interpreter is found. If the version has been selected
     # explicitly we search for it directly.
-    find_package(PythonInterp ${PYTHON_VERSION} REQUIRED)
-    set(PYTHON_VERSION ${PYTHON_VERSION_MAJOR})
+#    find_package(PythonInterp ${PYTHON_VERSION} REQUIRED)
+    find_package (Python3 COMPONENTS Interpreter Development)
+    set(PYTHON_VERSION ${Python3_VERSION_MAJOR})
 
     # WARNING: The COMPONENTS parts of Boost here may need to be changed
     # depending on your system. For example, you may need to rename `python3` to
@@ -127,6 +128,7 @@ if (MAKE_PYTHON)
         find_package(Boost ${BOOST_VERSION_REQUIRED} COMPONENTS python3 REQUIRED)
         set(BOOST_PYTHON_LIBRARY_NAME "Boost_PYTHON3_LIBRARY")
     else()
+        message(WARNING "Python 3.x not found. Finding Python 2.x" ...)
         find_package(PythonLibs 2.7 EXACT REQUIRED)
         find_package(Boost ${BOOST_VERSION_REQUIRED} COMPONENTS python REQUIRED)
         set(BOOST_PYTHON_LIBRARY_NAME "Boost_PYTHON_LIBRARY")
