@@ -34,3 +34,13 @@ RUN pip3 install matplotlib
 RUN apt-get update && \
 	RUNLEVEL=1 DEBIAN_FRONTEND=noninteractive && \
 	apt-get install -y libboost-all-dev cmake
+
+# Install Eigen
+RUN wget https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
+RUN tar -xvzf eigen-3.3.7.tar.gz
+RUN cd eigen-3.3.7/ && mkdir build_dir && cd build_dir && cmake .. && make install
+
+## Install LPSolve (required for AIToolbox)
+#RUN wget https://sourceforge.net/projects/lpsolve/files/lpsolve/5.5.2.5/lp_solve_5.5.2.5_source.tar.gz/download && \
+#    tar -xvzf download
+#RUN cd lp_solve_5.5/
