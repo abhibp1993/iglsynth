@@ -10,17 +10,24 @@
 #include <any>
 
 class Entity {
+
 protected:
-    std::string id;
+    std::string _id;
     std::string _class_name;
 
 public:
+    // TODO: Auto assign entity ID.
+    // TODO: Can we concatenate __func__ to obtain "A.B.C"?
     Entity() { _class_name = __func__; }
 
-    virtual std::string serialize(){
+    // Should serialize return a dictionary of string to IGLTypes?
+    // Or should it return a string directly?
+    // Reason: We could leave it to the "Transmission" module (GraphML/pickle/whatever)
+    // to do whatever it wants to do.
+    std::string serialize(){
         std::map<std::string, std::string> ser;
         ser["__class__"] = _class_name;
-        ser["id"] = id;
+        ser["id"] = _id;
 
         std::string ser_str;
 
@@ -37,9 +44,14 @@ public:
         return ser_str;
     }
 
-    virtual std::string deserialize(std::any msg){
+    // Deserialize should return an object of same class.
+    // How to define generic return type then?
+    Entity deserialize(std::map<std::string, std::string> msg){
         // TODO: Raise IGLException_NotImplemented.
-        return "";
+        Entity e;
+        e.id = msg["id"];
+        e._class_name = msg["__class__"];
+        return e;
     }
 
     std::string tostring(){

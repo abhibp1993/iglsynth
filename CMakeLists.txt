@@ -49,10 +49,14 @@ SET(BOOST_BIND_OUTPUT_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/iglsynth/util)
 
 # Add files to library
 ADD_LIBRARY (iglsynth SHARED
-        iglsynth_cpp/entity.hpp
-        iglsynth_cpp/graph.hpp
-        iglsynth_cpp/graph.cpp
-        iglsynth_cpp/entity_wrap.cpp
+#        iglsynth_cpp/entity.hpp
+#        iglsynth_cpp/graph.hpp
+#        iglsynth_cpp/graph.cpp
+#        iglsynth_cpp/entity_wrap.cpp
+        iglsynth_cpp/util/entity.h
+        iglsynth_cpp/util/types.h
+        iglsynth_cpp/util/graph.h
+        iglsynth_cpp/util/graph.cpp
         )
 
 

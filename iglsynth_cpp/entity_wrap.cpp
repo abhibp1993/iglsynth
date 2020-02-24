@@ -3,6 +3,7 @@
 //
 
 #include <boost/python.hpp>
+
 #include "entity.hpp"
 
 #define LTLSYNTH_FRAMEWORK_VERSION  "1.0.0"
