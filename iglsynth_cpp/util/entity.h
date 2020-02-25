@@ -28,7 +28,7 @@ namespace IGLSynth {
             return id_;
         }
 
-        std::size_t hash() {
+        [[nodiscard]] std::size_t hash() const {
             return std::hash<std::string>{}(id_);
         }
 
@@ -43,7 +43,7 @@ namespace IGLSynth {
             return ser;
         }
 
-        virtual Entity deserialize(IGLMap ser) {
+        void deserialize(IGLMap ser) {
             std::string tmp_id = std::get<std::string>(ser["id"]);
             std::string tmp_class = std::get<std::string>(ser["__class__"]);
 
@@ -51,16 +51,32 @@ namespace IGLSynth {
                 throw std::runtime_error("error");      // TODO: Change the Error type and string later.
             }
 
-            Entity e;
-            e.id_ = tmp_id;
-            e.class_name_ = tmp_class;
-            return e;
+            id_ = tmp_id;
+            class_name_ = tmp_class;
         }
 
         inline bool operator==(const Entity& rhs){
             return id_ == rhs.id_;
         }
     };  // Entity Class
+
+
+    template <class T>
+    struct EntityHasher {
+        size_t operator()(const T & obj) const {
+            return obj.hash();
+        }
+    };
+
+    template <class T>
+    struct EntityComparator {
+        bool operator()(const T & obj1, const T & obj2) const {
+            return obj1.id() == obj2.id();
+        }
+    };
+
+
+
 }  // namespace
 
 #endif //IGLSYNTH_ENTITY_H
