@@ -26,6 +26,21 @@ namespace IGLSynth {
 
         class Edge : protected Entity {
 
+            protected:
+                Vertex source_;
+                Vertex target_;
+
+            public:
+                // constructor
+                Edge(Vertex& u, Vertex& v) : source_(u), target_(v) {}
+                // methods
+                Vertex source(Edge& e){
+                    return e.source_;                   // TODO: Should this return iterator?
+                }
+
+                Vertex target(Edge& e){
+                    return e.target_;                   // TODO: Should this return iterator?
+                }
         };
 
 
