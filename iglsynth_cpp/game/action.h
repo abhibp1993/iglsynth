@@ -27,7 +27,7 @@ namespace IGLSynth{
     public:     // Methods
 
         // Constructor
-        explicit Action(const std::string &name, std::string &desc);
+        explicit Action(const std::string name, std::string desc);
 
         // Input-Output
         IGLMap serialize() override;

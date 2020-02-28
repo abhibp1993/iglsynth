@@ -44,8 +44,8 @@ namespace IGLSynth {
         }
 
         virtual void deserialize(IGLMap ser) {
-            std::string tmp_id = std::get<std::string>(ser["id"]);
-            std::string tmp_class = std::get<std::string>(ser["__class__"]);
+            std::string tmp_id = boost::get<std::string>(ser["id"]);
+            std::string tmp_class = boost::get<std::string>(ser["__class__"]);
 
             if (tmp_class != "Entity"){
                 throw std::runtime_error("error");      // TODO: Change the Error type and string later.

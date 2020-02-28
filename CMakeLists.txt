@@ -55,10 +55,11 @@ ADD_LIBRARY (iglsynth SHARED
 #        iglsynth_cpp/entity_wrap.cpp
         iglsynth_cpp/util/entity.h
         iglsynth_cpp/util/types.h
-        iglsynth_cpp/util/graph.h
-        iglsynth_cpp/util/graph.cpp
+#        iglsynth_cpp/util/graph.h
+#        iglsynth_cpp/util/graph.cpp
         iglsynth_cpp/game/action.cpp
         iglsynth_cpp/game/action.h
+        iglsynth_cpp/game_wrap.cpp
         )
 
 

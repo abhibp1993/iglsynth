@@ -6,7 +6,7 @@
 #include <iostream>
 
 
-IGLSynth::Action::Action(const std::string &name, std::string& desc) {
+IGLSynth::Action::Action(const std::string name, std::string desc) {
     std::cout << "Constructing Action " << name << " " << desc << std::endl;
 }
 
@@ -24,5 +24,6 @@ IGLSynth::IGLMap IGLSynth::Action::serialize() {
 
 void IGLSynth::Action::deserialize(IGLSynth::IGLMap ser) {
     Entity::deserialize(ser);
-    desc = std::get<std::string>(ser["desc"]);
+    desc = boost::get<std::string>(ser["desc"]);
 }
+
