@@ -43,7 +43,7 @@ namespace IGLSynth {
             return ser;
         }
 
-        void deserialize(IGLMap ser) {
+        virtual void deserialize(IGLMap ser) {
             std::string tmp_id = std::get<std::string>(ser["id"]);
             std::string tmp_class = std::get<std::string>(ser["__class__"]);
 

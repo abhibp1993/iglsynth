@@ -57,6 +57,8 @@ ADD_LIBRARY (iglsynth SHARED
         iglsynth_cpp/util/types.h
         iglsynth_cpp/util/graph.h
         iglsynth_cpp/util/graph.cpp
+        iglsynth_cpp/game/action.cpp
+        iglsynth_cpp/game/action.h
         )
 
 
