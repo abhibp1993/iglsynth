@@ -35,11 +35,11 @@ namespace IGLSynth {
                 Edge(Vertex& u, Vertex& v) : source_(u), target_(v) {}
                 // methods
                 Vertex source(Edge& e){
-                    return e.source_;                   // TODO: Should this return iterator?
+                    return e.source_;
                 }
 
                 Vertex target(Edge& e){
-                    return e.target_;                   // TODO: Should this return iterator?
+                    return e.target_;
                 }
         };
 
