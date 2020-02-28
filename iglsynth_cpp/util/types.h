@@ -8,13 +8,13 @@
 
 #include <map>
 #include <string>
-#include <variant>
+#include <boost/variant.hpp>
 
 
 namespace IGLSynth {
 
     // Define the types used in IGLSynth
-    typedef std::variant<bool, int, double, std::string> IGLTypes;
+    typedef boost::variant<bool, int, double, std::string> IGLTypes;
     typedef std::map<std::string, IGLTypes> IGLMap;
 
 }

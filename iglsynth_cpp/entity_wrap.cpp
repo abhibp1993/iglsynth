@@ -6,11 +6,11 @@
 
 #include "entity.hpp"
 
-#define LTLSYNTH_FRAMEWORK_VERSION  "1.0.0"
+#define IGLSYNTH_FRAMEWORK_VERSION  "1.0.0"
 
 
 // Current version of ltlsynth framework
-std::string version() { return LTLSYNTH_FRAMEWORK_VERSION; }
+std::string version() { return IGLSYNTH_FRAMEWORK_VERSION; }
 
 
 BOOST_PYTHON_MODULE(iglsynth){
