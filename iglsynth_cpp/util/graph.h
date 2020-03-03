@@ -17,14 +17,14 @@
 
 
 namespace IGLSynth {
-    class Graph : protected Entity {
+    class Graph : public Entity {
 
     public: // Classes
-        class Vertex : protected Entity {
+        class Vertex : public Entity {
 
         };
 
-        class Edge : protected Entity {
+        class Edge : public Entity {
 
             protected:
                 Vertex source_;
@@ -63,35 +63,35 @@ namespace IGLSynth {
 
     public: // Methods
         // Constructor
-        Graph();
+        Graph() {class_name_ = __PRETTY_FUNCTION__;}
 
         // Input-Output
         IGLMap serialize();                         // TODO: Can we replace IGLMap with boost::property_map?
         void deserialize(IGLMap ser);               // Will initialize "this" object.
-        std::string to_string();
+//        std::string to_string();
 
         // Containment checking
-        bool contains_vertex(Vertex& u);
-        bool contains_edge(Edge& e);
-
-        // Graph manipulation
-        bool add_edge(Edge& e);                     // Return true: if added, false: if not added.
-        bool add_edges(std::vector<Edge>& e);       // Return true: if added, false: if not added.
-        bool add_vertex(Vertex& u);                 // Return true: if added, false: if not added.
-        bool add_vertices(std::vector<Vertex>& e);  // Return true: if added, false: if not added.
-
-        bool rem_edge(Edge& e);                     // Return true: if added, false: if not added.
-        bool rem_edges(std::vector<Edge>& e);       // Return true: if added, false: if not added.
-        bool rem_vertex(Vertex& u);                 // Return true: if added, false: if not added.
-        bool rem_vertices(std::vector<Vertex>& e);  // Return true: if added, false: if not added.
-
-        std::vector<Edge>& get_edges(Vertex& u);
-        std::vector<Edge>& get_edges(Vertex& u, Vertex& v);
-        std::vector<Edge>& get_in_edges(Vertex& v);
-        std::vector<Edge>& get_out_edges(Vertex& u);
-        std::vector<Edge>& get_neighbors(Vertex& u);
-        std::vector<Edge>& get_in_neighbors(Vertex& v);
-        std::vector<Edge>& get_out_neighbors(Vertex& u);
+//        bool contains_vertex(Vertex& u);
+//        bool contains_edge(Edge& e);
+//
+//        // Graph manipulation
+//        bool add_edge(Edge& e);                     // Return true: if added, false: if not added.
+//        bool add_edges(std::vector<Edge>& e);       // Return true: if added, false: if not added.
+//        bool add_vertex(Vertex& u);                 // Return true: if added, false: if not added.
+//        bool add_vertices(std::vector<Vertex>& e);  // Return true: if added, false: if not added.
+//
+//        bool rem_edge(Edge& e);                     // Return true: if added, false: if not added.
+//        bool rem_edges(std::vector<Edge>& e);       // Return true: if added, false: if not added.
+//        bool rem_vertex(Vertex& u);                 // Return true: if added, false: if not added.
+//        bool rem_vertices(std::vector<Vertex>& e);  // Return true: if added, false: if not added.
+//
+//        std::vector<Edge>& get_edges(Vertex& u);
+//        std::vector<Edge>& get_edges(Vertex& u, Vertex& v);
+//        std::vector<Edge>& get_in_edges(Vertex& v);
+//        std::vector<Edge>& get_out_edges(Vertex& u);
+//        std::vector<Edge>& get_neighbors(Vertex& u);
+//        std::vector<Edge>& get_in_neighbors(Vertex& v);
+//        std::vector<Edge>& get_out_neighbors(Vertex& u);
 
     };  // End of class Graph
 

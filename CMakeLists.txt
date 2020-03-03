@@ -59,8 +59,14 @@ ADD_LIBRARY (iglsynth SHARED
         iglsynth_cpp/util/graph.cpp
         iglsynth_cpp/game/action.cpp
         iglsynth_cpp/game/action.h
-        iglsynth_cpp/game_wrap.cpp
-        iglsynth_cpp/util_wrap.cpp
+#        iglsynth_cpp/game_wrap.cpp
+#        iglsynth_cpp/util_wrap.cpp
+        iglsynth_cpp/boost_bind.cpp
+        iglsynth_cpp/boost_bind.h
+        iglsynth_cpp/python_bind/wrap_util.h
+        iglsynth_cpp/python_bind/wrap_util.cpp
+        iglsynth_cpp/python_bind/wrap_game.h
+        iglsynth_cpp/python_bind/wrap_game.cpp
         )
 
 
