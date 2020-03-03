@@ -62,6 +62,5 @@ namespace IGLSynth {
 //                .def("serialize", &Entity::serialize)
 //                .def("deserialize", &Entity::deserialize)
 //                ;
-
     }
 }
