@@ -67,7 +67,7 @@ ADD_LIBRARY (iglsynth SHARED
         iglsynth_cpp/python_bind/wrap_util.cpp
         iglsynth_cpp/python_bind/wrap_game.h
         iglsynth_cpp/python_bind/wrap_game.cpp
-        )
+        iglsynth_cpp/main.cpp)
 
 
 
@@ -79,10 +79,12 @@ SET_TARGET_PROPERTIES(iglsynth PROPERTIES
 
 
 ## Add files to executables
-#ADD_EXECUTABLE(tests
-#        #        tests/cpp/test_graph.cpp
-#        tests/cpp/boost_test_graph.cpp)
-#TARGET_LINK_LIBRARIES( tests LINK_PUBLIC iglsynth )
+ADD_EXECUTABLE(tests
+        iglsynth_cpp/main.cpp
+        # tests/cpp/test_graph.cpp
+        # tests/cpp/boost_test_graph.cpp
+        )
+TARGET_LINK_LIBRARIES( tests LINK_PUBLIC iglsynth )
 
 
 # Ctest Testing Framework

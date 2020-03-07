@@ -45,7 +45,7 @@ namespace IGLSynth {
         };
 
 
-    protected:  // Variables
+    public:  // Variables
 
         // TODO Check how to use the following boost map, set.
         //      Also consider the effect of these objects under python binding.
@@ -67,9 +67,7 @@ namespace IGLSynth {
         Graph() {class_name_ = __PRETTY_FUNCTION__;}
 
         // Input-Output
-        IGLMap serialize();                         // TODO: Can we replace IGLMap with boost::property_map?
-        void deserialize(IGLMap ser);               // Will initialize "this" object.
-        std::string to_string();
+        std::string tostring();
 
         // Containment checking
 //        bool contains_vertex(Vertex& u);

@@ -20,17 +20,8 @@ namespace IGLSynth {
     bool Graph::is_multigraph(){
         std::cerr << "Not Implemented Error" << std::endl;
     }
-
-
-    IGLMap Graph::serialize(){
-
-    }
-
-    void Graph::deserialize(IGLMap ser){
-
-    }
-
-    std::string Graph::to_string(){
+    
+    std::string Graph::tostring(){
         return "<" + class_name_ + " object with id=" + id_ + ">";
     }
 
