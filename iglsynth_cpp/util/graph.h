@@ -31,10 +31,10 @@ namespace IGLSynth {
                 Vertex target_;
 
             public:
-                // constructor
+                // Constructor
                 Edge(Vertex& u, Vertex& v) : source_(u), target_(v) {}
 
-                // methods
+                // Methods
                 Vertex source(Edge& e){
                     return e.source_;
                 }
