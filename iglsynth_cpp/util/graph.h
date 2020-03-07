@@ -33,6 +33,7 @@ namespace IGLSynth {
             public:
                 // constructor
                 Edge(Vertex& u, Vertex& v) : source_(u), target_(v) {}
+
                 // methods
                 Vertex source(Edge& e){
                     return e.source_;

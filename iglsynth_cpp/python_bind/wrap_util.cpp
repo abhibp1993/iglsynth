@@ -40,8 +40,8 @@ void boost_bind_util(){
 
     // Class Vertex
     bp::class_<Graph::Vertex, bp::bases<Entity>>("Vertex")
-        .def("serialize", &Graph::Edge::serialize)
-        .def("deserialize", &Graph::Edge::deserialize)
+        .def("serialize", &Graph::Vertex::serialize)
+        .def("deserialize", &Graph::Vertex::deserialize)
         ;
 
     // Class Edge
