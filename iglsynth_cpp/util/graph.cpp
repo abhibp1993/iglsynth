@@ -30,10 +30,14 @@ namespace IGLSynth {
 
     }
 
-//    std::string to_string();
+    std::string Graph::to_string(){
+        return "<" + class_name_ + " object with id=" + id_ + ">";
+    }
 
-//    // Containment checking
-//    bool contains_vertex(Vertex &u);
+    // Containment checking
+//    bool Graph::contains_vertex(Vertex &u);
+
+
 //    bool contains_edge(Edge &e);
 //
 //    // Graph manipulation

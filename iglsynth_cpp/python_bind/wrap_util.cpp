@@ -36,6 +36,7 @@ void boost_bind_util(){
         .def("is_multigraph", &Graph::is_multigraph)
         .def("serialize", &Graph::serialize)
         .def("deserialize", &Graph::deserialize)
+        .def("to_string", &Graph::to_string)
         ;
 
     // Class Vertex

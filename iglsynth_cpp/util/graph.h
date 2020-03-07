@@ -69,7 +69,7 @@ namespace IGLSynth {
         // Input-Output
         IGLMap serialize();                         // TODO: Can we replace IGLMap with boost::property_map?
         void deserialize(IGLMap ser);               // Will initialize "this" object.
-//        std::string to_string();
+        std::string to_string();
 
         // Containment checking
 //        bool contains_vertex(Vertex& u);
