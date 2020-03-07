@@ -4,8 +4,22 @@
 
 #include "types.h"
 #include "graph.h"
+#include <iostream>
 
 namespace IGLSynth {
+
+    // Read-Only Properties
+    int Graph::num_edges(){
+        std::cerr << "Not Implemented Error" << std::endl;
+    }
+
+    int Graph::num_vertices(){
+        std::cerr << "Not Implemented Error" << std::endl;
+    }
+
+    bool Graph::is_multigraph(){
+        std::cerr << "Not Implemented Error" << std::endl;
+    }
 
 
     IGLMap Graph::serialize(){

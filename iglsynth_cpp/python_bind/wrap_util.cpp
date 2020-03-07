@@ -31,6 +31,9 @@ void boost_bind_util(){
 
     // Class Graph
     bp::class_<Graph, bp::bases<Entity>>("Graph")
+        .def("num_edges", &Graph::num_edges)
+        .def("num_vertices", &Graph::num_vertices)
+        .def("is_multigraph", &Graph::is_multigraph)
         .def("serialize", &Graph::serialize)
         .def("deserialize", &Graph::deserialize)
         ;
