@@ -59,7 +59,7 @@ namespace IGLSynth {
         int num_edges();
         int num_vertices();
         std::vector<Edge> edges();                  // TODO: Should this return iterator?
-        std::vector<Edge> vertices();               // TODO: Should this return iterator?
+        std::vector<Vertex> vertices();               // TODO: Should this return iterator?
         bool is_multigraph();
 
 
