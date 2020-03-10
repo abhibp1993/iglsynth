@@ -11,6 +11,7 @@
 //#include <unordered_set>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
 
