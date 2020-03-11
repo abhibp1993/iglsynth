@@ -10,11 +10,11 @@ namespace IGLSynth {
 
     // Read-Only Properties
     int Graph::num_edges(){
-        std::cerr << "Not Implemented Error" << std::endl;
+        return IGLSynth::Graph::edges_.size();
     }
 
     int Graph::num_vertices(){
-        std::cerr << "Not Implemented Error" << std::endl;
+        return IGLSynth::Graph::vemap_.size();
     }
 
     bool Graph::is_multigraph(){
