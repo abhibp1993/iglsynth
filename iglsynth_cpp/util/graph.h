@@ -75,7 +75,7 @@ namespace IGLSynth {
 //        bool contains_edge(Edge& e);
 //
 //        // Graph manipulation
-//        bool add_edge(Edge& e);                     // Return true: if added, false: if not added.
+        bool add_edge(boost::shared_ptr<Graph::Edge> e);                     // Return true: if added, false: if not added.
 //        bool add_edges(std::vector<Edge>& e);       // Return true: if added, false: if not added.
 //        bool add_vertex(Vertex& u);                 // Return true: if added, false: if not added.
 //        bool add_vertices(std::vector<Vertex>& e);  // Return true: if added, false: if not added.
