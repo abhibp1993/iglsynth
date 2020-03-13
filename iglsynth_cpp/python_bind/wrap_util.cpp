@@ -41,14 +41,16 @@ void boost_bind_util(){
         ;
 
     // Class Vertex
-    bp::class_<Graph::Vertex, bp::bases<Entity>>("Vertex")
+    bp::class_<Graph::Vertex, bp::bases<Entity>,
+        boost::shared_ptr<Graph::Vertex>>("Vertex")
         .def("serialize", &Graph::Vertex::serialize)
         .def("deserialize", &Graph::Vertex::deserialize)
         ;
 
     // Class Edge
-    bp::class_<Graph::Edge, bp::bases<Entity>>("Edge", bp::init<Graph::Vertex&, Graph::Vertex&>())
-            .def("serialize", &Graph::Edge::serialize)
-            .def("deserialize", &Graph::Edge::deserialize)
-            ;
+    bp::class_<Graph::Edge, bp::bases<Entity>,
+        boost::shared_ptr<Graph::Edge>>("Edge", bp::init<Graph::Vertex&, Graph::Vertex&>())
+        .def("serialize", &Graph::Edge::serialize)
+        .def("deserialize", &Graph::Edge::deserialize)
+        ;
 }
