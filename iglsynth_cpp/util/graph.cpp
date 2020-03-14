@@ -34,6 +34,7 @@ namespace IGLSynth {
 //
 //    // Graph manipulation
     bool Graph::add_edge(boost::shared_ptr<Graph::Edge> e){
+
         // Return true: if added, false: if not added.
         try{
             // Edge already present in Graph
@@ -42,11 +43,23 @@ namespace IGLSynth {
                 return false;
             }
             // Edge not present in Graph
-            if(Graph::edges_.find(e) == Graph::edges_.end()){
-                Graph::edges_.insert(e);
-                std::cout << "Successfully added the edge" << std::endl;
+//            if(Graph::edges_.find(e) == Graph::edges_.end()){
+//                Graph::edges_.insert(e);
+//                std::cout << "Successfully added the edge" << std::endl;
+//                return true;
+//            }
+
+            Graph::Vertex u = Graph::Edge::source(*e);
+            Graph::Vertex v = Graph::Edge::target(*e);
+
+            auto it_u = vemap_.find(boost::make_shared<IGLSynth::Graph::Vertex>(u));
+            auto it_v = vemap_.find(boost::make_shared<IGLSynth::Graph::Vertex>(v));
+
+            if(it_u != Graph::vemap_.end() && it_v != Graph::vemap_.end()){
+//                std::cout << "The edge is already present in the Graph. Ignoring request to add." << std::endl;
                 return true;
             }
+
         }
         catch(std::exception& ep){
             // Catch standard exceptions
