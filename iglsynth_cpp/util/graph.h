@@ -16,7 +16,6 @@
 #include <boost/unordered_map.hpp>
 
 
-
 namespace IGLSynth {
     class Graph : public Entity {
 
@@ -51,10 +50,8 @@ namespace IGLSynth {
         // TODO Check how to use the following boost map, set.
         //      Also consider the effect of these objects under python binding.
         boost::unordered_set<boost::shared_ptr<Edge>> edges_;
-        boost::unordered_set<boost::shared_ptr<Edge>> in_edges_;
-        boost::unordered_set<boost::shared_ptr<Edge>> out_edges_;
-        boost::unordered_map<boost::shared_ptr<Vertex>, boost::unordered_set<boost::shared_ptr<Edge>>> vemap_;
-        boost::unordered_map<boost::shared_ptr<Vertex>, boost::unordered_set<boost::shared_ptr<Edge>>> vemap_out;
+        boost::unordered_map<boost::shared_ptr<Vertex>, boost::unordered_set<boost::shared_ptr<Edge>>> vemap_in_;
+        boost::unordered_map<boost::shared_ptr<Vertex>, boost::unordered_set<boost::shared_ptr<Edge>>> vemap_out_;
 
     public: // Properties
         // Read-only properties

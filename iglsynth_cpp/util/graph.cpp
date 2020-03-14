@@ -6,6 +6,9 @@
 #include "graph.h"
 #include <iostream>
 #include <stdexcept>
+// uncomment to disable assert()
+// #define NDEBUG
+#include <cassert>
 
 namespace IGLSynth {
 
@@ -15,7 +18,8 @@ namespace IGLSynth {
     }
 
     int Graph::num_vertices(){
-        return Graph::vemap_.size();
+        assert(Graph::vemap_in_.size() == Graph::vemap_out_.size());
+        return Graph::vemap_in_.size();
     }
 
     bool Graph::is_multigraph(){
@@ -52,11 +56,14 @@ namespace IGLSynth {
             Graph::Vertex u = Graph::Edge::source(*e);
             Graph::Vertex v = Graph::Edge::target(*e);
 
-            auto it_u = vemap_.find(boost::make_shared<IGLSynth::Graph::Vertex>(u));
-            auto it_v = vemap_.find(boost::make_shared<IGLSynth::Graph::Vertex>(v));
+            auto it_u = Graph::vemap_out_.find(boost::make_shared<IGLSynth::Graph::Vertex>(v));
+            auto it_v = Graph::vemap_in_.find(boost::make_shared<IGLSynth::Graph::Vertex>(u));
 
-            if(it_u != Graph::vemap_.end() && it_v != Graph::vemap_.end()){
-//                std::cout << "The edge is already present in the Graph. Ignoring request to add." << std::endl;
+            if(it_u != Graph::vemap_out_.end() && it_v != Graph::vemap_in_.end()){
+//                boost::unordered_set<boost::shared_ptr<Edge>> e_;
+//                e_.insert(e);
+                Graph::vemap_in_.insert(v, boost::unordered_set<boost::shared_ptr<Edge>>{e});
+                std::cout << "Successfully added the edge" << std::endl;
                 return true;
             }
 
