@@ -36,7 +36,7 @@ namespace IGLSynth {
 
 //    bool contains_edge(Edge &e);
 //
-//    // Graph manipulation
+    // Graph manipulation
     bool Graph::add_edge(boost::shared_ptr<Graph::Edge> e){
 
         // Return true: if added, false: if not added.
@@ -60,9 +60,12 @@ namespace IGLSynth {
             auto it_v = Graph::vemap_in_.find(boost::make_shared<IGLSynth::Graph::Vertex>(u));
 
             if(it_u != Graph::vemap_out_.end() && it_v != Graph::vemap_in_.end()){
-//                boost::unordered_set<boost::shared_ptr<Edge>> e_;
-//                e_.insert(e);
-                Graph::vemap_in_.insert(v, boost::unordered_set<boost::shared_ptr<Edge>>{e});
+//                boost::unordered_set<boost::shared_ptr<Graph::Edge>> edge_ = Graph::vemap_in_[v_];
+                auto v_ = boost::make_shared<Graph::Vertex>(v);
+                auto edge_ = Graph::vemap_in_[v_];
+                auto e_ = boost::make_shared<Graph::Edge>(*e);
+                edge_.insert(e_);
+                Graph::vemap_in_.insert(std::make_pair(v_, edge_));
                 std::cout << "Successfully added the edge" << std::endl;
                 return true;
             }
