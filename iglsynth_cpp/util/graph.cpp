@@ -133,7 +133,28 @@ namespace IGLSynth {
 //
 //    bool rem_edge(Edge &e);                     // Return true: if added, false: if not added.
 //    bool rem_edges(std::vector<Edge> &e);       // Return true: if added, false: if not added.
-//    bool rem_vertex(Vertex &u);                 // Return true: if added, false: if not added.
+    bool Graph::rem_vertex(boost::shared_ptr<Graph::Vertex> u){
+        /*
+         * Return true: if added, false: if not added.
+         * Remove a vertex from the graph.
+         * An attempt to remove non-existing vertex will be ignored, with a warning.
+         */
+        auto it_vemap_in = Graph::vemap_in_.find(u);
+        auto it_vemap_out = Graph::vemap_out_.find(u);
+
+        // If vertex is not already removed, then remove it.
+        if(it_vemap_in != Graph::vemap_in_.end() && it_vemap_out != Graph::vemap_out_.end()){
+            Graph::vemap_in_.erase(it_vemap_in);
+            Graph::vemap_out_.erase(it_vemap_out);
+            std::cout << "Successfully removed the vertex" << std::endl;
+            return true;
+        }
+        else{
+            std::cout << "The vertex is not present in the Graph. Ignoring request to remove." << std::endl;
+            return false;
+        }
+
+    }
 //    bool rem_vertices(std::vector<Vertex> &e);  // Return true: if added, false: if not added.
 //
 //    std::vector<Edge> &get_edges(Vertex &u);

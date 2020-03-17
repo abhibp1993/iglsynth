@@ -46,6 +46,15 @@ int main(){
     std::cout << "Number of edges: " << g.num_edges() << std::endl;
     std::cout << "Number of vertices: " << g.num_vertices() << std::endl;
 
+    // Insert vertices v1, v2,.. into IGLSynth::Graph object g
+    g.rem_vertex(v1);
+    std::cout << "Number of vertices: " << g.num_vertices() << std::endl;
+
+    g.rem_vertex(v2);
+    std::cout << "Number of vertices: " << g.num_vertices() << std::endl;
+
+    g.rem_vertex(v1);
+    g.rem_vertex(v2);
     // Iterate over the Vertex-Edge map to return pointers to the Vertex-Edge objects
 //    for(auto &i: g.vemap_){
 //        std::cout << i.first->id() << " " << i.second->tostring() << std::endl;

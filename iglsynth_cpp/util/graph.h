@@ -81,7 +81,7 @@ namespace IGLSynth {
 //
 //        bool rem_edge(Edge& e);                     // Return true: if added, false: if not added.
 //        bool rem_edges(std::vector<Edge>& e);       // Return true: if added, false: if not added.
-//        bool rem_vertex(Vertex& u);                 // Return true: if added, false: if not added.
+        bool rem_vertex(boost::shared_ptr<Graph::Vertex> u);                 // Return true: if added, false: if not added.
 //        bool rem_vertices(std::vector<Vertex>& e);  // Return true: if added, false: if not added.
 //
 //        std::vector<Edge>& get_edges(Vertex& u);
