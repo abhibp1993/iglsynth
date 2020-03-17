@@ -35,6 +35,7 @@ void boost_bind_util(){
         .def("num_vertices", &Graph::num_vertices)
         .def("is_multigraph", &Graph::is_multigraph)
         .def("add_edge", &Graph::add_edge)
+        .def("add_vertex", &Graph::add_vertex)
         .def("serialize", &Graph::serialize)
         .def("deserialize", &Graph::deserialize)
         .def("__str__", &Graph::tostring)

@@ -20,12 +20,19 @@ int main(){
     boost::shared_ptr<IGLSynth::Graph::Edge> e3(boost::make_shared<IGLSynth::Graph::Edge>(*v2, *v3));
     boost::shared_ptr<IGLSynth::Graph::Edge> e4(boost::make_shared<IGLSynth::Graph::Edge>(*v3, *v4));
 
+    // Insert vertices v1, v2,.. into IGLSynth::Graph object g
+    g.add_vertex(v1);
+    g.add_vertex(v2);
+    g.add_vertex(v3);
+    g.add_vertex(v3);
+    g.add_vertex(v4);
+
     // Insert edges e1, e2,.. into IGLSynth::Graph object g
     g.add_edge(e1);
-    g.add_edge(e2);
-    g.add_edge(e2);
-    g.add_edge(e3);
-    g.add_edge(e4);
+//    g.add_edge(e2);
+//    g.add_edge(e2);
+//    g.add_edge(e3);
+//    g.add_edge(e4);
     // Update the vertex edge map
 //    g.vemap_[v1] = boost::make_shared<IGLSynth::Graph::Edge>(*e1);
 //    g.vemap_[v1] = boost::make_shared<IGLSynth::Graph::Edge>(*e2);
