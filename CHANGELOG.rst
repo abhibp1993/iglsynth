@@ -1,6 +1,29 @@
 Release Notes
 =============
 
+
+1.0.0 (????????????????)
+------------------------
+
+(Tentative Changes)
+
+* Data Structure Changes
+
+    * ``Graph`` class redefines the way it stores vertices, edges and their properties.
+      These changes will later ease our way into C++/Python binding (which is being developed at a slower pace.)
+    * Implement ``SubGraph`` class.
+    * Parsers written for ``AP``, ``PL``, ``LTL``, ``LTLK`` logic.
+    * ``LTL`` class has spot-compatible input-output to allow easy interface with spot.
+    * Introduce ``SecondLevelHypergame`` class for general type of misperception.
+
+
+* Utilities
+
+    * ``util.io`` module allows saving and loading various objects in iglsynth.
+    * graph drawing utility with ``tikz`` output.
+    * mdptoolbox integration with MDP class.
+
+
 0.2.3 (26 November 2019)
 ------------------------
 
