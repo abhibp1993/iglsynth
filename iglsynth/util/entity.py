@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 
@@ -7,6 +8,11 @@ class Entity(object):
         self._id = self._get_unique_id()
         self._name = name
         self._class_name = self.__class__.__qualname__
+
+        # Logger for logging purposes
+        self.logger = logging.getLogger(self.__module__)
+        self.logger.setLevel(logging.DEBUG)
+        self.logger.info(f"{self.__str__()} is created.")
 
     def __eq__(self, other):
         if self._name is None:
@@ -32,9 +38,9 @@ class Entity(object):
     def serialize(self):
         for key, value in self.__dict__.items():
             if value != eval(repr(value)):
-                print(f"Improper serialization detected. "
-                      f"{value} cannot be reconstructed from its representation {repr(value)}."
-                      f"Deserialization may not work as expected.")
+                self.logger.debug(f"Improper serialization detected. "
+                                  f"{value} cannot be reconstructed from its representation {repr(value)}."
+                                  f"Deserialization may not work as expected.")
 
         return self.__repr__()
 
