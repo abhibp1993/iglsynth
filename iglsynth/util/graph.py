@@ -11,53 +11,44 @@ import warnings
 import iglsynth.util.entity as entity
 
 
+class Vertex(entity.Entity):
+    def __init__(self, name=None):
+        super(Vertex, self).__init__(name=name)
+
+
+class Edge(entity.Entity):
+    def __init__(self, u, v, name=None):
+        super(Edge, self).__init__(name)
+
+        # Edge data structure
+        self._u = u
+        self._v = v
+
+
 class Graph(entity.Entity):
+    Vertex = Vertex
+    Edge = Edge
 
     def __init__(self, name=None):
-        # super(Graph, self).__init__(id=name)
+        # Entity constructor
+        super(Graph, self).__init__(name=name)
 
         # Graph data structure
-        self._gprop = dict()
         self._edges = set()
         self._ve_map_in = dict()
         self._ve_map_out = dict()
 
-    def __getattr__(self, name):
-        return self._gprop[name]
+    def serialize(self, ignores=None):
+        nodes = None
+        edges = None
+        vprop = None
+        eprop = None
+        gprop = super(Graph, self).serialize(ignores=["_edges", "_ve_map_in", "_ve_map_out"])
 
-    def __setattr__(self, name, value):
-        # Let Python do it's usual work
-        super(Graph, self).__setattr__(name, value)
-
-        # Explicitly define which data structure elements should not be added to gprops
-        not_to_add_gprop = ["_gprop", "_edges", "_ve_map_in", "_ve_map_out"]
-
-        # Add elements to gprops
-        if name not in not_to_add_gprop:
-            self._gprop[name] = value
-
-    def __repr__(self):
-        # Build representation dictionary
-        repr_dict = {"igl_class": self.__class__.__qualname__}
-        repr_dict.update(self._gprop)
-
-        # Recursively convert all values to their representation
-        for key in repr_dict:
-            value = repr_dict[key]
-            repr_value = repr(repr_dict[key])
-
-            if eval(repr_value) != value:
-                # Add a log warning that representation is failing.
-                pass
-
-            repr_dict[key] = repr(repr_dict[key])
-
-        # Return representation dictionary
-        return str(repr_dict)
+        return gprop
 
 
-g = Graph()
-g.hello = 10
-
-repr_str = g.__repr__()
-print(repr_str)
+if __name__ == '__main__':
+    g = Graph(name="MyGraph")
+    ser = g.serialize()
+    print(ser)
