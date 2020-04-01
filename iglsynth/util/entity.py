@@ -3,6 +3,9 @@ import logging
 import uuid
 
 
+__all__ = ["Entity"]
+
+
 class Entity(object):
     def __init__(self, name=None):
         # Entity data structure

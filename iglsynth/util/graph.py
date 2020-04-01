@@ -6,9 +6,10 @@ License goes here...
 
 from typing import Iterable, Iterator, List, Union
 from functools import reduce
-import warnings
-
 import iglsynth.util.entity as entity
+
+
+__all__ = ["Vertex", "Edge", "Graph", "SubGraph"]
 
 
 class Vertex(entity.Entity):
@@ -42,6 +43,7 @@ class Edge(entity.Entity):
 
 
 class Graph(entity.Entity):
+    # Note: Potential of bugs: If user incorrectly sets Vertex, Edge classes to arbitrary classes.
     Vertex = Vertex
     Edge = Edge
 
@@ -262,7 +264,7 @@ class Graph(entity.Entity):
         :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
             nor an iterable of :class:`Graph.Vertex` objects.
         """
-        return iter(e.source for u in v for e in self.in_edges(v))
+        return iter(e.source for e in self.in_edges(v))
 
     def out_edges(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
         """
@@ -298,7 +300,7 @@ class Graph(entity.Entity):
         :raises AssertionError: When `v` is neither a :class:`Graph.Vertex` object
             nor an iterable of :class:`Graph.Vertex` objects.
         """
-        return iter(e.source for u in v for e in self.out_edges(v))
+        return iter(e.target for e in self.out_edges(v))
 
     def rm_edge(self, e: 'Graph.Edge'):
         """
