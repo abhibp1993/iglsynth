@@ -1,11 +1,6 @@
 import inspect
 import logging
 import uuid
-import re
-
-
-REGEX_IS_IGL_SERIAL_OUTPUT = re.compile(r"iglsynth{[a]}").match
-DESERIALIZATRION_FAILURE = "DESERIALIZATION FAILURE"
 
 
 class Entity(object):
@@ -67,6 +62,14 @@ class Entity(object):
         obj.__dict__.update(obj_dict)
 
         return obj
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def name(self):
+        return self._name
 
     def serialize(self, ignores=None):
         ser_dict = self.__dict__.copy()

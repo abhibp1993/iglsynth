@@ -1,5 +1,6 @@
 import importlib
 import logging
+from datetime import datetime
 from iglsynth.util.entity import Entity
 
 
@@ -9,6 +10,15 @@ if __name__ == '__main__':
 PRIMITIVE_DATATYPE = (bool, int, float, str, type(None))
 ITERABLE_DATATYPE = (list, tuple, set, dict)
 
+
+def get_fname(obj):
+    now = datetime.now()
+    dt_string = now.strftime("%Y-%m-%m-%H%M%S")
+
+    if obj.name is not None:
+        return f"{dt_string}-{obj.name}"
+    else:
+        return f"{dt_string}-{obj.id}"
 
 def serialize(obj):
     # Setup a logger
@@ -58,16 +68,17 @@ def deserialize(ser):
 
         # Get the module in iglsynth
         try:
-            importlib.import_module(mod_name)
+            module = importlib.import_module(mod_name)
         except ImportError as err:
             logger.exception(f"Cannot import module {mod_name} required to instantiate {dict_obj}.")
             raise err
 
         # Get the required class from imported module
         try:
-            class_ = globals()[cls_name]
+            class_ = eval(f"module.{cls_name}")
         except KeyError as err:
             logger.exception(f"Cannot find {cls_name} class in module {mod_name} required to instantiate {dict_obj}.")
+            print(f"Cannot find {cls_name} class in module {mod_name} required to instantiate {dict_obj}.")
             raise err
 
         # Ensure class_ is an Entity.
