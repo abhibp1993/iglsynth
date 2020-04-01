@@ -17,6 +17,7 @@ class Entity(object):
         self.logger.info(f"{self.__str__()} is created.")
 
     def __eq__(self, other):
+        # FIXME: Should two objects of different classes be comparable?
         if self._name is None:
             return isinstance(other, self.__class__) and self._id == other._id
 
@@ -29,7 +30,10 @@ class Entity(object):
         return hash(self._name)
 
     def __repr__(self):
-        return str(self.__dict__)
+        if self._name is None:
+            return f"<{self.__class__.__name__} object with id={self._id}>"
+
+        return f"<{self.__class__.__name__} object with name={self._name}>"
 
     def __str__(self):
         if self._name is None:
