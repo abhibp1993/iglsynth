@@ -74,6 +74,30 @@ class TSys(util.Graph):
         if edges is not None:
             self.add_edges(edges)
 
+    @property
+    def states(self):
+        return set(self.vertices)
+
+    @property
+    def act0(self):
+        return self._act0
+
+    @property
+    def act1(self):
+        return self._act1
+
+    @property
+    def act2(self):
+        return self._act2
+
+    @property
+    def act(self):
+        return self._act
+
+    @property
+    def prop(self):
+        return self._prop
+
     def add_vertex(self, v):
         if self._kind == CONCURRENT:
             assert v.turn is not None, '...'
@@ -90,19 +114,27 @@ class TSys(util.Graph):
 
         elif u.turn == TURN_ENV:
             assert (a in self._act0) if self._act0 is not None else (a in self._act)
-        
+
         elif u.turn == TURN_P1:
             assert (a in self._act1) if self._act1 is not None else (a in self._act)
-        
+
         elif u.turn == TURN_P2:
             assert (a in self._act2) if self._act2 is not None else (a in self._act)
 
         else:
             raise ValueError(f"")
-        
+
         super(TSys, self).add_edge(e)
 
     def initialize(self, v):
         assert v in self, '...'
         self._v0 = v
+
+    def trans(self, u, a):
+        assert u in self
+        return iter(e for e in self.out_edges(u) if e.act == a)
+
+    def label_func(self, u):
+        assert isinstance(u, self.Vertex) and u in self
+        return {p: p(u) for p in self._prop}
 
