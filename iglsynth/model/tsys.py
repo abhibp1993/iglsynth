@@ -44,7 +44,7 @@ class TSys(util.Graph):
     def __init__(self, kind, name=None,
                  vertices=None, edges=None,
                  act0=None, act1=None, act2=None, act=None,
-                 prop=None, label_func=None):
+                 alphabet=None, label_func=None):
 
         # Type checking
         assert kind in [CONCURRENT, TURN_BASED], '...'
@@ -61,7 +61,7 @@ class TSys(util.Graph):
         self._act1 = set(act1) if act1 is not None else None
         self._act2 = set(act2) if act2 is not None else None
         self._act = set.union(*(s for s in (self._act0, self._act1, self._act2, set(act)) if s is not None))
-        self._prop = prop
+        self._prop = alphabet
         self._v0 = None
 
         if label_func is not None:
