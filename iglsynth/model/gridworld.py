@@ -1,6 +1,6 @@
 import itertools
-from iglsynth.game.core import *
-from iglsynth.game.tsys import *
+from iglsynth.model.core import *
+from iglsynth.model.tsys import *
 
 
 # ======================================================================================================================

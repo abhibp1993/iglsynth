@@ -1,5 +1,5 @@
 import pytest
-from iglsynth.game.core import *
+from iglsynth.model.core import *
 
 
 def test_action_instantiation():

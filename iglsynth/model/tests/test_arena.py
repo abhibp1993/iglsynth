@@ -1,5 +1,5 @@
 import pytest
-from iglsynth.game.arena import *
+from iglsynth.model.arena import *
 
 @pytest.mark.skip(reason="Arena module is to be updated to v0.2.")
 def test_arena_instantiation():

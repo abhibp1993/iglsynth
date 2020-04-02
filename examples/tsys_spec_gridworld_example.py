@@ -1,5 +1,5 @@
-from iglsynth.game.game import *
-from iglsynth.game.gridworld import *
+from iglsynth.model.game import *
+from iglsynth.model.gridworld import *
 from iglsynth.logic.ltl import *
 from iglsynth.solver.zielonka import ZielonkaSolver
 

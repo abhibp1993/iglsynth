@@ -1,5 +1,5 @@
 import pytest
-from iglsynth.game.gridworld import *
+from iglsynth.model.gridworld import *
 
 
 # [ERROR] Instantiate with unacceptable dimension.

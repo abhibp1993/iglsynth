@@ -1,4 +1,4 @@
-from iglsynth.game.game import *
+from iglsynth.model.game import *
 
 
 class ISolver(object):

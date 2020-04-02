@@ -5,7 +5,7 @@ License goes here...
 """
 
 
-from iglsynth.game.tsys import *
+from iglsynth.model.tsys import *
 from iglsynth.logic.core import *
 
 

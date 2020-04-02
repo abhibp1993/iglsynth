@@ -1,4 +1,4 @@
-from iglsynth.game.game import *
+from iglsynth.model.game import *
 from iglsynth.solver.zielonka import ZielonkaSolver
 
 

@@ -1,5 +1,5 @@
 import pytest
-from iglsynth.game.tsys import *
+from iglsynth.model.tsys import *
 from iglsynth.logic.core import *
 
 # Define commonly used variables
