@@ -6,10 +6,25 @@ License goes here...
 
 from typing import Iterable, Iterator, List, Union
 from functools import reduce
+import logging
 import iglsynth.util.entity as entity
 
 
 __all__ = ["Vertex", "Edge", "Graph", "SubGraph"]
+
+
+class IGLDict(dict):
+    def __setitem__(self, key, value):
+        super(IGLDict, self).__setitem__(key, value)
+        logger = logging.getLogger(self.__module__)
+        logger.info(f"Updating IGLDict:\n\tself:{self}\n\tkey={key}\n\tvalue={value}")
+
+
+class IGLSet(set):
+    def add(self, element):
+        super(IGLSet, self).add(element)
+        logger = logging.getLogger(self.__module__)
+        logger.info(f"Updating IGLSet:\n\tself:{self}\n\tnewitem={element}")
 
 
 class Vertex(entity.Entity):
@@ -60,8 +75,8 @@ class Graph(entity.Entity):
 
         # Graph data structure
         self._edges = set()
-        self._ve_map_in = dict()
-        self._ve_map_out = dict()
+        self._ve_map_in = IGLDict()
+        self._ve_map_out = IGLDict()
 
     def __contains__(self, item):
         if issubclass(type(item), Vertex):
@@ -80,6 +95,7 @@ class Graph(entity.Entity):
 
         return f"<{self.__class__.__name__} object with name={self._name}>, " \
             f"|V|={self.num_vertices}, |E|={self.num_edges}>"
+
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
@@ -131,17 +147,17 @@ class Graph(entity.Entity):
 
         # If vertex is not already added, then add it.
         if v not in self._ve_map_in and v not in self._ve_map_out:
-            self._ve_map_in[v] = set()
-            self._ve_map_out[v] = set()
+            self._ve_map_in[v] = IGLSet()
+            self._ve_map_out[v] = IGLSet()
 
         elif (v in self._ve_map_in and v not in self._ve_map_out) or \
                 (v not in self._ve_map_in and v in self._ve_map_out):
             self.logger.error(f"Graph data structure is corrupted. "
-                              f"|ve_map_in|={len(self._ve_map_in)} AND |ve_map_out|={len(self._ve_map_out)}")
+                              f"|ve_map_in|={len(self._ve_map_in)} AND |ve_map_out|={len(self._ve_map_out)}.")
             raise ValueError(f"Graph data structure is corrupted.")
 
         else:
-            self.logger.debug(f"Vertex {v} is already present in graph. Ignoring request to add.")
+            self.logger.debug(f"Vertex {v} is already present in {self}. Ignoring request to add.")
 
     def add_vertices(self, vbunch):
         """
@@ -363,7 +379,7 @@ class Graph(entity.Entity):
         for v in vbunch:
             self.rm_vertex(v)
 
-    def serialize(self, ignores=None):
+    def serialize(self, ignores=tuple()):
         return super(Graph, self).serialize(ignores=list(ignores) + [])
 
 
