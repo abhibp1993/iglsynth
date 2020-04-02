@@ -5,6 +5,22 @@ Release Notes
 1.0.0 (????????????????)
 ------------------------
 
+* Data Structure Changes
+
+    * ``Entity, SubGraph`` class added.
+    * ``Graph, Vertex, Edge`` classes redefined. All of these classes inherit from ``Entity``.
+
+* Added ``readwrite`` sub-package.
+
+    * ``serialize`` and ``deserialize`` convert any primitive python type or a subclass of ``Entity`` to dictionary.
+    * ``iglpickle.load`` and ``iglpickle.save`` allow the IGLSynth objects to be saved and loaded from the disk.
+
+* All utils can now be imported using ``import iglsynth.util as util`` statement.
+* Logging support added to ``Entity, Graph`` class objects. This can be accessed using ``self.logger`` attribute.
+* An example is added for basic graph functionality.
+* Tests are updated for ``Entity, Graph`` classes.
+
+
 (Tentative Changes)
 
 * Data Structure Changes
