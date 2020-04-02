@@ -1,25 +1,22 @@
-e1 = Entity(name=(10, 10))
-e2 = Entity(name=(10, 10))
+import inspect
+import iglsynth.util as util
 
-print(e1, e2)
-print(hash(e1), hash(e2))
-print(e1 == e2)
 
-e1_seri = e1.serialize()
-e2_seri = e2.serialize()
+def test_import_util():
+    members_util = [m[0] for m in inspect.getmembers(util)]
+    assert "Graph" in members_util
+    assert "Vertex" in members_util
+    assert "Edge" in members_util
+    assert "SubGraph" in members_util
 
-print(f"e1_seri={e1_seri}")
-print(f"e2_seri={e2_seri}")
 
-e1_load = Entity.deserialize(eval(e1_seri))
-e2_load = Entity.deserialize(eval(e2_seri))
+def test_equality():
+    e1 = util.Entity()
+    e2 = util.Entity()
+    e3 = util.Entity(name="ent")
+    e4 = util.Entity(name="ent")
 
-print(e1_load, e2_load)
-print(hash(e1_load), hash(e2_load))
-print(e1_load == e2_load)
+    assert e1 != e2
+    assert e3 == e4
 
-a = {e1: 10}
-print(a)
 
-a[e2] = 20
-print(a)

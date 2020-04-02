@@ -3,6 +3,9 @@ import logging
 import uuid
 
 
+__all__ = ["Entity"]
+
+
 class Entity(object):
     def __init__(self, name=None):
         # Entity data structure
@@ -13,10 +16,10 @@ class Entity(object):
 
         # Logger for logging purposes
         self.logger = logging.getLogger(self.__module__)
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.info(f"{self.__str__()} is created.")
+        self.logger.info(f"{self} is created.")
 
     def __eq__(self, other):
+        # FIXME: Should two objects of different classes be comparable?
         if self._name is None:
             return isinstance(other, self.__class__) and self._id == other._id
 
@@ -29,7 +32,10 @@ class Entity(object):
         return hash(self._name)
 
     def __repr__(self):
-        return str(self.__dict__)
+        if self._name is None:
+            return f"<{self.__class__.__name__} object with id={self._id}>"
+
+        return f"<{self.__class__.__name__} object with name={self._name}>"
 
     def __str__(self):
         if self._name is None:
@@ -43,6 +49,8 @@ class Entity(object):
 
     @classmethod
     def instantiate_by_dict(cls, obj_dict):
+        logger = logging.getLogger(cls.__module__)
+
         # Detect init signature
         sig = inspect.signature(cls.__init__)
         init_attr = dict()
@@ -54,13 +62,13 @@ class Entity(object):
                 # Remark: While reconstructing the object from dictionary, default parameter values cannot be used.
                 init_attr[attr_name] = obj_dict[attr_name] if attr_name in obj_dict else obj_dict[f"_{attr_name}"]
             except KeyError as err:
-                # TODO logger
+                logger.exception(err)
                 raise err
 
         # If all parameters are values are available,
         obj = cls(**init_attr)
         obj.__dict__.update(obj_dict)
-
+        logger.info(f"New {cls} object {obj} instantiated. Dictionary initialized to {obj_dict}.")
         return obj
 
     @property
