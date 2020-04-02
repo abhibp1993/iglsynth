@@ -5,302 +5,249 @@ License goes here...
 """
 
 
-from iglsynth.model.tsys import *
-from iglsynth.logic.core import *
+from iglsynth.model.core import *
+import iglsynth.util as util
+import iglsynth.model.tsys as tsys
+import typing
 
 
-class Game(Graph):
-    """
-    Represents a two-player deterministic **zero-sum** game.
+class GameVertex(util.Vertex):
+    def __init__(self, turn=None, data=None, tsys_v=None, aut_v=None):
+        # Type checking
+        assert isinstance(tsys_v, tsys.TSysVertex)
+        # TODO assert isinstance(aut_v, logic.AutomatonVertex)
 
-        * The game could be concurrent or turn-based.
-        * Game instance can be constructed by adding vertices and edges (See :ref:`Example Game Graph Construction`).
+        # Base class constructor
+        super(GameVertex, self).__init__()
 
-    :param kind: (:data:`CONCURRENT <iglsynth.game.core.CONCURRENT>`
-        or :data:`TURN_BASED <iglsynth.game.core.TURN_BASED>`) Whether the game is concurrent or turn-based.
-    :param vtype: (:class:`Game.Vertex` or sub-class) The vertex type used to define the game instance.
-    :param etype: (:class:`Game.Edge` or sub-class) The edge type used to define the game instance.
-    :param graph: (:class:`Game`) A game instance from which "self" instance should be created.
-    :param file: (str) An absolute path of file from which the game should be loaded.
+        # Update name of vertex to reflect turn
+        if tsys_v is None and aut_v is None:
+            self._name = (self.id, turn) if data is None else (data, turn)  # Need id to ensure equality is well defined
+        elif tsys_v is not None and aut_v is not None:
+            self._name = ((self.id, tsys_v, aut_v), turn) if data is None else ((data, tsys_v, aut_v), turn)
+        else:
+            raise ValueError(f"Both tsys_v and aut_v must either be given or set to None.")
 
-    """
+    @property
+    def tsys_v(self):
+        if isinstance(self._name[0], tuple):
+            return self._name[0][1]
+        return None
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # PUBLIC CLASSES
-    # ------------------------------------------------------------------------------------------------------------------
-    class Vertex(Graph.Vertex):
-        """
-        Represents a vertex in game.
+    @property
+    def aut_v(self):
+        if isinstance(self._name[0], tuple):
+            return self._name[0][2]
+        return None
 
-        A game vertex is a 3-tuple, ``(name, tsys.v, aut.v)``. When game is
-        defined using a graph, `tsys.v` and `aut.v` are both set to None.
+    @property
+    def data(self):
+        if isinstance(self._name[0], tuple):
+            return self._name[0][0] if self._name[0][0] != self.id else None
+        return None
 
-        - Vertex must have a name.
-        - When game is constructed from transition system and an automaton the vertex stores tsys and aut vertices.
+    @property
+    def turn(self):
+        return self._name[1]
+GameEdge = tsys.TSysEdge
 
-        :param name: (str) The name of the vertex.
-        :param turn: (int) The id of player who will make the move at this state.
-        :param tsys_v: (:class:`iglsynth.game.tsys.TSys.Vertex`) Vertex of transition system.
-        :param aut_v: (:class:`iglsynth.logic.core.Automaton.Vertex`) Vertex of automaton.
 
-        .. note:: When game is defined using transition system and automaton, it is conventional to name vertices
-            as ``(tsys_v.name, aut_v.name)``.
+class Game(util.Graph):
+    Vertex = GameVertex
+    Edge = GameEdge
 
-        """
+    def __init__(self, kind, name=None,
+                 vertices=None, edges=None,
+                 act0=None, act1=None, act2=None, act=None,
+                 acc_cond=REACHABILITY):
 
-        # ------------------------------------------------------------------------------------------------------------------
-        # INTERNAL CLASSES
-        # ------------------------------------------------------------------------------------------------------------------
-        def __init__(self, name, turn=None, tsys_v=None, aut_v=None):
-            assert isinstance(tsys_v, TSys.Vertex) or tsys_v is None          
-            assert isinstance(aut_v, Automaton.Vertex) or aut_v is None
-            assert isinstance(turn, int) or turn is None
+        # Type checking
+        assert kind in [CONCURRENT, TURN_BASED]
+        assert acc_cond in ACCEPTANCE_CONDITIONS
+        assert all([isinstance(a, (Action, ConcurrentAction)) for a in act0])
+        assert all([isinstance(a, (Action, ConcurrentAction)) for a in act1])
+        assert all([isinstance(a, (Action, ConcurrentAction)) for a in act2])
 
-            self._name = name
-            self._tsys_v = tsys_v
-            self._aut_v = aut_v
-            self._turn = turn
+        # Base class constructor
+        super(Game, self).__init__(name)
 
-        def __repr__(self):
-            string = f"Vertex(name={self._name}"
-            if self._tsys_v is not None:
-                string += f", TSys.V={self._tsys_v}"        # pragma: no cover
-            if self._aut_v is not None:
-                string += f", Aut.V={self._aut_v}"          # pragma: no cover
-            string += ")"
-            return string
-
-        def __hash__(self):
-            return self.name.__hash__()
-
-        def __eq__(self, other):
-            # print("MYPRINT", self, other)
-            assert type(other) == type(self), f"Expected other of type={type(self)}. Received other.type={type(other)}."
-            return self.name == other.name and self.turn == other.turn
-
-        # ------------------------------------------------------------------------------------------------------------------
-        # PUBLIC PROPERTIES
-        # ------------------------------------------------------------------------------------------------------------------
-        @property
-        def name(self):
-            """ Returns the name of game vertex. """
-            return self._name
-
-        @property
-        def turn(self):
-            """ Returns the id of player who will make move in current state. """
-            return self._turn
-
-        @property
-        def tsys_vertex(self):
-            """ Returns the transition system vertex associated with game vertex. """
-            return self._tsys_v         # pragma: no cover
-
-        @property
-        def aut_vertex(self):
-            """ Returns the automaton vertex associated with game vertex. """
-            return self._aut_v          # pragma: no cover
-
-    class Edge(Graph.Edge):
-        """
-        Represents an action-labeled edge of a game.
-
-        - :class:`Edge <iglsynth.game.game.Game.Edge>` represents a directed edge labeled with an action.
-        - Two edges are equal if they share equal source and target vertices
-          and have identical action labels.
-
-        :param u: (:class:`Vertex`) Source vertex of edge.
-        :param v: (:class:`Vertex`) Target vertex of edge.
-        :param act: (:class:`Action <iglsynth.game.core.Action>` or None) An action label of edge. (Default: None)
-
-        .. note:: We have following cases depending on whether game is turn-based or concurrent.
-
-            * (Turn-based) Action must be an :class:`Action <iglsynth.game.core.Action>` object.
-            * (Concurrent) Action must be a 2-tuple of (:class:`Action <iglsynth.game.core.Action>`,
-              :class:`Action <iglsynth.game.core.Action>`)
-        """
-        def __init__(self, u: 'Game.Vertex', v: 'Game.Vertex', act=None):
-            # Validate type of action
-            if isinstance(act, Action):
-                pass
-
-            elif isinstance(act, (tuple, list)):
-                assert len(act) == 2
-                assert isinstance(act[0], Action)
-                assert isinstance(act[1], Action)
-                act = tuple(act)
-
-            elif act is None:
-                pass
-
-            else:
-                raise AssertionError(f"Input parameter act must be an Action or a 2-tuple (Action, Action) or None.")
-
-            super(Game.Edge, self).__init__(u=u, v=v)
-            self._act = act
-
-        def __eq__(self, other):
-            return self.source == other.source and self.target == other.target and self.act == other.act
-
-        def __hash__(self):
-            return (self.source, self.target, self.act).__hash__()
-
-        @property
-        def act(self):
-            """ Returns action associated with game edge. """
-            return self._act
-
-    # ------------------------------------------------------------------------------------------------------------------
-    # INTERNAL METHODS
-    # ------------------------------------------------------------------------------------------------------------------
-    def __init__(self, kind, vtype=None, etype=None, graph=None, file=None):
-
-        assert kind in [TURN_BASED, CONCURRENT], \
-                f"Parameter 'kind' must be either TURN_BASED or CONCURRENT. Got {kind}."
-
-        # Initialize internal variables
+        # Add graph properties for transition system
         self._kind = kind
-        self._p1_spec = None
-        self._final = set()
+        self._act0 = set(act0) if act0 is not None else None
+        self._act1 = set(act1) if act1 is not None else None
+        self._act2 = set(act2) if act2 is not None else None
+        self._act = set.union(*(s for s in (self._act0, self._act1, self._act2, set(act)) if s is not None))
+        self._final = list()
+        self._acc_cond = acc_cond
+        self._v0 = None
 
-        super(Game, self).__init__(vtype, etype, graph, file)
+        # Initialize graph with vertices and edges
+        if vertices is not None:
+            self.add_vertices(vertices)
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # PROPERTIES
-    # ------------------------------------------------------------------------------------------------------------------
-    @property
-    def kind(self):
-        """
-        Returns the kind of game, whether :data:`TURN_BASED <iglsynth.game.core.TURN_BASED>` or
-        :data:`CONCURRENT <iglsynth.game.core.CONCURRENT>`.
-        """
-        return self._kind
-
-    @property
-    def p1_spec(self):
-        """ Returns the specification of P1 in the game. """
-        return self._p1_spec
+        if edges is not None:
+            self.add_edges(edges)
 
     @property
     def final(self):
-        """ Returns the set of final states of the game. """
         return self._final
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # PRIVATE METHODS
-    # ------------------------------------------------------------------------------------------------------------------
-    def _product_turn_based_tsys_aut(self, tsys, aut):
-        """
-        Computes the product of a turn-based transition system with a specification automaton.
+    @final.setter
+    def final(self, flist):
+        pass
 
-        :param tsys:
-        :param aut:
-        :return:
-        """
-        # Generate vertices of game
-        tsys_states = list(tsys.vertices)
-        aut_states = list(aut.vertices)
+    @property
+    def kind(self):
+        return self._kind
 
-        game_states = [self.Vertex(name=f"({s}, {q})", tsys_v=s, aut_v=q, turn=s.turn)
-                       for s in tsys_states for q in aut_states]
-        self.add_vertices(game_states)
+    def add_vertex(self, v):
+        pass
 
-        # Set final states
-        for v in self.vertices:
-            if v.aut_vertex in aut.final:
-                self.mark_final(v)
+    def add_edge(self, e):
+        pass
 
-        # Add edges of game
-        for u in self.vertices:
-            s = u.tsys_vertex
-            q = u.aut_vertex
+    def serialize(self, ignores=tuple()):
+        pass
 
-            s_out_edges = tsys.out_edges(s)
-            q_out_edges = aut.out_edges(q)
+    @typing.overload
+    def construct(self):
+        pass
 
-            for se in s_out_edges:
-                for qe in q_out_edges:
-                    # qe_formula = PL(formula=str(qe.formula), alphabet=self.p1_spec.alphabet)
-                    if qe.formula(se.target) is True:
-                        v = self.Vertex(name=f"({se.target}, {qe.target})", tsys_v=se.target,
-                                        aut_v=qe.target, turn=se.target.turn)
-                        self.add_edge(self.Edge(u=u, v=v, act=se.action))
+    def construct(self):
+        raise AttributeError("...")
 
-    def _product_concurrent_tsys_aut(self, tsys, aut):
-        # TODO: Implement this one!
-        pass        # pragma: no cover
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # PUBLIC METHODS
-    # ------------------------------------------------------------------------------------------------------------------
-    def add_vertex(self, v: 'Game.Vertex'):
-        if self._kind == TURN_BASED:
-            assert v.turn is not None
-        else:   # kind is CONCURRENT
-            assert v.turn is None
-
-        super(Game, self).add_vertex(v)
-
-    def add_edge(self, e: 'Game.Edge'):
-
-        if self._kind == TURN_BASED:
-            assert isinstance(e.act, Action) or e.act is None
-        else:   # kind is CONCURRENT
-            act = e.act
-            if act is not None:
-                assert isinstance(act, (list, tuple))
-                assert len(act) == 2
-                assert isinstance(act[0], Action)
-                assert isinstance(act[1], Action)
-        
-        super(Game, self).add_edge(e)
-
-    def define(self, tsys=None, p1_spec=None):      # pragma: no cover
-        """
-        Defines and constructs the deterministic zero-sum game graph.
-
-        :param tsys: (:class:`TSys`) Transition system over which game is defined.
-        :param p1_spec: (:class:`ILogic`) Logical specification that P1 must satisfy over transition system.
-
-        .. note:: A game graph can be defined in three possible ways.
-
-            * Explicit construction of graph by adding vertices and edges.
-            * By providing transition system and a logical specification for P1.
-            * By providing an game field and two players. (Not presently supported).
-
-        """
-        # If transition system and specification are provided, then construct game using appropriate product operation
-        if tsys is not None and p1_spec is not None:
-
-            # Validate input arguments
-            assert isinstance(p1_spec, ILogic), \
-                f"Input argument p1_spec must be an ILogic formula. Received p1_spec={p1_spec}."
-            assert isinstance(tsys, TSys), \
-                f"Input argument tsys must be an TSys object. Received p1_spec={tsys}."
-            assert tsys.kind == self.kind, \
-                f"Type of argument tsys={tsys} is {tsys.kind} does NOT match self.kind={self.kind}."
-
-            # Update internal variables
-            self._p1_spec = p1_spec
-
-            # Translate the specification to an automaton
-            aut = p1_spec.translate()
-
-            # Invoke appropriate product operation
-            if self.kind == TURN_BASED:
-                self._product_turn_based_tsys_aut(tsys, aut)
-
-            else:
-                self._product_concurrent_tsys_aut(tsys, aut)
-
-        else:
-            AttributeError("Either provide a graph or (tsys and aut) parameter, but not both.")
-
-    def mark_final(self, v):
-        """
-        Adds the given state to the set of final states in the game.
-
-        :param v: (:class:`Game.Vertex`) Vertex to be marked as final.
-        """
-        if v in self.vertices:
-            self._final.add(v)
+# class Game(Graph):
+#     """
+#     Represents a two-player deterministic **zero-sum** game.
+#
+#         * The game could be concurrent or turn-based.
+#         * Game instance can be constructed by adding vertices and edges (See :ref:`Example Game Graph Construction`).
+#
+#     :param kind: (:data:`CONCURRENT <iglsynth.game.core.CONCURRENT>`
+#         or :data:`TURN_BASED <iglsynth.game.core.TURN_BASED>`) Whether the game is concurrent or turn-based.
+#     :param vtype: (:class:`Game.Vertex` or sub-class) The vertex type used to define the game instance.
+#     :param etype: (:class:`Game.Edge` or sub-class) The edge type used to define the game instance.
+#     :param graph: (:class:`Game`) A game instance from which "self" instance should be created.
+#     :param file: (str) An absolute path of file from which the game should be loaded.
+#
+#     """
+#
+   # ------------------------------------------------------------------------------------------------------------------
+#     # PRIVATE METHODS
+#     # ------------------------------------------------------------------------------------------------------------------
+#     def _product_turn_based_tsys_aut(self, tsys, aut):
+#         """
+#         Computes the product of a turn-based transition system with a specification automaton.
+#
+#         :param tsys:
+#         :param aut:
+#         :return:
+#         """
+#         # Generate vertices of game
+#         tsys_states = list(tsys.vertices)
+#         aut_states = list(aut.vertices)
+#
+#         game_states = [self.Vertex(name=f"({s}, {q})", tsys_v=s, aut_v=q, turn=s.turn)
+#                        for s in tsys_states for q in aut_states]
+#         self.add_vertices(game_states)
+#
+#         # Set final states
+#         for v in self.vertices:
+#             if v.aut_vertex in aut.final:
+#                 self.mark_final(v)
+#
+#         # Add edges of game
+#         for u in self.vertices:
+#             s = u.tsys_vertex
+#             q = u.aut_vertex
+#
+#             s_out_edges = tsys.out_edges(s)
+#             q_out_edges = aut.out_edges(q)
+#
+#             for se in s_out_edges:
+#                 for qe in q_out_edges:
+#                     # qe_formula = PL(formula=str(qe.formula), alphabet=self.p1_spec.alphabet)
+#                     if qe.formula(se.target) is True:
+#                         v = self.Vertex(name=f"({se.target}, {qe.target})", tsys_v=se.target,
+#                                         aut_v=qe.target, turn=se.target.turn)
+#                         self.add_edge(self.Edge(u=u, v=v, act=se.action))
+#
+#     def _product_concurrent_tsys_aut(self, tsys, aut):
+#         # TODO: Implement this one!
+#         pass        # pragma: no cover
+#
+#     # ------------------------------------------------------------------------------------------------------------------
+#     # PUBLIC METHODS
+#     # ------------------------------------------------------------------------------------------------------------------
+#     def add_vertex(self, v: 'Game.Vertex'):
+#         if self._kind == TURN_BASED:
+#             assert v.turn is not None
+#         else:   # kind is CONCURRENT
+#             assert v.turn is None
+#
+#         super(Game, self).add_vertex(v)
+#
+#     def add_edge(self, e: 'Game.Edge'):
+#
+#         if self._kind == TURN_BASED:
+#             assert isinstance(e.act, Action) or e.act is None
+#         else:   # kind is CONCURRENT
+#             act = e.act
+#             if act is not None:
+#                 assert isinstance(act, (list, tuple))
+#                 assert len(act) == 2
+#                 assert isinstance(act[0], Action)
+#                 assert isinstance(act[1], Action)
+#
+#         super(Game, self).add_edge(e)
+#
+#     def define(self, tsys=None, p1_spec=None):      # pragma: no cover
+#         """
+#         Defines and constructs the deterministic zero-sum game graph.
+#
+#         :param tsys: (:class:`TSys`) Transition system over which game is defined.
+#         :param p1_spec: (:class:`ILogic`) Logical specification that P1 must satisfy over transition system.
+#
+#         .. note:: A game graph can be defined in three possible ways.
+#
+#             * Explicit construction of graph by adding vertices and edges.
+#             * By providing transition system and a logical specification for P1.
+#             * By providing an game field and two players. (Not presently supported).
+#
+#         """
+#         # If transition system and specification are provided, then construct game using appropriate product operation
+#         if tsys is not None and p1_spec is not None:
+#
+#             # Validate input arguments
+#             assert isinstance(p1_spec, ILogic), \
+#                 f"Input argument p1_spec must be an ILogic formula. Received p1_spec={p1_spec}."
+#             assert isinstance(tsys, TSys), \
+#                 f"Input argument tsys must be an TSys object. Received p1_spec={tsys}."
+#             assert tsys.kind == self.kind, \
+#                 f"Type of argument tsys={tsys} is {tsys.kind} does NOT match self.kind={self.kind}."
+#
+#             # Update internal variables
+#             self._p1_spec = p1_spec
+#
+#             # Translate the specification to an automaton
+#             aut = p1_spec.translate()
+#
+#             # Invoke appropriate product operation
+#             if self.kind == TURN_BASED:
+#                 self._product_turn_based_tsys_aut(tsys, aut)
+#
+#             else:
+#                 self._product_concurrent_tsys_aut(tsys, aut)
+#
+#         else:
+#             AttributeError("Either provide a graph or (tsys and aut) parameter, but not both.")
+#
+#     def mark_final(self, v):
+#         """
+#         Adds the given state to the set of final states in the game.
+#
+#         :param v: (:class:`Game.Vertex`) Vertex to be marked as final.
+#         """
+#         if v in self.vertices:
+#             self._final.add(v)

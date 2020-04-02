@@ -1,13 +1,6 @@
 import iglsynth.util as util
 from iglsynth.model.core import *
 
-# Module level configuration parameters for users
-TURN_BASED = "Turn-based"
-CONCURRENT = "Concurrent"
-TURN_ENV = "TURN_ENV"
-TURN_P1 = "TURN_P1"
-TURN_P2 = "TURN_P2"
-
 
 class TSysVertex(util.Vertex):
     def __init__(self, name=None, turn=None):

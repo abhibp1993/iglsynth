@@ -4,22 +4,22 @@ from iglsynth.model.field import *
 @pytest.mark.skip(reason="Arena module is to be updated to v0.2.")
 def test_arena_instantiation():
     # 1. Default Constructor
-    arena = Arena()
+    arena = Field()
 
     # 2. Constructor with UserVertex, UserEdge types
-    class UserVertex(Arena.Vertex):
+    class UserVertex(Field.Vertex):
         def __init__(self, name):
             self.name = name
 
-    class UserEdge(Arena.Edge):
+    class UserEdge(Field.Edge):
         def __init__(self, name, u, v):
             super(UserEdge, self).__init__(u, v)
             self.name = name
 
-    arena = Arena(vtype=UserVertex, etype=UserEdge)
+    arena = Field(vtype=UserVertex, etype=UserEdge)
 
     with pytest.raises(AssertionError):
-        arena = Arena(vtype=UserEdge, etype=UserVertex)
+        arena = Field(vtype=UserEdge, etype=UserVertex)
 
     with pytest.raises(AssertionError):
         class UserVertex(Graph.Vertex):
@@ -31,7 +31,7 @@ def test_arena_instantiation():
                 super(UserEdge1, self).__init__(u, v)
                 self.name = name
 
-        arena = Arena(vtype=UserVertex, etype=UserEdge1)
+        arena = Field(vtype=UserVertex, etype=UserEdge1)
 
     # 3. Copy Constructor -- TODO
     # graph = Graph(graph=graph)
@@ -43,13 +43,13 @@ def test_arena_instantiation():
 
 @pytest.mark.skip(reason="Arena module is to be updated to v0.2.")
 def test_add_edge():
-    arena = Arena()
+    arena = Field()
     v0 = Graph.Vertex()
     v1 = Graph.Vertex()
     arena.add_vertices([v0, v1])
 
     # Add an edge
-    e = Arena.Edge(v0, v1)
+    e = Field.Edge(v0, v1)
     arena.add_edge(e)
     assert arena.num_edges == 1
 
@@ -58,17 +58,17 @@ def test_add_edge():
     assert arena.num_edges == 1
 
     # Add a new edge between same vertices
-    e0 = Arena.Edge(v0, v1)
+    e0 = Field.Edge(v0, v1)
     arena.add_edge(e0)
     assert arena.num_edges == 1
 
     # Add edge using UserDefined Edge type
-    class GraphEdge(Arena.Edge):
+    class GraphEdge(Field.Edge):
         def __init__(self, name, u, v):
             super(GraphEdge, self).__init__(u, v)
             self.name = name
 
-    class ArenaEdge(Arena.Edge):
+    class ArenaEdge(Field.Edge):
         def __init__(self, name, u, v):
             super(ArenaEdge, self).__init__(u, v)
             self.name = name
