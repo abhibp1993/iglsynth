@@ -1,5 +1,5 @@
 from iglsynth.model.kripke import *
-from iglsynth.model.arena import *
+from iglsynth.model.field import *
 from iglsynth.model.core import Player, Action
 
 TURN_BASED = "Turn-based"
