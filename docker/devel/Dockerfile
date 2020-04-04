@@ -30,3 +30,5 @@ RUN pip3 install pytest-cov coverage codecov
 # Install additional packages, libraries
 RUN pip3 install matplotlib
 RUN pip3 install jupyter
+
+ENV PYTHONPATH "${PYTHONPATH}:/home/iglsynth"
