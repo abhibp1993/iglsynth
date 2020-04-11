@@ -7,6 +7,9 @@ License goes here...
 import iglsynth.util as util
 
 
+__all__ = ["Field"]
+
+
 class Field(util.Graph):
     def add_edge(self, e):
         u = e.source
@@ -17,7 +20,7 @@ class Field(util.Graph):
                               f"\tu={u}, \n"
                               f"\tv={v}, \n"
                               f"\t get_edges(u, v) = {list(self.get_edges(u, v))}")
-            raise ValueError(f"Field graph cannot have more than one edge between two vertices.")
+            raise AssertionError(f"Field graph cannot have more than one edge between two vertices.")
 
         super(Field, self).add_edge(e)
 

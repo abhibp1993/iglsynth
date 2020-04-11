@@ -11,6 +11,9 @@ import iglsynth.model.tsys as tsys
 import typing
 
 
+__all__ = ["Game"]
+
+
 class GameVertex(util.Vertex):
     def __init__(self, turn=None, data=None, tsys_v=None, aut_v=None):
         # Type checking
@@ -49,6 +52,8 @@ class GameVertex(util.Vertex):
     @property
     def turn(self):
         return self._name[1]
+
+
 GameEdge = tsys.TSysEdge
 
 
