@@ -50,7 +50,6 @@ class Entity(object):
         self.logger.info(f"{self} is created.")
 
     def __eq__(self, other):
-        # FIXME: Should two objects of different classes be comparable?
         return type(other) == type(self) and self.name == other.name
 
     def __hash__(self):
@@ -81,21 +80,3 @@ class Entity(object):
             for item in ignores:
                 ser_dict.pop(item)
         return ser_dict
-
-
-if __name__ == '__main__':
-    a = Entity(**{"name": "abhishek", "work": "student", "record": 10})
-    print(a, id(a))
-
-    b = Entity(**{"name": "abhishek", "work": "student"})
-    print(b, id(b))
-
-    c = Entity(name="abhishek")
-    print(c, id(c))
-
-    d = Entity()
-    print(d, id(d))
-
-    e = Entity(name="hello", work="student")
-    print(e, e.__dict__)
-    print(e.work)
