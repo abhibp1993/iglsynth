@@ -66,6 +66,13 @@ class Entity(object):
     def name(self):
         return self._name
 
+    @classmethod
+    def get_object_by_name(cls, name):
+        iname = make_instance_name(cls.__module__, cls.__qualname__, name)
+        if iname in Entity._instances:
+            return Entity._instances[iname]
+        return None
+
     def serialize(self, ignores=None):
         ser_dict = self.__dict__.copy()
         ser_dict.pop("logger")
