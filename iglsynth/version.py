@@ -4,7 +4,7 @@
 _major = 1
 _minor = 0
 _micro = 0
-_build = 1
+_build = 2
 __version__ = f"{_major}.{_minor}.{_micro}"
 
 # Contributors

@@ -1,16 +1,47 @@
-import inspect
+__all__ = ["Entity"]
+
 import logging
 import uuid
+from collections.abc import Hashable, Iterable
+from weakref import WeakValueDictionary
 
 
-__all__ = ["Entity"]
+def make_instance_name(mod_name, cls_name, name):
+    return f"{mod_name}:{cls_name}:{name}"
 
 
 class Entity(object):
-    def __init__(self, name=None):
+    _instances = WeakValueDictionary()
+
+    def __new__(cls, name=None, **kwargs):
+
+        # If name is not given, generate one.
+        name = uuid.uuid4() if name is None else name
+        iname = make_instance_name(cls.__module__, cls.__qualname__, name)
+
+        # Check if entity with the name already exists. If yes, return it.
+        if iname in Entity._instances:
+            old_entity = Entity._instances[iname]
+            for key in kwargs:
+                if key in old_entity.__dict__:
+                    assert old_entity.__dict__[key] == kwargs[key], \
+                        f"Entity creation failed. " \
+                        f"There exists an entity with name={iname}. " \
+                        f"But old_entity[{key}]={old_entity.__dict__[key]} does not match given " \
+                        f"kwargs[{key}]={kwargs[key]}."
+            return old_entity
+
+        # If entity with given name does not exist, then create a new one
+        assert isinstance(name, Hashable), f"Cannot create an entity with UnHashable name of type={type(name)}."
+        new_entity = object.__new__(cls)
+        Entity._instances[iname] = new_entity
+        new_entity.__dict__["_name"] = name
+        new_entity.__dict__.update(kwargs)
+        return new_entity
+
+    def __init__(self, name=None, **kwargs):
         # Entity data structure
-        self._id = self._get_unique_id()
-        self._name = name
+        self._name = self._name
         self._class_name = self.__class__.__qualname__
         self._module_name = self.__class__.__module__
 
@@ -20,60 +51,16 @@ class Entity(object):
 
     def __eq__(self, other):
         # FIXME: Should two objects of different classes be comparable?
-        if self._name is None:
-            return isinstance(other, self.__class__) and self._id == other._id
-
-        return isinstance(other, self.__class__) and self._name == other._name
+        return type(other) == type(self) and self.name == other.name
 
     def __hash__(self):
-        if self._name is None:
-            return hash(self._id)
-
-        return hash(self._name)
+        return hash(self.name)
 
     def __repr__(self):
-        if self._name is None:
-            return f"<{self.__class__.__name__} object with id={self._id}>"
-
-        return f"<{self.__class__.__name__} object with name={self._name}>"
+        return f"{self.__class__.__name__}(name={self._name})"
 
     def __str__(self):
-        if self._name is None:
-            return f"<{self.__class__.__name__} object with id={self._id}>"
-
-        return f"<{self.__class__.__name__} object with name={self._name}>"
-
-    @classmethod
-    def _get_unique_id(cls):
-        return f"{cls.__qualname__}::{uuid.uuid4()}"
-
-    @classmethod
-    def instantiate_by_dict(cls, obj_dict):
-        logger = logging.getLogger(cls.__module__)
-
-        # Detect init signature
-        sig = inspect.signature(cls.__init__)
-        init_attr = dict()
-        for attr_name in sig.parameters.keys():
-            if attr_name == "self":
-                continue
-
-            try:
-                # Remark: While reconstructing the object from dictionary, default parameter values cannot be used.
-                init_attr[attr_name] = obj_dict[attr_name] if attr_name in obj_dict else obj_dict[f"_{attr_name}"]
-            except KeyError as err:
-                logger.exception(err)
-                raise err
-
-        # If all parameters are values are available,
-        obj = cls(**init_attr)
-        obj.__dict__.update(obj_dict)
-        logger.info(f"New {cls} object {obj} instantiated. Dictionary initialized to {obj_dict}.")
-        return obj
-
-    @property
-    def id(self):
-        return self._id
+        return self.__repr__()
 
     @property
     def name(self):
@@ -82,5 +69,26 @@ class Entity(object):
     def serialize(self, ignores=None):
         ser_dict = self.__dict__.copy()
         ser_dict.pop("logger")
+
+        if isinstance(ignores, Iterable):
+            for item in ignores:
+                ser_dict.pop(item)
         return ser_dict
 
+
+if __name__ == '__main__':
+    a = Entity(**{"name": "abhishek", "work": "student", "record": 10})
+    print(a, id(a))
+
+    b = Entity(**{"name": "abhishek", "work": "student"})
+    print(b, id(b))
+
+    c = Entity(name="abhishek")
+    print(c, id(c))
+
+    d = Entity()
+    print(d, id(d))
+
+    e = Entity(name="hello", work="student")
+    print(e, e.__dict__)
+    print(e.work)
