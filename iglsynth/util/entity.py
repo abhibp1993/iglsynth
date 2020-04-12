@@ -61,6 +61,12 @@ class Entity(object):
     def __str__(self):
         return self.__repr__()
 
+    def __setattr__(self, key, value):
+        if key == "_name" and key in self.__dict__:
+            self.logger.debug(f"Name of Entity is changed from {self._name} to {value}.")
+
+        return super(Entity, self).__setattr__(key, value)
+
     @property
     def name(self):
         return self._name
