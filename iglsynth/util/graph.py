@@ -70,14 +70,16 @@ class Vertex(entity.Entity):
 
 class Edge(entity.Entity):
     def __init__(self, u, v, **kwargs):
+        assert isinstance(u, Vertex) and isinstance(v, Vertex) and type(u) == type(v)
+
         # Default naming for an edge (note: it's a tuple, not a string)
         if "name" not in kwargs:
             name = (u, v)
-        else:
-            name = kwargs["name"]
+            super(Edge, self).__init__(name=name, **kwargs)
 
-        # Base class constructor
-        super(Edge, self).__init__(name=name, **kwargs)
+        else:
+            # When `name` is a keyword argument, it is implicitly passed during unpacking of **kwargs
+            super(Edge, self).__init__(**kwargs)
 
         # Edge data structure
         self._u = u
@@ -140,7 +142,11 @@ class Graph(GraphBase):
                         f"Received {type(item)}.")
 
     def __repr__(self):
-        return f"{self._class_name}(name={self.name}, |V|={self.num_vertices}, |E|={self.num_edges})"
+        # Patch ensures that loggers do not raise errors when __repr__ is called during instantiation of Graph.
+        try:
+            return f"{self._class_name}(name={self.name}, |V|={self.num_vertices}, |E|={self.num_edges})"
+        except AttributeError:
+            return f"{self._class_name}(name={self.name})"
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
