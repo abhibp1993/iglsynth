@@ -8,6 +8,7 @@ Release Notes
 * Data Structure Changes
 
     * ``Entity, SubGraph`` class added.
+    * ``Entity`` ensures uniqueness of object w.r.t. the entity ``name``.
     * ``Graph, Vertex, Edge`` classes redefined. All of these classes inherit from ``Entity``.
 
 * Added ``readwrite`` sub-package.
@@ -18,6 +19,7 @@ Release Notes
 * All utils can now be imported using ``import iglsynth.util as util`` statement.
 * Logging support added to ``Entity, Graph`` class objects. This can be accessed using ``self.logger`` attribute.
 * An example is added for basic graph functionality.
+* An example/tutorial added for ``Entity`` class description.
 * Tests are updated for ``Entity, Graph`` classes.
 
 
