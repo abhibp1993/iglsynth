@@ -34,8 +34,8 @@ class LTL(PL):
         """
         Reference: https://stackoverflow.com/questions/17920304/what-is-the-size-of-an-ltl-formula
         """
-        spot_formula = spot.formula(self.formula)
-        unabbr_formula = str(spot.unabbreviate(spot_formula, "FGRMWie^"))
+        spot_formula = iglspot.formula(self.formula)
+        unabbr_formula = str(iglspot.unabbreviate(spot_formula, "FGRMWie^"))
         return unabbr_formula.count("U") + unabbr_formula.count("X")
 
     @property
@@ -51,7 +51,7 @@ class LTL(PL):
 
         .. seealso:: A discussion on `Manna-Pnueli Hierarchy <https://spot.lrde.epita.fr/hierarchy.html>`_
         """
-        return spot.mp_class(spot.formula(self.formula))
+        return iglspot.mp_class(iglspot.formula(self.formula))
 
     # ------------------------------------------------------------------------------------------------------------------
     # PRIVATE METHODS
@@ -74,7 +74,7 @@ class LTL(PL):
     def parse(self, formula: str):
         # Invoke spot parser
         try:
-            spot_formula = spot.formula(formula)
+            spot_formula = iglspot.formula(formula)
         except SyntaxError:
             raise ParsingError(f"The string {formula} is NOT an acceptable LTL formula.")
 
@@ -83,7 +83,7 @@ class LTL(PL):
         tree.build_from_spot_formula(spot_formula)
 
         # A non-PL formula cannot be evaluated.
-        mp_class = spot.mp_class(spot_formula)
+        mp_class = iglspot.mp_class(spot_formula)
         if mp_class is not MP_CLASS["B"]:
             self._eval_func = None
 
@@ -92,7 +92,7 @@ class LTL(PL):
         self._formula = formula
 
         # Update alphabet
-        sigma = {AP(str(ap)) for ap in spot.atomic_prop_collect(spot_formula)}
+        sigma = {AP(str(ap)) for ap in iglspot.atomic_prop_collect(spot_formula)}
         if self._alphabet is None:
             self._alphabet = Alphabet(sigma)
         else:
@@ -108,7 +108,7 @@ class LTL(PL):
     def translate(self):
 
         # Translate LTL formula to spot automaton using spot
-        spot_aut = spot.translate(self.formula, "BA", "High", "SBAcc", "Complete")
+        spot_aut = iglspot.translate(self.formula, "BA", "High", "SBAcc", "Complete")
 
         num_vertices = spot_aut.num_states()
         init_st = spot_aut.get_init_state_number()
@@ -146,7 +146,7 @@ class LTL(PL):
                 target = Automaton.Vertex(name=str(e.dst))
                 igl_aut.add_vertex(target)
 
-                edge_formula = PL(formula=str(spot.bdd_format_formula(bdict, e.cond)), alphabet=self.alphabet)
+                edge_formula = PL(formula=str(iglspot.bdd_format_formula(bdict, e.cond)), alphabet=self.alphabet)
                 edge = Automaton.Edge(u=source, v=target, f=edge_formula)
                 igl_aut.add_edge(edge)
 

@@ -2,7 +2,7 @@ import inspect
 from abc import ABC
 from typing import Callable
 from iglsynth.util.graph import *
-import iglsynth.util.spot as spot
+import iglsynth.util.iglspot as spot
 
 
 ########################################################################################################################

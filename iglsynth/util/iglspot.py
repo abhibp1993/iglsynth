@@ -1,7 +1,6 @@
 from spot import *
 
-
-__all__ = []
+# __all__ = ["formula", "substitute"]
 
 
 def substitute(self, formula, new_formula, *args):

@@ -4,7 +4,7 @@ iglsynth: graph.py
 License goes here...
 """
 
-from typing import Iterable, Iterator, List, Union
+from typing import Iterable, Iterator, Union
 from functools import reduce
 import logging
 import iglsynth.util.entity as entity
@@ -14,32 +14,72 @@ __all__ = ["Vertex", "Edge", "Graph", "SubGraph"]
 
 
 class IGLDict(dict):
+    def __init__(self, name, *args, **kwargs):
+        super(IGLDict, self).__init__(*args, **kwargs)
+        self._name = name
+
+        # Get a logger for IGLDict
+        logger = logging.getLogger(self.__module__)
+        self.logger = logger
+
     def __setitem__(self, key, value):
         super(IGLDict, self).__setitem__(key, value)
-        logger = logging.getLogger(self.__module__)
-        logger.info(f"Updating IGLDict:\n\tself:{self}\n\tkey={key}\n\tvalue={value}")
+        self.logger.info(f"Updating IGLDict:\n\tself:{self}\n\tkey={key}\n\tvalue={value}")
+
+    def __delitem__(self, key):
+        # Check if key is in dictionary
+        is_in_dict = self.__contains__(key)
+
+        # Remove key
+        super(IGLDict, self).__delitem__(key)
+
+        # Log if key was removed
+        if is_in_dict and not self.__contains__(key):
+            self.logger.info(f"Removing {key} from IGLDict({self._name}).")
 
 
 class IGLSet(set):
+    def __init__(self, name, *args, **kwargs):
+        super(IGLSet, self).__init__(*args, **kwargs)
+        self._name = name
+
+        # Get a logger for IGLDict
+        logger = logging.getLogger(self.__module__)
+        self.logger = logger
+
     def add(self, element):
         super(IGLSet, self).add(element)
-        logger = logging.getLogger(self.__module__)
-        logger.info(f"Updating IGLSet:\n\tself:{self}\n\tnewitem={element}")
+        self.logger.info(f"Updating IGLSet:\n\tself:{self}\n\tnewitem={element}")
+
+    def remove(self, key):
+        # Check if key is in dictionary
+        is_in_dict = self.__contains__(key)
+
+        # Remove key
+        super(IGLSet, self).remove(key)
+
+        # Log if key was removed
+        if is_in_dict and not self.__contains__(key):
+            self.logger.info(f"Removing {key} from IGLSet({self._name}).")
 
 
 class Vertex(entity.Entity):
-    def __init__(self, name=None):
-        super(Vertex, self).__init__(name=name)
+    def __init__(self, name=None, **kwargs):
+        super(Vertex, self).__init__(name=name, **kwargs)
 
 
 class Edge(entity.Entity):
-    def __init__(self, u, v, name=None):
-        # Default naming for an edge (note: it's a tuple, not a string)
-        if name is None:
-            name = (u, v)
+    def __init__(self, u, v, **kwargs):
+        assert isinstance(u, Vertex) and isinstance(v, Vertex) and type(u) == type(v)
 
-        # Base class constructor
-        super(Edge, self).__init__(name)
+        # Default naming for an edge (note: it's a tuple, not a string)
+        if "name" not in kwargs:
+            name = (u, v)
+            super(Edge, self).__init__(name=name, **kwargs)
+
+        else:
+            # When `name` is a keyword argument, it is implicitly passed during unpacking of **kwargs
+            super(Edge, self).__init__(**kwargs)
 
         # Edge data structure
         self._u = u
@@ -57,26 +97,39 @@ class Edge(entity.Entity):
         return self._v
 
 
-class Graph(entity.Entity):
-    # Note: Potential of bugs: If user incorrectly sets Vertex, Edge classes to arbitrary classes.
+class GraphBase(entity.Entity):
+    def __setattr__(self, key, value):
+        if key == "Vertex":
+            assert issubclass(value, Vertex), \
+                f"Cannot set {self.__class__.__qualname__}.Vertex = {value}. " \
+                f"{value} should be a subclass of {Vertex} class."
+
+        if key == "Edge":
+            assert issubclass(value, Edge), \
+                f"Cannot set {self.__class__.__qualname__}.Edge = {value}. " \
+                f"{value} should be a subclass of {Vertex} class."
+
+        super(GraphBase, self).__setattr__(key, value)
+
+
+class Graph(GraphBase):
     Vertex = Vertex
     Edge = Edge
 
     # ------------------------------------------------------------------------------------------------------------------
     # INTERNAL METHODS
     # ------------------------------------------------------------------------------------------------------------------
-    def __init__(self, name=None):
+    def __init__(self, name=None, **kwargs):
         # Entity constructor
-        super(Graph, self).__init__(name=name)
-
-        # Data type checks
-        assert issubclass(self.Vertex, Vertex), f"Graph.Vertex class {self.Vertex} must be a sub-class of {Vertex}."
-        assert issubclass(self.Edge, Edge), f"Graph.Edge class {self.Edge} must be a sub-class of {Edge}."
+        super(Graph, self).__init__(name=name, **kwargs)
 
         # Graph data structure
         self._edges = set()
-        self._ve_map_in = IGLDict()
-        self._ve_map_out = IGLDict()
+        self._ve_map_in = IGLDict(name=f"{self}._ve_map_in")
+        self._ve_map_out = IGLDict(name=f"{self}._ve_map_out")
+
+        # Log event of creation
+        self.logger.info(f"Graph object {self} is created.")
 
     def __contains__(self, item):
         if issubclass(type(item), Vertex):
@@ -89,13 +142,11 @@ class Graph(entity.Entity):
                         f"Received {type(item)}.")
 
     def __repr__(self):
-        if self._name is None:
-            return f"<{self.__class__.__name__} object with id={self._id}, " \
-                f"|V|={self.num_vertices}, |E|={self.num_edges}>"
-
-        return f"<{self.__class__.__name__} object with name={self._name}>, " \
-            f"|V|={self.num_vertices}, |E|={self.num_edges}>"
-
+        # Patch ensures that loggers do not raise errors when __repr__ is called during instantiation of Graph.
+        try:
+            return f"{self._class_name}(name={self.name}, |V|={self.num_vertices}, |E|={self.num_edges})"
+        except AttributeError:
+            return f"{self._class_name}(name={self.name})"
 
     # ------------------------------------------------------------------------------------------------------------------
     # PROPERTIES
@@ -142,20 +193,13 @@ class Graph(entity.Entity):
         :param v: (:class:`Graph.Vertex`) Vertex to be added to graph.
         """
         # Type checking
-        assert issubclass(self.Vertex, Vertex), f"Graph.Vertex class {self.Vertex} must be a sub-class of {Vertex}."
         assert isinstance(v, self.Vertex), f"Given vertex {v} must be an instance of {self}.Vertex class. "
 
         # If vertex is not already added, then add it.
-        if v not in self._ve_map_in and v not in self._ve_map_out:
-            self._ve_map_in[v] = IGLSet()
-            self._ve_map_out[v] = IGLSet()
-
-        elif (v in self._ve_map_in and v not in self._ve_map_out) or \
-                (v not in self._ve_map_in and v in self._ve_map_out):
-            self.logger.error(f"Graph data structure is corrupted. "
-                              f"|ve_map_in|={len(self._ve_map_in)} AND |ve_map_out|={len(self._ve_map_out)}.")
-            raise ValueError(f"Graph data structure is corrupted.")
-
+        if not self.has_vertex(v):
+            self._ve_map_in[v] = IGLSet(name=f"{self}._ve_map_in[{v}]")
+            self._ve_map_out[v] = IGLSet(name=f"{self}._ve_map_out[{v}]")
+            self.logger.info(f"Vertex {v} is added to {self}.")
         else:
             self.logger.debug(f"Vertex {v} is already present in {self}. Ignoring request to add.")
 
@@ -177,12 +221,11 @@ class Graph(entity.Entity):
         :raises AssertionError: When argument `e` is not an :class:`Graph.Edge` object.
         """
         # Type checking
-        assert issubclass(self.Edge, Edge), f"Graph.Edge class {self.Edge} must be a sub-class of {Edge}."
         assert isinstance(e, self.Edge), f"Given edge {e} must be an instance of {self}.Edge class. "
 
         # Ignore duplicate addition of edge
-        if e in self._edges:
-            self.logger.debug(f"Edge {e} is already present in graph. Ignoring request to add.")
+        if self.has_edge(e):
+            self.logger.debug(f"Edge {e} is already present in {self}. Ignoring request to add.")
             return None
 
         # Get source and target vertices
@@ -190,19 +233,20 @@ class Graph(entity.Entity):
         v = e.target
 
         # Update graph data structure
-        if u in self._ve_map_in and v in self._ve_map_in:
+        if self.has_vertex(u) and self.has_vertex(v):
             self._ve_map_out[u].add(e)
             self._ve_map_in[v].add(e)
             self._edges.add(e)
+            self.logger.info(f"Edge {e} is added to {self}.")
             return None
 
-        if u not in self._ve_map_in and v not in self._ve_map_in:
+        if not self.has_vertex(u) and not self.has_vertex(v):
             raise AssertionError(f"Vertices {u} and {v} are not in graph.")
 
-        elif u in self._ve_map_in and v not in self._ve_map_in:
+        elif self.has_vertex(u) and not self.has_vertex(u):
             raise AssertionError(f"Vertex {v} is not in graph.")
 
-        else:  # v in self._vertex_edge_map:
+        else:  # not self.has_vertex(u):
             raise AssertionError(f"Vertex {u} is not in graph.")
 
     def add_edges(self, ebunch):
@@ -222,15 +266,15 @@ class Graph(entity.Entity):
         :param v: (:class:`Graph.Vertex`) Vertex of the graph.
         :return: (iterator(:class:`Graph.Edge`)) Edges between u, v.
         """
-        assert u in self, f"Vertex u={u} is not in graph."
-        assert v in self, f"Vertex v={v} is not in graph."
+        assert self.has_vertex(u), f"Vertex u={u} is not in graph."
+        assert self.has_vertex(v), f"Vertex v={v} is not in graph."
 
         if v is None:
             return iter(self._ve_map_out[u])
 
         return iter(set.intersection(self._ve_map_out[u], self._ve_map_in[v]))
 
-    def has_edge(self, e: 'Graph.Edge'):
+    def has_edge(self, e):
         """
         Checks whether the graph has the given edge or not.
         :param e: (:class:`Graph.Edge`) An edge to be checked for containment in the graph.
@@ -238,12 +282,21 @@ class Graph(entity.Entity):
         """
         return e in self._edges
 
-    def has_vertex(self, v: 'Graph.Vertex'):
+    def has_vertex(self, v):
         """
         Checks whether the graph has the given vertex or not.
         :param v: (:class:`Graph.Vertex`) Vertex to be checked for containment.
         :return: (bool) True if given vertex is in the graph, else False.
         """
+        # Check for data corruption
+        if (v in self._ve_map_in and v not in self._ve_map_out) or (v not in self._ve_map_in and v in self._ve_map_out):
+            raise RuntimeError(f"Graph data structure is corrupted. "
+                               f"({v} in self._ve_map_in and {v} not in self._ve_map_out)="
+                               f"{(v in self._ve_map_in and v not in self._ve_map_out)}. "
+                               f"({v} not in self._ve_map_in and {v} in self._ve_map_out)="
+                               f"{(v not in self._ve_map_in and v in self._ve_map_out)}. "
+                               )
+
         return v in self._ve_map_in
 
     def in_edges(self, v: Union['Graph.Vertex', Iterable['Graph.Vertex']]):
@@ -256,14 +309,11 @@ class Graph(entity.Entity):
             nor an iterable of :class:`Graph.Vertex` objects.
         """
         if isinstance(v, self.Vertex):
-            assert isinstance(v, self.Vertex), f"Vertex {v} must be of type={self.Vertex}."
-            assert v in self, f"Vertex {v} is not in {self}."
+            assert self.has_vertex(v), f"Vertex {v} is not in {self}."
             return iter(self._ve_map_in[v])
 
         elif isinstance(v, Iterable):
-            assert all(isinstance(u, self.Vertex) for u in v), \
-                f"All vertices in input: {v} must be of type={self.Vertex}."
-            assert all(u in self for u in v), \
+            assert all(self.has_vertex(u) for u in v), \
                 f"All vertices in input: {v} must be in {self}."
 
             in_edges = (self._ve_map_in[u] for u in v)
@@ -292,14 +342,11 @@ class Graph(entity.Entity):
             nor an iterable of :class:`Graph.Vertex` objects.
         """
         if isinstance(v, self.Vertex):
-            assert isinstance(v, self.Vertex), f"All vertices in input: {v} must be of type={self.Vertex}."
-            assert v in self, f"Vertex {v} is not in {self}."
+            assert self.has_vertex(v), f"Vertex {v} is not in {self}."
             return iter(self._ve_map_out[v])
 
         elif isinstance(v, Iterable):
-            assert all(isinstance(u, self.Vertex) for u in v), \
-                f"All vertices in input: {v} must be of type={self.Vertex}."
-            assert all(u in self for u in v), \
+            assert all(self.has_vertex(u) for u in v), \
                 f"All vertices in input: {v} must be in {self}."
 
             out_edges = (self._ve_map_out[u] for u in v)
@@ -326,11 +373,11 @@ class Graph(entity.Entity):
         """
         # Check the type of input edge
         assert isinstance(e, self.Edge), \
-            f"e must be an object of {self.__class__.__name__}.Edge class or its sub-class. Got {e.__class__.__name__}"
+            f"e must be an object of {self._class_name}.Edge class or its sub-class. Got {e.__class__.__name__}"
 
         # If edge is not in graph, warn the user and return
         if e not in self:
-            self.logger.warning(f"Edge {e} is not present in graph. Ignoring request to remove edge.")
+            self.logger.debug(f"Edge {e} is not present in {self}. Ignoring request to remove edge.")
             return None
 
         # Extract source and target of edge
@@ -341,6 +388,9 @@ class Graph(entity.Entity):
         self._ve_map_out[u].remove(e)
         self._ve_map_in[v].remove(e)
         self._edges.remove(e)
+
+        # Log the removal of edge
+        self.logger.info(f"Edge {e} was removed from {self}")
 
     def rm_edges(self, ebunch: Iterable['Graph.Edge']):
         """
@@ -361,7 +411,7 @@ class Graph(entity.Entity):
             f"Vertex {v} must be object of {self.Vertex}. Given, v is {v.__class__.__name__}"
 
         # Remove incoming and outgoing edges from v, and then remove v
-        if v in self:
+        if self.has_vertex(v):
             in_edges = self.in_edges(v)
             out_edges = self.out_edges(v)
 
@@ -369,6 +419,10 @@ class Graph(entity.Entity):
             self.rm_edges(out_edges)
             self._ve_map_in.pop(v)
             self._ve_map_out.pop(v)
+
+            self.logger.debug(f"Vertex {v} was removed from {self}.")
+        else:
+            self.logger.debug(f"Vertex {v} is not present in {self}. Ignoring request to remove vertex.")
 
     def rm_vertices(self, vbunch: Iterable['Graph.Vertex']):
         """
@@ -518,13 +572,3 @@ class SubGraph(Graph):
     def set_efilt(self, efilt):
         self._efilt = set(efilt)
         self._is_efilt_set = True
-
-
-if __name__ == '__main__':
-    v1 = Vertex(name="v1")
-    v2 = Vertex(name="v2")
-    e = Edge(v1, v2)
-    print(e, repr(e))
-
-
-
