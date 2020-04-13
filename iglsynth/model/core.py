@@ -6,6 +6,7 @@ License goes here...
 
 from inspect import signature
 from typing import Callable
+import iglsynth.util as util
 
 
 # Module level configuration parameters for users
@@ -25,70 +26,63 @@ class Player(object):
     pass
 
 
-class Action(object):
-    """
-    Represents an action.
-    An action acts on a state (of :class:`TSys` or :class:`Game` etc.) to produce a new state.
+class Action(util.Entity):
+    def __init__(self, func=None, **kwargs):
+        if func is None and "name" in kwargs:
+            super(Action, self).__init__(**kwargs)
+        elif func is None and "name" not in kwargs:
+            super(Action, self).__init__(name=None, **kwargs)
+        else:   # func is not None
+            super(Action, self).__init__(name=func.__name__, **kwargs)
 
-    :param name: (str) Name of the action.
-    :param func: (function) An implementation of action.
+        # Internal data structure
+        self._pre = None
+        self._act = func
+        self._post = None
 
-    .. note:: Acceptable function templates are,
+    def __call__(self, u, *args, **kwargs):
+        v = None
 
-        * ``st <- func(st)``
-        * ``st <- func(st, *args)``
-        * ``st <- func(st, **kwargs)``
-        * ``st <- func(st, *args, **kwargs)``
+        # Evaluate precondition
+        eval_pre = False
+        if self._pre is None:
+            eval_pre = True
+        else:
+            eval_pre = self._pre(u, *args, **kwargs)
 
-    """
-    def __init__(self, name=None, func=None):
-        assert isinstance(func, Callable), f"Input parameter func must be a function, got {type(func)}."
-        assert len(signature(func).parameters) in [1, 2, 3], f"Function 'func' must take exactly one parameter."
+        # Apply action
+        if not eval_pre:
+            return v
 
-        self._name = name
-        self._func = func
+        if self._act is None:
+            return v
 
-    def __repr__(self):
-        return f"Action(name={self._name})"
+        v = self._act(u, *args, **kwargs)
 
-    def __call__(self, v, *args, **kwargs):
-        return self._func(v, *args, **kwargs)
+        # Evaluate postcondition
+        if self._post is None:
+            return v
 
+        v = self._post(v, u, *args, **kwargs)
+        return v
 
-class ConcurrentAction(object):
-    """
-    Represents an action.
-    An action acts on a state (of :class:`TSys` or :class:`Game` etc.) to produce a new state.
+    def precondition(self, func):
+        self._pre = func
+        return self
 
-    :param name: (str) Name of the action.
-    :param func: (function) An implementation of action.
-
-    .. note:: Acceptable function templates are,
-
-        * ``st <- func(st)``
-        * ``st <- func(st, *args)``
-        * ``st <- func(st, **kwargs)``
-        * ``st <- func(st, *args, **kwargs)``
-
-    """
-    def __init__(self, name=None, func=None):
-        assert isinstance(func, Callable), f"Input parameter func must be a function, got {type(func)}."
-        assert len(signature(func).parameters) in [1, 2, 3], f"Function 'func' must take exactly one parameter."
-
-        self._name = name
-        self._func = func
-
-    def __repr__(self):
-        return f"Action(name={self._name})"
-
-    def __call__(self, v, *args, **kwargs):
-        return self._func(v, *args, **kwargs)
+    def postcondition(self, func):
+        self._post = func
+        return self
 
 
-def action(func):
-    """
-    Decorator definition to create :class:`Action` objects.
-    """
-    a = Action(name=func.__name__, func=func)
-    return a
+if __name__ == '__main__':
 
+    @Action
+    def north(state):
+        return state + 1
+
+    @north.precondition
+    def north(state):
+        return True
+
+    print(north(5))
