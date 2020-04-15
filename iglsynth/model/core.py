@@ -37,8 +37,8 @@ class Action(util.Entity):
 
         # Internal data structure
         self._pre = None
-        self._act = func
-        self._post = None
+        # self._act = func
+        self._post = func
 
     def __call__(self, u, *args, **kwargs):
         v = None
@@ -52,18 +52,18 @@ class Action(util.Entity):
 
         # Apply action
         if not eval_pre:
-            return v
+            return None
 
-        if self._act is None:
-            return v
+        # if self._act is None:
+        #     return v
+        #
+        # v = self._act(u, *args, **kwargs)
+        #
+        # # Evaluate postcondition
+        # if self._post is None:
+        #     return v
 
-        v = self._act(u, *args, **kwargs)
-
-        # Evaluate postcondition
-        if self._post is None:
-            return v
-
-        v = self._post(v, u, *args, **kwargs)
+        v = self._post(u, *args, **kwargs)
         return v
 
     def precondition(self, func):
@@ -73,6 +73,10 @@ class Action(util.Entity):
     def postcondition(self, func):
         self._post = func
         return self
+
+
+class ConcurrentAction(util.Entity):
+    pass
 
 
 if __name__ == '__main__':

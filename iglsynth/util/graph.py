@@ -24,7 +24,7 @@ class IGLDict(dict):
 
     def __setitem__(self, key, value):
         super(IGLDict, self).__setitem__(key, value)
-        self.logger.info(f"Updating IGLDict:\n\tself:{self}\n\tkey={key}\n\tvalue={value}")
+        self.logger.info(f"Updating IGLDict:\n\tself:{self._name}\n\tkey={key}\n\tvalue={value}")
 
     def __delitem__(self, key):
         # Check if key is in dictionary
@@ -49,7 +49,7 @@ class IGLSet(set):
 
     def add(self, element):
         super(IGLSet, self).add(element)
-        self.logger.info(f"Updating IGLSet:\n\tself:{self}\n\tnewitem={element}")
+        self.logger.info(f"Updating IGLSet:\n\tself:{self._name}\n\tnewitem={element}")
 
     def remove(self, key):
         # Check if key is in dictionary
@@ -129,7 +129,7 @@ class Graph(GraphBase):
         self._ve_map_out = IGLDict(name=f"{self}._ve_map_out")
 
         # Log event of creation
-        self.logger.info(f"Graph object {self} is created.")
+        self.logger.info(f"{self._class_name} object with {self._name} is created.")
 
     def __contains__(self, item):
         if issubclass(type(item), Vertex):

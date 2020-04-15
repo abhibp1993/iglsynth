@@ -1,8 +1,11 @@
+
+__all__ = ["TSys"]
+
+
 import iglsynth.util as util
 from iglsynth.model.core import *
 
 
-# TODO: What's a good API to type-check for turn without troubling user?
 class TSysVertex(util.Vertex):
     def __init__(self, state=None, turn=None, **kwargs):
         # If state is provided by user, then we set the name of vertex as state + turn
@@ -16,6 +19,7 @@ class TSysVertex(util.Vertex):
         # Internal data structure
         self._turn = turn
 
+    @property
     def turn(self):
         return self._turn
 
@@ -23,7 +27,7 @@ class TSysVertex(util.Vertex):
 class TSysEdge(util.Edge):
     def __init__(self, u, v, a, **kwargs):
         assert isinstance(a, (Action, ConcurrentAction))
-        super(TSysEdge, self).__init__(name=(u, v, a), **kwargs)
+        super(TSysEdge, self).__init__(u=u, v=v, name=(u, v, a), **kwargs)
         self._a = a
 
     @property
@@ -35,21 +39,26 @@ class TSys(util.Graph):
     Vertex = TSysVertex
     Edge = TSysEdge
 
-    def __init__(self, kind, name=None,
+    def __init__(self, kind=CONCURRENT, name=None,
                  vertices=None, edges=None,
                  act0=None, act1=None, act2=None, act=None,
                  alphabet=None, label_func=None):
 
         # Type checking
         assert kind in [CONCURRENT, TURN_BASED]
-        assert all([isinstance(a, (Action, ConcurrentAction)) for a in act0])
-        assert all([isinstance(a, (Action, ConcurrentAction)) for a in act1])
-        assert all([isinstance(a, (Action, ConcurrentAction)) for a in act2])
+        assert all([isinstance(a, (Action, ConcurrentAction)) for a in act0]) if act0 is not None else True
+        assert all([isinstance(a, (Action, ConcurrentAction)) for a in act1]) if act1 is not None else True
+        assert all([isinstance(a, (Action, ConcurrentAction)) for a in act2]) if act2 is not None else True
+        assert all([isinstance(a, (Action, ConcurrentAction)) for a in act]) if act is not None else True
 
         # Base class constructor
         super(TSys, self).__init__(name)
 
         # Add graph properties for transition system
+        #   First, preprocess act.
+        #   act0, act1, act2 may be None (to represent not-given-by-user)
+        #   act must be a (possibly empty) set.
+        act = set(act) if act is not None else set()
         self._kind = kind
         self._act0 = set(act0) if act0 is not None else None
         self._act1 = set(act1) if act1 is not None else None
@@ -87,6 +96,11 @@ class TSys(util.Graph):
     @property
     def act(self):
         return self._act
+
+    @act.setter
+    def act(self, val):
+        assert all([isinstance(a, (Action, ConcurrentAction)) for a in val])
+        self._act = val
 
     @property
     def prop(self):
