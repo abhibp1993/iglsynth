@@ -1,4 +1,4 @@
-FROM ubuntu:19.04
+FROM ubuntu:19.10
 MAINTAINER Abhishek N. Kulkarni <ankulkarni@wpi.edu>
 
 
@@ -29,4 +29,6 @@ RUN pip3 install pytest-cov coverage codecov
 
 # Install additional packages, libraries
 RUN pip3 install matplotlib
+RUN pip3 install snap-stanford
+RUN pip3 install bidict
 
